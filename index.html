@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
+	<title>PrimaryAccess</title>
+	<meta name="viewport" content="width=1920, initial-scale=1.0">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+	<script src="lib/jquery.ui.touch-punch.min.js"></script>
+	<style type="text/css">
+		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  box-sizing: border-box;
+							padding:0px;margin:0px
+							}
+
+@media only screen and (max-width: 500px) {
+    .wm-contentBody {		padding: 8px;   }
+	}
+</style>
+</head>
+<body>
+	
+Hello
+
+<script>
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// MAIN 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+var app=null;
+
+$(window).resize(function() {                                         	// ON WINDOW RESIZE
+	if (app && app.allowResize)												// If app loaded and allowing resizing
+		app.Draw();															// Redraw to fit screen
+	});
+			
+$(document).ready(function() {								           	// ON PAGE LOADED
+	var url=window.location.search.substring(1);						   	// Get query string
+//	app=new App();                                                      	// Alloc app
+    });									
+		
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// HELPERS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	function DialogBox(title, content, width, callback, callback2) 			// DIALOG BOX
+	{
+		$("#dialogDiv").remove();												
+		$("body").append("<div class='unselectable' id='dialogDiv'></div>");														
+		var str="<p><img src='img/logo32.png' style='vertical-align:-10px'/>&nbsp;&nbsp;";								
+		str+="<span id='gtBoxTi'style='font-size:18px;text-shadow:1px 1px #ccc;color:#666'><b>"+title+"</b></span><p>";
+		str+="<div style='font-size:14px;margin:14px'>"+content+"</div>";
+		$("#dialogDiv").append(str);	
+		$("#dialogDiv").dialog({ width:Math.abs(width), buttons: {
+					            	"OK": 		function() { if (callback)
+					            								callback(); 
+					            								$(this).remove();  
+					            								},
+					            	"Cancel":  	function() { if (callback2)	            		
+					            								callback2();
+					            								$(this).remove(); }
+									}});	
+		if (width < 0)
+			$("#dialogDiv").dialog("option","position",{ my:"left top", at:"left top", of:this.parent });
+		else
+			$("#dialogDiv").dialog("option","position",{ my:"center", at:"center", of:this.parent });
+	}
+
+
+	function trace(msg, p1, p2, p3, p4)										// CONSOLE 
+	{
+		if (p4 != undefined)
+			console.log(msg,p1,p2,p3,p4);
+		else if (p3 != undefined)
+			console.log(msg,p1,p2,p3);
+		else if (p2 != undefined)
+			console.log(msg,p1,p2);
+		else if (p1 != undefined)
+			console.log(msg,p1);
+		else
+			console.log(msg);
+	}
+
+	function Sound(sound, mute)												// PLAY SOUND
+	{
+		var snd=new Audio();													// Init audio object
+		if (!snd.canPlayType("audio/mpeg") || (snd.canPlayType("audio/mpeg") == "maybe")) 
+			snd=new Audio("img/"+sound+".ogg");									// Use ogg
+		else	
+			snd=new Audio("img/"+sound+".mp3");									// Use mp3
+		if (!mute)	{															// If not initing or muting	
+			snd.volume=50/100;											// Set volume
+			snd.play();															// Play it
+			}
+		}
+		
+	function ButtonPress(id)												// WIGGLE BUTTON
+	{
+		Sound("click");
+		var p=$("#"+id).offset();
+		$("#"+id).animate( { left: p.left+1+"px", top: p.top+1+"px"}, 50, 
+			function() {$("#"+id).css( { left: p.left+"px", top: p.top+"px"})} 
+			);
+	}
+
+</script>
+</body>
+</html>
