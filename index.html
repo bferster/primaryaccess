@@ -11,17 +11,36 @@
 	<script src="lib/jquery.ui.touch-punch.min.js"></script>
 	<style type="text/css">
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  box-sizing: border-box;
-							padding:0px;margin:0px
+							padding: 0; margin:0px
+							}
+		.pa-main {		 	width: 100%;  background-color:#eee; height: vh; overflow-y: auto;
+							}
+		.pa-title {			width: 100%; text-align:center;	font-size: 24px; display:inline-block; margin-bottom: 18px; 
+							font-weight: bold;
+							}
+		.pa-script {		position: absolute; width: calc(50% - 40px); left:0; top:0;
+							background-color:#fff; height:calc(100% - 128px); overflow-y: scroll;
+							padding: 20px; font-size: 24px;
+							}
+		.pa-player {		position: absolute; width: 50%; left:50%; top: 0px;
+							background-color:#ccc;  height:calc(100% - 128px); float: top
+							}
+		.pa-bin {			position: absolute; width: 100%; left:0; top: calc(100% - 128px);
+							background-color:#999; height:128px; 
 							}
 
-@media only screen and (max-width: 500px) {
-    .wm-contentBody {		padding: 8px;   }
-	}
 </style>
 </head>
 <body>
-	
-Hello
+	<div id="mainDiv" class="pa-main">
+		<div id="scriptDiv" class="pa-script" contenteditable="true">
+			<div id="titleDiv" class="pa-title" contenteditable="true">Introducing PrimaryAccess</div>		
+			In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. 
+			This landmark decision sparked the modern Civil Rights movement.
+			Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.		</div>	
+		<div id="binDiv" class="pa-bin"></div>
+		<div id="playerDiv" class="pa-player"></div>
+	</div>
 
 <script>
 
@@ -31,14 +50,25 @@ Hello
 
 var app=null;
 
-$(window).resize(function() {                                         	// ON WINDOW RESIZE
-	if (app && app.allowResize)												// If app loaded and allowing resizing
-		app.Draw();															// Redraw to fit screen
-	});
+	function ResizePanes()
+	{
+		if ($(window).width() < 800) {
+			$("#scriptDiv").css({ width:"calc(100% - 40px)", height: "75%" });
+			$("#binDiv").css({ top: "75%" });
+			$("#playerDiv").css({ width:"100%", height:"75%", left:0, top: "calc(75% + 128px)" });
+			}
+		else{
+			$("#scriptDiv").css({ width:"calc(50% - 40px)", height:"calc(100% - 128px)" });
+			$("#playerDiv").css({ width:"50%", height:"calc(100% - 128px)", left:"50%", top:0 });
+			$("#binDiv").css({ top: 	$("#playerDiv").height() });
+			}
+	}
+
+
 			
 $(document).ready(function() {								           	// ON PAGE LOADED
 	var url=window.location.search.substring(1);						   	// Get query string
-//	app=new App();                                                      	// Alloc app
+	$(window).resize(ResizePanes);                                        	// On window resizing
     });									
 		
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +121,7 @@ $(document).ready(function() {								           	// ON PAGE LOADED
 		else	
 			snd=new Audio("img/"+sound+".mp3");									// Use mp3
 		if (!mute)	{															// If not initing or muting	
-			snd.volume=50/100;											// Set volume
+			snd.volume=50/100;													// Set volume
 			snd.play();															// Play it
 			}
 		}
