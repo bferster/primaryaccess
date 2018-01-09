@@ -10,7 +10,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 	<script src="lib/jquery.ui.touch-punch.min.js"></script>
 	<style type="text/css">
-		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  box-sizing: border-box;
+		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
 							padding: 0; margin:0px
 							}
 		.pa-main {		 	width: 100%;  background-color:#eee; height: vh; overflow-y: auto;
@@ -19,14 +19,15 @@
 							font-weight: bold;
 							}
 		.pa-script {		position: absolute; width: calc(50% - 40px); left:0; top:0;
-							background-color:#fff; height:calc(100% - 128px); overflow-y: scroll;
+							background-color:#fff; height:calc(100% - 150px); overflow-y: scroll;
 							padding: 20px; font-size: 24px;
 							}
 		.pa-player {		position: absolute; width: 50%; left:50%; top: 0px;
-							background-color:#ccc;  height:calc(100% - 128px); float: top
+							background-color:#ccc;  height:calc(100% - 150px); float: top
 							}
-		.pa-bin {			position: absolute; width: 100%; left:0; top: calc(100% - 128px);
-							background-color:#999; height:128px; 
+		.pa-bin {			position: absolute; width: 100%; left:0; top: calc(100% - 150px);
+							background-color:#fff; height: 149px; overflow-x: scroll;  white-space: nowrap;
+							border-top: 1px solid #ccc;
 							}
 
 </style>
@@ -48,19 +49,19 @@
 // MAIN 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-var app=null;
+var bin, script, player;
 
 	function ResizePanes()
 	{
 		if ($(window).width() < 800) {
 			$("#scriptDiv").css({ width:"calc(100% - 40px)", height: "75%" });
 			$("#binDiv").css({ top: "75%" });
-			$("#playerDiv").css({ width:"100%", height:"75%", left:0, top: "calc(75% + 128px)" });
+			$("#playerDiv").css({ width:"100%", height:"75%", left:0, top: "calc(75% + 150px)" });
 			}
 		else{
-			$("#scriptDiv").css({ width:"calc(50% - 40px)", height:"calc(100% - 128px)" });
-			$("#playerDiv").css({ width:"50%", height:"calc(100% - 128px)", left:"50%", top:0 });
-			$("#binDiv").css({ top: 	$("#playerDiv").height() });
+			$("#scriptDiv").css({ width:"calc(50% - 40px)", height:"calc(100% - 150px)" });
+			$("#playerDiv").css({ width:"50%", height:"calc(100% - 150px)", left:"50%", top:0 });
+			$("#binDiv").css({ top: $("#playerDiv").height() });
 			}
 	}
 
@@ -69,8 +70,89 @@ var app=null;
 $(document).ready(function() {								           	// ON PAGE LOADED
 	var url=window.location.search.substring(1);						   	// Get query string
 	$(window).resize(ResizePanes);                                        	// On window resizing
-    });									
+	bin=new CBin();															// Alloc bin
+	});									
 		
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// BIN
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+	function CBin()														// BIN CONSTRUCTOR
+	{
+		this.pics=this.LoadPics();											// Load default pics									
+		this.Draw();														// Show bin
+	}
+
+	CBin.prototype.Draw=function() 										//	DRAW BIN
+	{
+		var i,str="";
+		for (i=0;i<this.pics.length;++i) 
+			str+="<img src='"+this.pics[i].src+"' style='height:112px; padding:8px; padding-right:0px'>"
+		$("#binDiv").html(str);
+	}
+
+	CBin.prototype.LoadPics=function() 									//	LOAD IMAGES
+	{
+		var pics=[];
+		pics.push({ src:"//stagetools.com/primaryaccess/Test.jpg", 
+			title:"Martin Luther King at Civil rights march",
+			date: "1963",
+			desc: "Martin Luther King delivers his \"I have a dream\" speech at the Lincoln Memorial",
+			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"
+			});
+		pics.push({ src:"//stagetools.com/primaryaccess/Test2.jpg", 
+			title:"Rosa Parks sitting on bus",
+			date: "1955",
+			desc: "Rosa Parks prompted outcry when she sat in the front of the bus",
+			link: "//teacher.scholastic.com/rosa"
+			});
+		pics.push({ src:"//stagetools.com/primaryaccess/Test10.jpg", 
+			title:"Brown vs. Board of Education",
+			date: "1954",
+			desc: "George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.",
+			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"
+			});
+		pics.push({ src:"//stagetools.com/primaryaccess/Test3.jpg", 
+			title:"The Little Rock Nine",
+			date: "1957",
+			desc: "After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.",
+			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"
+			});
+		pics.push({ src:"//stagetools.com/primaryaccess/Test4.jpg", 
+			title:"The Little Rock Nine letter - Page 1",
+			date: "1957",
+			desc: "Letter from Daisy Bates to Roy Wilkins.",
+			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"
+			});
+		pics.push({ src:"//stagetools.com/primaryaccess/Test5.jpg", 
+			title:"The Little Rock Nine letter - Page 2",
+			date: "1957",
+			desc: "Letter from Daisy Bates to Roy Wilkins.",
+			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"
+			});			
+		pics.push({ src:"//stagetools.com/primaryaccess/Test6.jpg", 
+			title:"Greensboro Lunch Counter Sit-in",
+			date: "1960",
+			desc: "Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.",
+			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"
+			});
+		pics.push({ src:"//stagetools.com/primaryaccess/Test7.jpg", 
+			title:"Roger Wilkins, head of NAACP",
+			date: "1957",
+			desc: "Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.",
+			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"
+			});
+		pics.push({ src:"//stagetools.com/primaryaccess/Test8.jpg", 
+			title:"Civil rights march on Washington",
+			date: "1963",
+			desc: "The August 28, 1963, March on Washington riveted the nation's attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.",
+			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"
+			});
+	trace(pics)
+			return pics;
+	}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
