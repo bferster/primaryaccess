@@ -15,31 +15,52 @@
 							}
 		.pa-main {		 	width: 100%;  background-color:#eee; height: vh; overflow-y: auto;
 							}
-		.pa-title {			width: 100%; text-align:center;	font-size: 24px; display:inline-block; margin-bottom: 18px; 
-							font-weight: bold;
+		.pa-script {		position: absolute; width: 50%; height: 100%; left:0; top:0; 
+							background-color:#fff; height: calc(100% - 150px); overflow-y: scroll;
 							}
-		.pa-script {		position: absolute; width: calc(50% - 40px); left:0; top:0;
-							background-color:#fff; height:calc(100% - 150px); overflow-y: scroll;
-							padding: 20px; font-size: 24px;
+		.pa-scriptPix {		display: inline-block; width: 126px; padding: 16px;
+							}
+		.pa-scriptText {	display: inline-block; width: calc(100% - 240px); vertical-align: top;
+							padding: 16px; font-size: 24px; 
+							}
+		.pa-scriptText:focus { outline:none
 							}
 		.pa-player {		position: absolute; width: 50%; left:50%; top: 0px;
 							background-color:#ccc;  height:calc(100% - 150px); float: top
 							}
 		.pa-bin {			position: absolute; width: 100%; left:0; top: calc(100% - 150px);
-							background-color:#fff; height: 149px; overflow-x: scroll;  white-space: nowrap;
-							border-top: 1px solid #ccc;
+							background-color:#eee; 	border-top: 1px solid #ccc;
 							}
+		.pa-pix {			overflow-x: scroll;  white-space: nowrap; margin-left: 160px;
+							border-left: 1px solid #ccc; 
+							}
+		.pa-pic {			padding: 8px; padding-right: 0; padding-bottom:4px; display: inline-block;
+							}
+
+		.ui-tooltip, .arrow:after {	background: #eee; border: 1px solid #999}
+  		.ui-tooltip {    	padding: 10px 20px;  border-radius: 8px; }
+  		.arrow {    		width: 70px; height: 16px; overflow: hidden; position: absolute; left: 50%; margin-left: -35px; bottom: -16px; }
+ 		.arrow.top {    	top: -16px;  bottom: auto; }
+  		.arrow.left {    	left: 20%; }
+		.arrow:after {    	content: "";  position: absolute; left: 20px; top: -20px;  width: 25px; height: 25px; -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); }
+  		.arrow.top:after {  bottom: -20px;  top: auto;  }
 
 </style>
 </head>
 <body>
 	<div id="mainDiv" class="pa-main">
-		<div id="scriptDiv" class="pa-script" contenteditable="true">
-			<div id="titleDiv" class="pa-title" contenteditable="true">Introducing PrimaryAccess</div>		
-			In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. 
-			This landmark decision sparked the modern Civil Rights movement.
-			Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.		</div>	
-		<div id="binDiv" class="pa-bin"></div>
+		<div id="scriptDiv" class="pa-script">
+			<div id="scriptPixDiv" class="pa-scriptPix"></div>	
+			<div style="position:fixed;background-color:#ccc;width:6px;height:calc(100% - 186px);top:20px;left:160px;border-radius:2px;"></div>	
+			<div id="scriptTextDiv" contenteditable="true" class="pa-scriptText">
+				In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. 
+				This landmark decision sparked the modern Civil Rights movement.
+				Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.
+				</div>		
+		</div>	
+		<div id="binDiv" class="pa-bin">
+			<div id="binPixDiv" class="pa-pix"></div>
+		</div>
 		<div id="playerDiv" class="pa-player"></div>
 	</div>
 
@@ -49,30 +70,50 @@
 // MAIN 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-var bin, script, player;
+	var bin=null;
+	var script=null;
+	var player=null;
 
+	$(document).ready(function() {								        // ON PAGE LOADED
+		var url=window.location.search.substring(1);					 	// Get query string
+		$(window).resize(ResizePanes);                                     	// On window resizing
+		bin=new CBin();														// Alloc bin module
+	
+		$(document).tooltip({												// Add tooltip handler
+ 		    content: function(e) { return this.title },						// To support HTML markup
+			 position: {													// Position
+  		    	my: "center+8 bottom-10",  at: "center top",
+				using: function(position) {
+					$(this).css(position);
+					$("<div>").addClass("arrow").appendTo( this );
+					}
+				},
+			close: function (event, ui) {
+            	ui.tooltip.hover(function () {  $(this).stop(true).fadeTo(400,1); },    
+					function() {
+						$(this).fadeOut("400", function () {
+						$(this).remove();
+						})
+  	          		});
+				}
+     		});
+
+		});									
+		
 	function ResizePanes()
 	{
 		if ($(window).width() < 800) {
-			$("#scriptDiv").css({ width:"calc(100% - 40px)", height: "75%" });
+			$("#scriptDiv").css({ width:"100%", height: "75%" });
 			$("#binDiv").css({ top: "75%" });
 			$("#playerDiv").css({ width:"100%", height:"75%", left:0, top: "calc(75% + 150px)" });
 			}
 		else{
-			$("#scriptDiv").css({ width:"calc(50% - 40px)", height:"calc(100% - 150px)" });
+			$("#scriptDiv").css({ width:"50%", height:"calc(100% - 150px)" });
 			$("#playerDiv").css({ width:"50%", height:"calc(100% - 150px)", left:"50%", top:0 });
 			$("#binDiv").css({ top: $("#playerDiv").height() });
 			}
 	}
 
-
-			
-$(document).ready(function() {								           	// ON PAGE LOADED
-	var url=window.location.search.substring(1);						   	// Get query string
-	$(window).resize(ResizePanes);                                        	// On window resizing
-	bin=new CBin();															// Alloc bin
-	});									
-		
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // BIN
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,10 +126,25 @@ $(document).ready(function() {								           	// ON PAGE LOADED
 
 	CBin.prototype.Draw=function() 										//	DRAW BIN
 	{
-		var i,str="";
-		for (i=0;i<this.pics.length;++i) 
-			str+="<img src='"+this.pics[i].src+"' style='height:112px; padding:8px; padding-right:0px'>"
-		$("#binDiv").html(str);
+		var i;
+		var str="<ul id='pixList' style='list-style-type:none;padding:0;margin:0'>"
+		for (i=0;i<this.pics.length;++i) {									// For each pic
+			str+="<li class='pa-pic'";										// List start
+			if (this.pics[i].title || this.pics[i].desc) {					// If something to show
+				str+=" title='";											// Add title tag
+				if (this.pics[i].title)										// If a title
+					str+="<b>"+this.pics[i].title+"</b><br><br>";				// Add it
+				if (this.pics[i].desc)										// If a description
+					str+=this.pics[i].desc;									// Add it
+				if (this.pics[i].link)										// If a link
+					str+=" Click <a href=\""+this.pics[i].link+"\" target=\"_blank\">here</a> for more information.";
+				str+="'";													// Closing quote
+				}
+			str+="><img src='"+this.pics[i].src+"' style='margin:0;height:117px'></li>"; // Add image
+			}
+		$("#binPixDiv").html(str+"</ul>");									// Add to div
+		$("#pixList").sortable();											// Make it sortable
+ 		$("#pixList").disableSelection();									// Imnhibit selection
 	}
 
 	CBin.prototype.LoadPics=function() 									//	LOAD IMAGES
@@ -145,11 +201,10 @@ $(document).ready(function() {								           	// ON PAGE LOADED
 		pics.push({ src:"//stagetools.com/primaryaccess/Test8.jpg", 
 			title:"Civil rights march on Washington",
 			date: "1963",
-			desc: "The August 28, 1963, March on Washington riveted the nation's attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.",
+			desc: "The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.",
 			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"
 			});
-	trace(pics)
-			return pics;
+		return pics;
 	}
 
 
