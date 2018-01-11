@@ -18,10 +18,12 @@
 		.pa-script {		position: absolute; width: 50%; height: 100%; left:0; top:0; 
 							background-color:#fff; height: calc(100% - 150px); overflow-y: scroll;
 							}
-		.pa-scriptPix {		display: inline-block; width: 126px; padding: 16px;
+		.pa-scriptPix {		display: inline-block; width: 126px; padding: 16px; height:100%;
+							}
+		.pa-scriptPic {		width:128px; position: absolute; left: 16px;
 							}
 		.pa-scriptText {	display: inline-block; width: calc(100% - 240px); vertical-align: top;
-							padding: 16px; font-size: 24px; 
+							padding: 16px; font-size: 24px; line-height: 150%;
 							}
 		.pa-scriptText:focus { outline:none
 							}
@@ -79,7 +81,8 @@
 	$(document).ready(function() {								        // ON PAGE LOADED
 		var url=window.location.search.substring(1);					 	// Get query string
 		$(window).resize(ResizePanes);                                     	// On window resizing
-		bin=new CBin();														// Alloc bin module
+		bin=new CBin();														// Alloc CBin module
+		script=new CScript();												// Alloc CScript module
 		});									
 		
 	function ResizePanes()
@@ -94,6 +97,62 @@
 			$("#playerDiv").css({ width:"50%", height:"calc(100% - 150px)", left:"50%", top:0 });
 			$("#binDiv").css({ top: $("#playerDiv").height() });
 			}
+	}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// SCRIPT
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+	function CScript()													// SCRIPT CONSTRUCTOR
+	{
+		this.pics=[];														// Alloc array									
+		this.Draw();														// Show bin
+		var _this=this;														// Save context
+
+		$("#scriptPixDiv").droppable({										// HANDLE DROPS TO BIN
+			accept: ".pa-pic",												// Accept only pics from bin	  
+			drop: function(event,ui) {										// On drop
+				    if ($(this)) {											// If something
+						var id=ui.draggable[0].id.substr(7);				// Get id
+						_this.AddPic(id);									// Add to script
+						Sound("ding");										// Ding
+						_this.Draw();										// Show script
+						}
+				}
+			});
+	}
+
+	CScript.prototype.Draw=function() 									//	DRAW SCRIPT
+	{
+		var i,y=24,str=""
+		var _this=this;														// Save context
+		for (i=0;i<this.pics.length;++i) {									// For each pic
+			str+="<img id='scriptPic-"+i+"' class='pa-scriptPic' ";			// Image 
+			str+="src='"+this.pics[i].src+"' "								// Source
+			str+="style='top:"+y+"px'>";									// Pos
+			y+=100;
+			}
+		$("#scriptPixDiv").html(str);										// Show pix
+	
+		for (i=0;i<this.pics.length;++i) {									// For each pic
+			$("#scriptPic-"+i).draggable( {									// Allow drag
+				stop: function(event, ui) {									// If stopped						
+					if (ui.position.left > 180) {							// Out of area
+						_this.pics.splice(ui.helper[0].id.substr(10),1);	// Delete it
+						Sound("delete");									// Sound
+					}
+				_this.Draw();												// Redraw
+				}	
+			});
+			}
+	}
+
+	CScript.prototype.AddPic=function(num) 								//	ADD PIC TO SCRIPT
+	{
+		var o={};															// Blank obj
+		o.src=bin.pics[num].src;											// Add url
+		o.start=0;															// add start time
+		this.pics.push(o);													// Add to pics array
 	}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -121,6 +180,7 @@
 	
 		var _this=this;														// Save context
 		for (i=0;i<this.pics.length;++i) {									// For each pic
+				
 			$("#binPic-"+i).on("mouseenter", function(e) {					// Add over handler
 				$("#pa-webpage").remove();									// Remove old image, if any
 				var id=e.currentTarget.id.substr(7);						// Get id
