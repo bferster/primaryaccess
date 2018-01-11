@@ -4,7 +4,7 @@
 	<meta charset="UTF-8" />
 	<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
 	<title>PrimaryAccess</title>
-	<meta name="viewport" content="width=1920, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
@@ -36,14 +36,16 @@
 							}
 		.pa-pic {			padding: 8px; padding-right: 0; padding-bottom:4px; display: inline-block;
 							}
+		.pa-meta {			position: absolute;  width: 320px; padding: 16px; border-radius: 8px; font-size: 14px;
+							background-color: #eee; border: 1px solid #999; box-shadow: -4px -4px 12px 2px #aaa;
+							}
+		.pa-arrow-down {  	position: absolute; left: calc(50% - 14px); top: 100%; width: 0; height: 0; 
+							border-left: 10px solid transparent; border-right: 10px solid transparent;  border-top: 10px solid #bbb;
+							}
+		.pa-webpage	{ 		position: absolute; padding: 12px; border-radius: 6px; display: none; padding: 12px; height:auto;
+							border: 1px solid #999; background-color:#eee; font-size: 11px; box-shadow: 4px 4px 12px 2px #aaa;
+							}
 
-		.ui-tooltip, .arrow:after {	background: #eee; border: 1px solid #999}
-  		.ui-tooltip {    	padding: 10px 20px;  border-radius: 8px; }
-  		.arrow {    		width: 70px; height: 16px; overflow: hidden; position: absolute; left: 50%; margin-left: -35px; bottom: -16px; }
- 		.arrow.top {    	top: -16px;  bottom: auto; }
-  		.arrow.left {    	left: 20%; }
-		.arrow:after {    	content: "";  position: absolute; left: 20px; top: -20px;  width: 25px; height: 25px; -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); }
-  		.arrow.top:after {  bottom: -20px;  top: auto;  }
 
 </style>
 </head>
@@ -78,26 +80,6 @@
 		var url=window.location.search.substring(1);					 	// Get query string
 		$(window).resize(ResizePanes);                                     	// On window resizing
 		bin=new CBin();														// Alloc bin module
-	
-		$(document).tooltip({												// Add tooltip handler
- 		    content: function(e) { return this.title },						// To support HTML markup
-			 position: {													// Position
-  		    	my: "center+8 bottom-10",  at: "center top",
-				using: function(position) {
-					$(this).css(position);
-					$("<div>").addClass("arrow").appendTo( this );
-					}
-				},
-			close: function (event, ui) {
-            	ui.tooltip.hover(function () {  $(this).stop(true).fadeTo(400,1); },    
-					function() {
-						$(this).fadeOut("400", function () {
-						$(this).remove();
-						})
-  	          		});
-				}
-     		});
-
 		});									
 		
 	function ResizePanes()
@@ -129,24 +111,69 @@
 		var i;
 		var str="<ul id='pixList' style='list-style-type:none;padding:0;margin:0'>"
 		for (i=0;i<this.pics.length;++i) {									// For each pic
-			str+="<li class='pa-pic'";										// List start
-			if (this.pics[i].title || this.pics[i].desc) {					// If something to show
-				str+=" title='";											// Add title tag
-				if (this.pics[i].title)										// If a title
-					str+="<b>"+this.pics[i].title+"</b><br><br>";				// Add it
-				if (this.pics[i].desc)										// If a description
-					str+=this.pics[i].desc;									// Add it
-				if (this.pics[i].link)										// If a link
-					str+=" Click <a href=\""+this.pics[i].link+"\" target=\"_blank\">here</a> for more information.";
-				str+="'";													// Closing quote
-				}
+			str+="<li id='binPic-"+i+"' class='pa-pic'";					// List start
 			str+="><img src='"+this.pics[i].src+"' style='margin:0;height:117px'></li>"; // Add image
 			}
+
 		$("#binPixDiv").html(str+"</ul>");									// Add to div
 		$("#pixList").sortable();											// Make it sortable
  		$("#pixList").disableSelection();									// Imnhibit selection
+	
+		var _this=this;														// Save context
+		for (i=0;i<this.pics.length;++i) {									// For each pic
+			$("#binPic-"+i).on("mouseenter", function(e) {					// Add over handler
+				var id=e.currentTarget.id.substr(7);						// Get id
+				_this.ShowMetaData(id);										// Show metadata popup
+				});
+			}
 	}
 
+	CBin.prototype.ShowMetaData=function(num) 						//	SHOW METADATA POPUP
+	{
+		$("#metaDiv").remove();												// Kill old one
+		var o=this.pics[num];												// Point at pic
+		if (!o.title && !o.desc) 											// If nothing to show
+			return;															// Quit
+		var _this=this;														// Save context
+		var str="<div id='metaDiv' class='pa-meta'>";						// Add div
+		str+="<img id='zoomBut' src='img/zoomer.png' style='float:right;width:16px'>";	// Zoomer button
+		if (o.title)														// If a title
+			str+="<b>"+o.title+"</b><br><br>";								// Add it
+		if (o.desc)															// If a description
+			str+=o.desc;													// Add it
+		if (o.link)															// If a link
+			str+=" Click <a href=\""+o.link+"\" target=\"_blank\">here</a> for more information.";  // Add it
+		str+="<div id='metaArrow' class='pa-arrow-down'></div>";			// Add div
+		$("body").append(str+"</div>");										// Add popup
+		var x=$("#binPic-"+num).offset().left-160+$("#binPic-"+num).width()/2;	// Center
+		var off=x;															// Save pos
+		x=Math.min(x,$(window).width()-360);								// Cap to window
+		off-=x;																// Offset from end
+		$("#metaArrow").css("left",Math.min(160+off,320)+"px");				// Position arrow
+		var y=$("#binDiv").position().top-$("#metaDiv").height()-34;		// Align by bottom
+		$("#metaDiv").offset({left:x,top:y});								// Position popup
+	
+		$("#scriptDiv").on("mouseenter", function() {						// Add over handler
+			$("#metaDiv").remove();											// Kill old one
+			});
+		$("#playerDiv").on("mouseenter", function() {						// Add over handler
+			$("#metaDiv").remove();											// Kill old one
+			});
+		$("#zoomBut").on("click", function() {								// Zoomer handler
+			var div="#mainDiv";												// Enclosing div	
+			$("#pa-webpage").remove();										// Remove any pre-existing popup
+			var str="<div id='pa-webpage' class='pa-webpage' style='";		// Add div
+			str+="width:"+($(div).width()*.64-28);							// Width
+			str+="px;height:"+$(div).height();								// Height
+			str+="px;top:16px;left:"+($(div).width()*.16)+"px'>";			// Finish div
+			str+="<b>"+o.title+"</b><img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer'><br><br>"	// Add close button
+			$("body").append(str+"</div>");									// Add popup
+			_this.DrawZoomer("pa-webpage",o.src,1,4);						// Add it
+			$("#pa-webpage").fadeIn(1000);									// Fade in
+			$("#pa-close").click(function() { $("#pa-webpage").remove(); });// Remove on click of close but
+			});
+	}
+		
 	CBin.prototype.LoadPics=function() 									//	LOAD IMAGES
 	{
 		var pics=[];
@@ -159,7 +186,7 @@
 		pics.push({ src:"//stagetools.com/primaryaccess/Test2.jpg", 
 			title:"Rosa Parks sitting on bus",
 			date: "1955",
-			desc: "Rosa Parks prompted outcry when she sat in the front of the bus",
+			desc: "Rosa Parks prompted outcry when she sat in the front of the bus.",
 			link: "//teacher.scholastic.com/rosa"
 			});
 		pics.push({ src:"//stagetools.com/primaryaccess/Test10.jpg", 
@@ -206,7 +233,140 @@
 			});
 		return pics;
 	}
+	
+CBin.prototype.DrawZoomer=function(div, url, startZoom, overviewSize) 	//	DRAW ZOOMER
+{
+	var str,i,j,k,o,v,vv;
+ 	this.div="#"+div;														// Current div selector
+ 	var _this=this;															// Context for callbacks
+	var str="<div id='zoomerOuterDiv' style='border:1px solid #666;overflow:hidden;margin-right:3px;margin-bottom:3px;'>";	// Make outer div
+ 	str+="<div id='zoomerDiv' </div></div>";								// Make Zoomer div
+	$(this.div).height("auto");												// Height is auto
+	$(this.div).append(str);												// Add div
+  	this.zoomerScale=startZoom;												// Init scale
+	this.zoomerOverviewSize=overviewSize;									// Set size
+	str="<img id='zoomerImg' src='"+url+"' ";								// Add image
+	str+="height='100%' width='100%'>";										// Size
+	$("#zoomerDiv").append(str);											// Add image to zoomer
+	
+	$("#zoomerImg").on("load", function(e) {								// WHEN IMAGE IS LOADED
+		_this.zoomerWidth=$(this).width();									// Get true width
+		_this.zoomerHeight=$(this).height();								// Get true height
+		_this.zoomerAsp=_this.zoomerHeight/_this.zoomerWidth;				// Get aspect ratio
+		_this.zoomerX=_this.zoomerY=.5; 									// Default center
+		$("#zoomerOuterDiv").width(800)	
+		
+		$("#zoomerOuterDiv").height($("#zoomerOuterDiv").width()*_this.zoomerAsp);
+		_this.DrawZoomerOverview(url);										// Reflect pos in overview
+		_this.PositionZoomer();												// Position it
+		});
 
+	$("#zoomerDiv").draggable({ drag:function(event,ui) {					// Make it draggable
+		var w=$("#zoomerDiv").width();										// Get image width
+		var h=$("#zoomerDiv").height();										// Get image height
+		var s=this.zoomerScale;												// Current scale
+		_this.DrawZoomerOverview(url);										// Reflect pos in overview
+		}});	 
+	}
+
+CBin.prototype.PositionZoomer=function() 								// POSITION ZOOMER
+{
+	var s=this.zoomerScale;													// Point at scale
+	var w=this.zoomerWidth*s;												// Get image width scaled
+	var h=this.zoomerHeight*s;												// Get image height
+	$("#zoomerDiv").width(w);												// Size it
+	$("#zoomerDiv").height(h);												// Size it
+	var l=w*this.zoomerX-(w/s/2);											// Get left
+	var t=h*this.zoomerY-(h/s/2);											// Get top
+	$("#zoomerDiv").css({"left":-l+"px","top":-t+"px"});					// Position zoomer	
+	var l=$(this.div).position().left;										// Left boundary
+	var r=l-0+(w/s-w+14);													// Right boundary
+	var t=$(this.div).position().top;										// Top boundary
+	var b=t-0+(h/s-h+36);													// Bottom boundary
+	$("#zoomerDiv").draggable("option",{ containment: [r,b,l,t] } );		// Reset containment
+}
+
+CBin.prototype.DrawZoomerOverview=function(url) 						// DRAW ZOOMER OVERVIEW
+{
+	var str;
+	var s=this.zoomerScale;													// Scale
+	if (!this.zoomerOverviewSize)
+		return;
+ 	var _this=this;															// Context for callbacks
+	var w=$("#zoomerOuterDiv").width()/this.zoomerOverviewSize;				// Width of frame
+	var h=$("#zoomerOuterDiv").height()/this.zoomerOverviewSize;			// Height of frame
+	var h=w*h/w;															// Height based on aspect
+	var p=$("#zoomerOuterDiv").position();									// Offset in frame
+	
+	if ($("#zoomerOverDiv").length == 0)  {									// If not initted yet 
+		var css = { position:"absolute",									// Frame factors
+					left:w*this.zoomerOverviewSize-w+p.left+"px",
+					width:w+"px",
+					height:h+"px",
+					top:h*this.zoomerOverviewSize-h+p.top+"px",
+					"border-left":"1px solid #ccc",
+					"border-top":"1px solid #eee"
+					};
+		
+		str="<div id='zoomerOverDiv'></div>";								// Frame box div
+		$("#zoomerOuterDiv").append(str);									// Add to div
+		$("#zoomerOverDiv").css(css);										// Set overview frame
+		str="<img src='"+url+"' ";											// Name
+		str+="height='"+h+"' ";												// Height
+		str+="width='"+w+"' >";												// Width
+		$("#zoomerOverDiv").append(str);									// Add image to zoomer
+		if (typeof(DrawZoomerOverviewGrid) == "function")					// If not embedded
+			DrawZoomerOverviewGrid();										// Draw grid in overview if enabled
+			var css = { position:"absolute",								// Box factors
+						border:"1px solid #eee",
+						"z-index":3,
+						"background-color":"rgba(220,220,220,0.4)"
+						};
+		str="<div id='zoomerOverBox'></div>";								// Control box div
+		$("#zoomerOverDiv").append(str);									// Add control box to overview frame
+		$("#zoomerOverBox").css(css);										// Set overview frame
+		$("#zoomerOverBox").draggable({ containment:"parent", 				// Make it draggable 
+							drag:function(event,ui) {						// Handle drag						
+								var w=$("#zoomerOverDiv").width();			// Overview width
+								var pw=$("#zoomerDiv").width();				// Zoomer width
+								var h=$("#zoomerOverDiv").height();			// Overview hgt
+								var ph=$("#zoomerDiv").height();			// Zoomer hgt
+								var s=_this.zoomerScale;					// Current scale
+								var x=Math.max(0,ui.position.left/w*pw);	// Calc left
+								var y=Math.max(0,ui.position.top/h*ph);		// Calc top
+								_this.zoomerX=(x+(pw/s/2))/pw; 				// Get center X%
+								_this.zoomerY=(y+(ph/s/2))/ph;  			// Get center Y%
+								$("#zoomerDiv").css({"left":-x+"px","top":-y+"px"});	// Position zoomer	
+								}
+							 });		
+		$("#zoomerOverBox").resizable({ containment:"parent",				// Resizable
+								aspectRatio:true,
+								minHeight:12,
+								resize:function(event,ui) {					// On resize
+									var w=$("#zoomerOverDiv").width();		// Overview width
+									var pw=$("#zoomerDiv").width();			// zoomer width
+									var h=$("#zoomerOverDiv").height();		// Overview hgt
+									var ph=$("#zoomerDiv").height();		// zoomer hgt
+									_this.zoomerScale=Math.max(w/ui.size.width,1); 	// Get new scale, cap at 100%					
+									var s=_this.zoomerScale;				// Current scale
+									var x=Math.max(0,ui.position.left/w*pw);// Calc left
+									var y=Math.max(0,ui.position.top/h*ph);	// Calc top
+									_this.zoomerX=(x+(pw/s/2))/pw; 			// Get center X%
+									_this.zoomerY=(y+(ph/s/2))/ph;  		// Get center Y%
+									_this.PositionZoomer();					// Redraw
+									}
+								}); 
+			}
+
+		var x=$("#zoomerDiv").css("left").replace(/px/,"");					// Get x pos
+		x=-$("#zoomerOuterDiv").width()/2;									// Center it
+		x=-x/w/this.zoomerOverviewSize*w/this.zoomerScale;					// Scale to fit
+		var y=$("#zoomerDiv").css("top").replace(/px/,"");					// Get y pos
+		y=-$("#zoomerOuterDiv").height()/2;									// Center it
+		y=-y/h/this.zoomerOverviewSize*h/this.zoomerScale;					// Scale to fit
+		$("#zoomerOverBox").width(w/this.zoomerScale).height(h/this.zoomerScale);	// Set size
+		$("#zoomerOverBox").css({"left":x+"px","top":y+"px"});				// Position control box		
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
