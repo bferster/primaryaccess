@@ -33,9 +33,9 @@
 		.pa-bin {			position: absolute; width: 100%; left:0; top: calc(100% - 150px);
 							background-color:#eee; 	border-top: 1px solid #ccc;
 							}
-		.pa-binMenu {		display: inline-block; vertical-align: top; text-align:center; width:150px;
+		.pa-binMenu {		display: inline-block; vertical-align: top; text-align:center; width: 150px;
 							}							
-		.pa-pix {			display: inline-block; overflow-x: scroll;  white-space: nowrap;
+		.pa-pix {			display: inline-block; overflow-x: scroll;  white-space: nowrap; width: calc(100% - 170px); 
 							}
 		.pa-pic {			padding: 8px; padding-right: 0; padding-bottom:4px; display: inline-block;
 							}
@@ -174,7 +174,7 @@
 		var str="<br>"+MakeSelect("scriptOptions",false,["Script options"]);
 		str+="<p><img style='cursor:pointer;width: 20px' src='img/helpicon.gif'></p>"; 
 		str+=MakeSelect("vinOptions",false,["Resource options","Add new resource"]);
-		str+="<p style='color:#666;font-size:11px'> &copy; 2018 University of Virginia</p>";
+		str+="<p style='color:#666;font-size:11px'> &copy; 2018 University<br>of Virginia</p>";
 		$("#binMenuDiv").html(str)
 		$("#binDiv").disableSelection();									// Inhibit selection
 	}
