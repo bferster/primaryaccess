@@ -18,12 +18,12 @@
 		.pa-script {		position: absolute; width: 50%; height: 100%; left:0; top:0; 
 							background-color:#fff; height: calc(100% - 150px); overflow-y: scroll;
 							}
-		.pa-scriptPix {		display: inline-block; width: 126px; padding: 16px; height:100%;
+		.pa-scriptPix {		display: inline-block; width: 126px; padding: 16px; height:80%;
 							}
 		.pa-scriptPic {		width:128px; position: absolute; left: 16px;
 							}
 		.pa-scriptText {	display: inline-block; width: calc(100% - 240px); vertical-align: top;
-							padding: 16px; font-size: 24px; line-height: 150%;
+							padding: 16px; font-size: 24px; line-height: 175%;
 							}
 		.pa-scriptText:focus { outline:none
 							}
@@ -33,8 +33,9 @@
 		.pa-bin {			position: absolute; width: 100%; left:0; top: calc(100% - 150px);
 							background-color:#eee; 	border-top: 1px solid #ccc;
 							}
-		.pa-pix {			overflow-x: scroll;  white-space: nowrap; margin-left: 160px;
-							border-left: 1px solid #ccc; 
+		.pa-binMenu {		display: inline-block; vertical-align: top; text-align:center; width:150px;
+							}							
+		.pa-pix {			display: inline-block; overflow-x: scroll;  white-space: nowrap;
 							}
 		.pa-pic {			padding: 8px; padding-right: 0; padding-bottom:4px; display: inline-block;
 							}
@@ -46,6 +47,12 @@
 							}
 		.pa-webpage	{ 		position: absolute; padding: 12px; border-radius: 6px; display: none; padding: 12px; height:auto;
 							border: 1px solid #999; background-color:#eee; font-size: 11px; box-shadow: 4px 4px 12px 2px #aaa;
+							}
+		.pa-is {			border-radius:10px;padding-left:8px;padding-right:8px;padding-top:1px;
+							border:1px solid #999;font-size:12px;height:20px;width:200px;
+							}
+		.pa-bs {			border-radius:10px;padding-left:8px;padding-right:8px;padding-top:1px;
+							border:1px solid #999;font-size:12px;height:20px;color:#666;cursor:pointer;
 							}
 
 
@@ -63,6 +70,7 @@
 				</div>		
 		</div>	
 		<div id="binDiv" class="pa-bin">
+			<div id="binMenuDiv" class="pa-binMenu"></div>
 			<div id="binPixDiv" class="pa-pix"></div>
 		</div>
 		<div id="playerDiv" class="pa-player"></div>
@@ -163,6 +171,12 @@
 	{
 		this.pics=this.LoadPics();											// Load default pics									
 		this.Draw();														// Show bin
+		var str="<br>"+MakeSelect("scriptOptions",false,["Script options"]);
+		str+="<p><img style='cursor:pointer;width: 20px' src='img/helpicon.gif'></p>"; 
+		str+=MakeSelect("vinOptions",false,["Resource options","Add new resource"]);
+		str+="<p style='color:#666;font-size:11px'> &copy; 2018 University of Virginia</p>";
+		$("#binMenuDiv").html(str)
+		$("#binDiv").disableSelection();									// Inhibit selection
 	}
 
 	CBin.prototype.Draw=function() 										//	DRAW BIN
@@ -362,16 +376,26 @@
 			snd.play();															// Play it
 			}
 		}
-		
-	function ButtonPress(id)												// WIGGLE BUTTON
+	
+	function MakeSelect(id, multi, items, sel, extra, values)				// CREATE HTML SELECT
 	{
-		Sound("click");
-		var p=$("#"+id).offset();
-		$("#"+id).animate( { left: p.left+1+"px", top: p.top+1+"px"}, 50, 
-			function() {$("#"+id).css( { left: p.left+"px", top: p.top+"px"})} 
-			);
+		var	str="<select class='pa-bs' id='"+id+"'";							// Header
+		if (multi)																// Multi select
+			str+="multiple='multiple' size='"+multi+"'";						// Add flag
+		if (extra)																// If extra param
+			str+=extra;															// Add them
+		str+=">";																// End header
+		for (i=0;i<items.length;++i) {											// For each option
+			str+="<option";														// Add tag
+			if (sel == items[i])												// If selected
+				str+=" selected='selected'"										// Add tag
+			if (values && values[i])											// If has a value
+				str+=" value='"+values[i]+"'";									// Add it
+			str+=">"+items[i]+"</option>";										// End option
+			}	
+		return str+"</select>";													// End select				
 	}
-
+	
 </script>
 </body>
 </html>
