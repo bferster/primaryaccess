@@ -135,6 +135,15 @@
 						}
 				}
 			});
+
+		$("#scriptTextDiv")[0].addEventListener('input', function() {		// ON SCRIPT CHANGE
+			_this.ResizeImageArea();										// Equilibrate fields
+			});
+	}
+
+	CScript.prototype.ResizeImageArea=function() 						//	MATCH IMAGE AREA TO TEXT AREA
+	{
+		$("#scriptPixDiv").height($("#scriptTextDiv").height())				// Make the same
 	}
 
 	CScript.prototype.Draw=function() 									//	DRAW SCRIPT
