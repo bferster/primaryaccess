@@ -35,7 +35,7 @@
 							}
 		.pa-binMenu {		display: inline-block; vertical-align: top; text-align:center; width: 150px;
 							}							
-		.pa-pix {			display: inline-block; overflow-x: scroll;  white-space: nowrap; width: calc(100% - 170px); 
+		.pa-pix {			display: inline-block; overflow-x: scroll;  white-space: nowrap; width: calc(100% - 160px); 
 							}
 		.pa-pic {			padding: 8px; padding-right: 0; padding-bottom:4px; display: inline-block;
 							}
@@ -54,8 +54,10 @@
 		.pa-bs {			border-radius:10px;padding-left:8px;padding-right:8px;padding-top:1px;
 							border:1px solid #999;font-size:12px;height:20px;color:#666;cursor:pointer;
 							}
+		.pa-arrow {  		cursor:pointer; vertical-align: 2px; display: none;
+							}
 
-
+ 
 </style>
 </head>
 <body>
@@ -71,7 +73,9 @@
 		</div>	
 		<div id="binDiv" class="pa-bin">
 			<div id="binMenuDiv" class="pa-binMenu"></div>
+			<img id='binLeftBut' src='img/leftarrow.png' class='pa-arrow'>
 			<div id="binPixDiv" class="pa-pix"></div>
+			<img id='binRightBut' src='img/rightarrow.png' class='pa-arrow'>
 		</div>
 		<div id="playerDiv" class="pa-player"></div>
 	</div>
@@ -85,8 +89,10 @@
 	var bin=null;
 	var script=null;
 	var player=null;
+	var isMobile=false;
 
 	$(document).ready(function() {								        // ON PAGE LOADED
+		isMobile=navigator.userAgent.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag
 		var url=window.location.search.substring(1);					 	// Get query string
 		$(window).resize(ResizePanes);                                     	// On window resizing
 		bin=new CBin();														// Alloc CBin module
@@ -121,6 +127,7 @@
 			accept: ".pa-pic",												// Accept only pics from bin	  
 			drop: function(event,ui) {										// On drop
 				    if ($(this)) {											// If something
+						$("#metaDiv").remove();								// Kill popup
 						var id=ui.draggable[0].id.substr(7);				// Get id
 						_this.AddPic(id);									// Add to script
 						Sound("ding");										// Ding
@@ -180,12 +187,32 @@
 		str+="<div style='color:#888;font-size:11px;line-height:100%'> &copy; 2018 University<br>of Virginia</div>";
 		$("#binMenuDiv").html(str)
 		$("#binDiv").disableSelection();									// Inhibit selection
+
+		$("#binLeftBut").on("click", function() {							// Mobile scroll left
+			$("#metaDiv").remove();											// Kill popup
+			$("#binPixDiv").scrollLeft($("#binPixDiv").scrollLeft()-$("#binPixDiv").width()/2);
+			if ($("#binPixDiv").scrollLeft())								// If scrolled
+				$("#binLeftBut").show();									// Show
+			else															// At start
+				$("#binLeftBut").hide();									// Hide
+			if (Math.abs($('#binPixDiv')[0].scrollWidth-$('#binPixDiv').outerWidth()) > 5)	// If it can scroll
+				$("#binRightBut").show();									// Show
+			});
+		$("#binRightBut").on("click", function() {							// Right
+			$("#metaDiv").remove();											// Kill popup
+			$("#binPixDiv").scrollLeft($("#binPixDiv").scrollLeft()+$("#binPixDiv").width()/2);
+			$("#binLeftBut").show();										// Show left
+			if ($('#binPixDiv')[0].scrollWidth-$('#binPixDiv').scrollLeft()-$('#binPixDiv').outerWidth() < 20)	// If no scroll left
+				$("#binRightBut").hide();									// Hide
+			else															// At start
+				$("#binRightBut").show();									// Show
+			});
 	}
 
 	CBin.prototype.Draw=function() 										//	DRAW BIN
 	{
-		var i;
-		var str="<ul id='pixList' style='list-style-type:none;padding:0;margin:0'>"
+		var i,str="";
+		str+="<ul id='pixList' style='list-style-type:none;padding:0;margin:0'>"
 		for (i=0;i<this.pics.length;++i) {									// For each pic
 			str+="<li id='binPic-"+i+"' class='pa-pic'";					// List start
 			str+="><img src='"+this.pics[i].src+"' style='margin:0;height:114px'></li>"; // Add image
@@ -203,6 +230,11 @@
 				_this.ShowMetaData(id);										// Show metadata popup
 				});
 			}
+		if (isMobile) {														// Mobile doesn't show scroll bars
+			if (Math.abs($('#binPixDiv')[0].scrollWidth-$('#binPixDiv').outerWidth()) > 5)	// If it can scroll
+				$("#binRightBut").show();									// Show right
+			$("#binPixDiv").css("width","calc(100% - 200px)");				// Shorten container div
+			}		
 	}
 
 	CBin.prototype.ShowMetaData=function(num) 						//	SHOW METADATA POPUP
