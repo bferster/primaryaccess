@@ -47,18 +47,18 @@
 		.pa-slider {  		position: absolute; width: 0; height: 0; border-bottom: 10px solid #009900;
 							border-left: 10px solid transparent; border-right: 10px solid transparent; cursor: pointer;
 							}
-		.pa-playbut {		cursor: pointer;
+		.pa-playbut {		cursor: pointer; margin: 0px 36px; 
 							}
 							
-		.pa-options {		border-radius: 10px; padding-left: 8px; width: 160px; vertical-align: 24px; margin: 36px; margin-top: 16px;
+		.pa-options {		border-radius: 10px; padding-left: 8px; width: 160px; vertical-align: 24px; margin-top: 16px;
 							border: 1px solid #999; font-size: 16px; height: 24px; color:#666; cursor:pointer;
 							font-weight: bold; background-color: #ccc;
 							}
-		.pa-move {			display: inline-block; color:#666; margin: 16px; margin-top: 0;background-color: #eee; 
+		.pa-move {			display: inline-block; color:#666; margin: 16px; background-color: #eee; 
 							border: 1px solid #666; padding: 12px; padding-right: 7px; border-radius: 8px;
 							}
 		
-		.pa-movePic {		display: inline-block; cursor: pointer; width: 128px; height: 96px; margin: 2px; margin-bottom: -2px;
+		.pa-movePic {		display: inline-block; cursor: pointer; width: 150px; height: 84px; margin: 2px; margin-bottom: -2px;
 							background-color: #666; border: 2px solid #666;
 							}
 							
@@ -91,6 +91,9 @@
 							}
 		.pa-bs {			border-radius:10px; padding-left:8px; padding-right:8px; padding-top:1px;
 							border:1px solid #999; font-size:12px; height:18px; cursor:pointer; width:60px;
+							}
+		.pa-ok {			display:inline-block; border-radius: 20px; height: 18px; width: 22px; cursor:pointer;
+							border:1px solid #666; color:#666; font-size: 10px; padding-top: 4px;
 							}
 		.pa-arrow {  		cursor:pointer; vertical-align: 2px; display: none;
 							}
@@ -128,6 +131,7 @@
 				<option>Set motion</option>
 				<option>Closed caption</option>
 				<option>Full screen</option>
+				<option>Add new picture</option>
 				</select>
 			<img id="playBut" class="pa-playbut" src="img/playbut.gif">
 			<select id="soundOptions" class="pa-options">
@@ -136,17 +140,19 @@
 				<option>Female voice</option>
 				<option>Use MP3 file</option>
 			</select>
-		<br><div id="moveDiv" class="pa-move">
-			<div style="display:inline-block">
-				<span style="color:#009900"><b>Start</b></span><br><div id="startDiv" class="pa-movePic"></div>
-				<br><input type="checkbox" checked>Slow in
+		<br>
+		<img id="paLogo" src="img/palogo.gif">
+		<div id="moveDiv" class="pa-move">
+			<div id="startDiv" style="display:inline-block">
+				<b>Start</b><br><div id="startPic" class="pa-movePic"></div>
+				<br><input id="slowInBut" type="checkbox" checked>Slow in
 			</div>
-			<div style="display:inline-block">
-				<span style="color:#990000"><b>End</b></span><br><div id="startDiv" class="pa-movePic"></div>
-				<br><input type="checkbox" checked>Slow out
+			<div id="moveDoneBut" class="pa-ok" style="vertical-align:56px">OK</div>
+			<div id="endDiv" style="display:inline-block">
+				<b>End</b><br><div id="endPic" class="pa-movePic"></div>
+				<br><input id="slowOutBut" type="checkbox" checked>Slow out
 			</div>
-			<div id="moveDoneBut" class="pa-bs" style='display:inline-block;vertical-align:60px'>Done</div>
-			</div>
+		</div>
 	</div>
 
 <script>
@@ -188,6 +194,11 @@
 		var x=$("#sliderBarDiv").offset().left-8;							// Set left
 		var y=$("#sliderBarDiv").offset().top+10;							// Set top
 		$("#sliderDiv").offset({ left:x,top:y });							// Set slider						
+		if ($("#playerDiv").width() < 600)
+			$("#playBut").css("margin","0px 8px");
+		else
+			$("#playBut").css("margin","0px 36px");
+
 	}
 
 
@@ -197,13 +208,15 @@
 
 	function CPlayer()													// PLAYER CONSTRUCTOR
 	{
-		this.inPlay=this.inMove=false;
+		this.curPic=0;														// Currently active picture
+		this.inPlay=this.inMove=0;											// Default modes
+		this.pos=[[50,50,50,1],[50,50,50,1]];								// Start, end [x,y,w,t]
 		this.Draw();														// Show player
 		var _this=this;														// Save context
 		this.curTime=0;														// Start at 0
 		this.Draw();														// Update player
-		$("#moveDiv").fadeOut(0);										// Hide move controls
-		
+		$("#moveDiv").fadeOut(0);											// Hide move controls
+
 		$("#sliderDiv").draggable( {										// Draggable slider
 			axis: "x",														// X axis
 			containment: "parent"											// Constrain
@@ -219,8 +232,16 @@
 			});
 
 		$("#picOptions").on("change", function() {							// ON PIC OPTIONS CHANGE
-			if ($(this).val() == "Set motion")								// If setting motion
+			if ($(this).val() == "Set motion") {							// If setting motion
+				_this.inMove=1;												// Set moving mode to head
+				$("#startDiv").css("color","#009900");						// Hilite start text
+				$("#startPic").css("border","2px solid #009900");			// And border
+				$("#endDiv").css("color","#666");							// Mute end text
+				$("#endPic").css("border","2px solid #666");				// And border
+				_this.DrawCamera(.5,.5,.5);									// Starting camera position
+				$("#paLogo").fadeOut(0);									// Hide logo
 				$("#moveDiv").fadeIn();										// Show move controls
+				}
 			else															
 				$(this).val("Picture options");
 			});
@@ -230,8 +251,27 @@
 			}); 
 	
 		$("#moveDoneBut").on("click", function() {							// ON MOVE DONE CLICKED
+			_this.inMove=0;													// No longer in moving mode
 			$("#picOptions").val("Picture options");						// Restore menu
-			$("#moveDiv").fadeOut();										// Hide move controls
+			$("#paLogo").fadeIn();											// Show logo
+			$("#moveDiv").fadeOut(0);										// Hide move controls
+			$("#cameraDiv").remove();										// Remove camera
+			});
+
+		$("#startPic").on("click", function() {								// ON MOVE START CLICK
+			$("#startDiv").css("color","#009900");							// Hilite start text
+			$("#startPic").css("border","2px solid #009900");				// And border
+			$("#endDiv").css("color","#666");								// Mute end text
+			$("#endPic").css("border","2px solid #666");					// And border
+			_this.inMove=1;													// Moving start
+			});
+		
+		$("#endPic").on("click", function() {								// ON MOVE END CLICK
+			$("#endDiv").css("color","#009900");							// Hilite end text
+			$("#endPic").css("border","2px solid #009900");					// And border
+			$("#startDiv").css("color","#666");								// Mute end text
+			$("#startPic").css("border","2px solid #666");					// And border
+			_this.inMove=2;													// Moving end
 			});
 
 		$("#playerDiv").disableSelection();									// Inhibit selection
@@ -246,6 +286,38 @@
 		$("#sliderDiv").offset({ left:x,top:y });							// Set slider						
 	}
 
+	CPlayer.prototype.DrawCamera=function(cx, cy, width) 				// DRAW CAMERA
+	{
+		$("#cameraDiv").remove();											// Remove old one
+		var w=$("#screenDiv").width()*width;								// Calc width
+		var h=$("#screenDiv").height()*width;								// Calc height
+		var str="<div id='cameraDiv' style='width:"+w+"px;height:"+h;		// Size
+		str+="px;cursor:url(img/move.cur),auto; ";							// Cursor
+		str+= "px;border:1px solid yellow;position:absolute;border-radius:0px'>"
+		str+="<div style='width:calc(100% - 4px);height:calc(100% - 4px);";
+		str+= "border:2px solid #000;border-radius:0px'>";
+		str+="<div style='width:calc(100% - 2x);height:calc(100% - 2px);";
+		str+= "border:1px solid yellow;border-radius:0px'></div></div>"
+		str+="<div id='camSizerBut' style='width:30px;height:32px;";
+		str+="float:right;margin:-15px;cursor:nw-resize'>"
+		str+="<div style='width:0;height:0;border-bottom: 10px solid yellow;";	
+		str+="border-left: 10px solid transparent'</div></div>";
+		$("#screenDiv").append("</div>"+str);
+		$("#cameraDiv").draggable();
+		$("#camSizerBut").draggable({
+			axis:"x",
+			drag: function(event, ui) {										// On drag
+				var x=event.clientX-$("#cameraDiv").offset().left;			// Position of camera left
+				$("#cameraDiv").width(x);									// Size camera width
+				$("#cameraDiv").height(x*.5625);							// Height is proportional
+				$(this).css("display","none");
+					},
+			stop: function(event, ui) {										// On stop
+				$(this).css({display:"inline-block",left:"0px"});
+//				this.moveWid=$("#screenDiv").width()/$("#cameraDiv").width();
+				}
+			});
+	}
 
 
 
