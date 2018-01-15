@@ -50,8 +50,8 @@
 		.pa-playbut {		cursor: pointer; margin: 0px 36px; 
 							}
 							
-		.pa-options {		border-radius: 10px; padding-left: 8px; width: 160px; vertical-align: 24px; margin-top: 16px;
-							border: 1px solid #999; font-size: 16px; height: 24px; color:#666; cursor:pointer;
+		.pa-options {		border-radius: 10px; padding-left: 8px; width: 150px; vertical-align: 24px; margin-top: 16px;
+							border: 1px solid #999; font-size: 14px; height: 20px; color:#666; cursor:pointer;
 							font-weight: bold; background-color: #ccc;
 							}
 		.pa-move {			display: inline-block; color:#666; margin: 16px; background-color: #eee; 
@@ -61,8 +61,7 @@
 		.pa-movePic {		display: inline-block; cursor: pointer; width: 150px; height: 84px; margin: 2px; margin-bottom: -2px;
 							background-color: #666; border: 2px solid #666;
 							}
-							
-
+	
 		/* BIN --------------------------------------------------------------------------------------------------*/
 
 		.pa-bin {			position: absolute; width: 100%; left:0; top: calc(100% - 150px);
@@ -97,9 +96,8 @@
 							}
 		.pa-arrow {  		cursor:pointer; vertical-align: 2px; display: none;
 							}
+ </style>
 
- 
-</style>
 </head>
 <body>
 	<div id="mainDiv" class="pa-main">
@@ -178,27 +176,26 @@
 		player=new CPlayer();												// Alloc CPlayer module
 		});									
 		
-	function ResizePanes()
+	function ResizePanes()												//  REACT TO SCREEN SIZE
 	{
-		if ($(window).width() < 800) {
-			$("#scriptDiv").css({ width:"100%", height: "75%" });
-			$("#binDiv").css({ top: "75%" });
-			$("#playerDiv").css({ width:"100%", height:"75%", left:0, top: "calc(75% + 150px)" });
+		if ($(window).width() < 800) {										// If narrow
+			$("#scriptDiv").css({ width:"100%", height: "75%" });			// Script is whole width
+			$("#binDiv").css({ top: "75%" });								// Bin below script
+			$("#playerDiv").css({ width:"100%", height:"75%", left:0, top: "calc(75% + 150px)" });	// Player at bottom
 			}
-		else{
-			$("#scriptDiv").css({ width:"50%", height:"calc(100% - 150px)" });
+		else{																// Width screen
+			$("#scriptDiv").css({ width:"50%", height:"calc(100% - 150px)" });	// Split screen
 			$("#playerDiv").css({ width:"50%", height:"calc(100% - 150px)", left:"50%", top:0 });
-			$("#binDiv").css({ top: $("#playerDiv").height() });
+			$("#binDiv").css({ top: $("#playerDiv").height() });			// Bin below both script and player
 			}
 		$("#screenDiv").height($("#screenDiv").width()*.5625);				// 16 x 9 screen		
 		var x=$("#sliderBarDiv").offset().left-8;							// Set left
 		var y=$("#sliderBarDiv").offset().top+10;							// Set top
 		$("#sliderDiv").offset({ left:x,top:y });							// Set slider						
-		if ($("#playerDiv").width() < 600)
-			$("#playBut").css("margin","0px 8px");
-		else
-			$("#playBut").css("margin","0px 36px");
-
+		if ($("#playerDiv").width() < 600)									// If narrow player
+			$("#playBut").css("margin","0px 8px");							// Squeeze options 
+		else																// Wide player
+			$("#playBut").css("margin","0px 36px");							// Normal options 
 	}
 
 
@@ -208,9 +205,8 @@
 
 	function CPlayer()													// PLAYER CONSTRUCTOR
 	{
-		this.curPic=0;														// Currently active picture
+		this.curPic=-1;														// Currently active picture
 		this.inPlay=this.inMove=0;											// Default modes
-		this.pos=[[.5,.5,.5,1],[.5,.5,.75,1]];								// Positions
 		this.Draw();														// Show player
 		var _this=this;														// Save context
 		this.curTime=0;														// Start at 0
@@ -232,7 +228,7 @@
 			});
 
 		$("#picOptions").on("change", function() {							// ON PIC OPTIONS CHANGE
-			if ($(this).val() == "Set motion") 	{							// If setting motion
+			if (($(this).val() == "Set motion") && (_this.curPic != -1)) {	// If setting motion on a valid pic
 				_this.InitMotionEditor(1);									// Draw motion editor
 				$("#paLogo").fadeOut(0);									// Hide logo
 				$("#moveDiv").fadeIn();										// Show move controls
@@ -251,7 +247,6 @@
 			$("#paLogo").fadeIn();											// Show logo
 			$("#moveDiv").fadeOut(0);										// Hide move controls
 			$("#cameraDiv").remove();										// Remove camera
-			script.pics[_this.curPic].pos=_this.pos;						// Copy position
 			script.pics[_this.curPic].pos[0][3]=$("#slowInBut").prop("checked") ? 1 : 0;
 			script.pics[_this.curPic].pos[1][3]=$("#slowOutBut").prop("checked") ? 1 : 0;
 			});
@@ -280,10 +275,8 @@
 	{
 		var onCol="#009900", offCol="#666";									// Colors
 		this.inMove=mode;													// Set moving mode to head
-		if (this.curPic < 0)												// No pic
-			return;															// Quit
-		var num=script.pics[this.curPic];									// Picture to move
-		var str="<img id='screenPic' src='"+bin.pics[num=1].src+"' height='100%'>";
+		var num=script.pics[this.curPic].num;								// Picture to move
+		var str="<img id='screenPic' src='"+bin.pics[num].src+"' height='100%'>";
 		$("#screenDiv").html(str);											// Ad pic to screen
 		this.picWid=$("#screenPic").width();								// Save width
 		this.picHgt=$("#screenDiv").height();								// Save height
@@ -310,12 +303,10 @@
 	{
 		var _this=this;														// Save context
 		$("#cameraDiv").remove();											// Remove old one
-		var cx=this.pos[which][0];											// Get cx
-		var cy=this.pos[which][1];											// Get cy
-		var wid=this.pos[which][2];											// Get width
-		var w=$("#screenPic").width()*wid-1;								// Calc width
-		var h=$("#screenPic").height()*wid-1;								// Calc height
-		var str="<div id='cameraDiv' style='width:"+w+"px;height:"+h;		// Size
+		var o=script.pics[_this.curPic].pos[which];
+		var w=$("#screenPic").width()*o[2]-1;								// Calc width
+		var h=$("#screenPic").height()*o[2]-1;								// Calc height
+		var str="<div id='cameraDiv' style='width:"+w+"px;height:"+w*.5625;	// Size
 		str+="px;cursor:url(img/move.cur),auto; ";							// Cursor
 		str+= "px;border:1px solid yellow;position:absolute;border-radius:0px'>"
 		str+="<div style='width:calc(100% - 4px);height:calc(100% - 4px);";
@@ -327,15 +318,13 @@
 		str+="<div style='width:0;height:0;border-bottom: 10px solid yellow;";	
 		str+="border-left: 10px solid transparent'</div></div>";
 		$("#screenDiv").append("</div>"+str);								// Add camera to screen
-		cx=this.picWid*cx+(cx-w/2)+14;										// Calc camera left
-		cy=this.picHgt*cy+(cy-h/2)+14;										// And top
+		var cx=this.picWid*o[0]+(o[0]-w/2)+14;								// Calc camera left
+		var cy=this.picHgt*o[1]+(o[1]-w*.5625/2)+14;						// And top
 		$("#cameraDiv").css({ left:cx, top:cy });							// Position camera
 		$("#cameraDiv").draggable({											// Make camera draggable
 			stop: function(event, ui) {										// On drag stop
-				var x=(ui.position.left-14+$("#cameraDiv").width()/2)/$("#screenPic").width();	// Calc x
-				var y=(ui.position.top-14+$("#cameraDiv").height()/2)/$("#screenPic").height();	// Calc y
-				_this.pos[which][0]=x;										// Set cx
-				_this.pos[which][1]=y;										// Set cy
+				o[0]=(ui.position.left-14+$("#cameraDiv").width()/2)/$("#screenPic").width();	// Calc x
+				o[1]=(ui.position.top-14+$("#cameraDiv").height()/2)/$("#screenPic").height();	// Calc y
 				}
 			});
 		$("#camSizerBut").draggable({										// Make resizer draggable
@@ -348,7 +337,7 @@
 				},
 			stop: function(event, ui) {										// On drag stop
 				$(this).css({display:"inline-block",left:"0px"});			// Force in box
-				_this.pos[which][2]=$("#cameraDiv").width()/$("#screenPic").width();	// Set width
+				o[2]=$("#cameraDiv").width()/$("#screenPic").width();		// Set width
 				}
 			});
 	}
@@ -370,6 +359,8 @@
 				    if ($(this)) {											// If something
 						$("#metaDiv").remove();								// Kill popup
 						var id=ui.draggable[0].id.substr(7);				// Get id
+						if (!player.inMove)									// If not in motion editor
+							player.curPic=_this.pics.length;				// This is current pic
 						_this.AddPic(id);									// Add to script
 						Sound("ding");										// Ding
 						_this.Draw();										// Show script
@@ -401,14 +392,23 @@
 		$("#scriptPixDiv").html(str);										// Show pix
 	
 		for (i=0;i<this.pics.length;++i) {									// For each pic
+			$("#scriptPic-"+i).on("click", function(e) {					// On click
+				if (!player.inMove)											// If not in motion editor
+					player.curPic=e.target.id.substr(10);					// Set current pic
+				});	
+			
 			$("#scriptPic-"+i).draggable( {									// Allow drag
 				start: function(event, ui) {								// If starting					
 					$("#metaDiv").remove();									// Kill meta popup, if any
+					if (!player.inMove)										// If not in motion editor
+						player.curPic=ui.helper[0].id.substr(10);			// Set curpic
 					},
 				stop: function(event, ui) {									// If stopped						
 					if (ui.position.left > 180) {							// Out of area
 						_this.pics.splice(ui.helper[0].id.substr(10),1);	// Delete it
 						Sound("delete");									// Sound
+						if (!player.inMove)									// If not in motion editor
+							player.curPic=-1;								// No current pic
 					}
 				_this.Draw();												// Redraw
 				}	
@@ -677,25 +677,6 @@
 			snd.play();															// Play it
 			}
 		}
-	
-	function MakeSelect(id, multi, items, sel, extra, values)				// CREATE HTML SELECT
-	{
-		var	str="<select class='pa-bs' id='"+id+"'";							// Header
-		if (multi)																// Multi select
-			str+="multiple='multiple' size='"+multi+"'";						// Add flag
-		if (extra)																// If extra param
-			str+=extra;															// Add them
-		str+=">";																// End header
-		for (i=0;i<items.length;++i) {											// For each option
-			str+="<option";														// Add tag
-			if (sel == items[i])												// If selected
-				str+=" selected='selected'"										// Add tag
-			if (values && values[i])											// If has a value
-				str+=" value='"+values[i]+"'";									// Add it
-			str+=">"+items[i]+"</option>";										// End option
-			}	
-		return str+"</select>";													// End select				
-	}
 	
 </script>
 </body>
