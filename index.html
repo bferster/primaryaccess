@@ -37,7 +37,7 @@
 							background-color:#ddd;  height:calc(100% - 150px); float: top
 							}
 		.pa-screen {		width:calc(100% - 32px); background-color: #666; border-radius: 8px;
-							margin: 16px; margin-bottom: -4px;
+							margin: 16px; margin-bottom: -4px; text-align:left; overflow: hidden;
 							}
 		.pa-time {			color: #666; padding: 16px;
 							}
@@ -210,7 +210,7 @@
 	{
 		this.curPic=0;														// Currently active picture
 		this.inPlay=this.inMove=0;											// Default modes
-		this.pos=[[50,50,50,1],[50,50,50,1]];								// Start, end [x,y,w,t]
+		this.pos=[[.5,.5,.5,1],[.5,.5,.75,1]];								// Positions
 		this.Draw();														// Show player
 		var _this=this;														// Save context
 		this.curTime=0;														// Start at 0
@@ -232,18 +232,13 @@
 			});
 
 		$("#picOptions").on("change", function() {							// ON PIC OPTIONS CHANGE
-			if ($(this).val() == "Set motion") {							// If setting motion
-				_this.inMove=1;												// Set moving mode to head
-				$("#startDiv").css("color","#009900");						// Hilite start text
-				$("#startPic").css("border","2px solid #009900");			// And border
-				$("#endDiv").css("color","#666");							// Mute end text
-				$("#endPic").css("border","2px solid #666");				// And border
-				_this.DrawCamera(.5,.5,.5);									// Starting camera position
+			if ($(this).val() == "Set motion") 	{							// If setting motion
+				_this.InitMotionEditor(1);									// Draw motion editor
 				$("#paLogo").fadeOut(0);									// Hide logo
 				$("#moveDiv").fadeIn();										// Show move controls
 				}
-			else															
-				$(this).val("Picture options");
+			else															// Some other option											
+				$(this).val("Picture options");								// Set menu to default
 			});
 
 		$("#soundOptions").on("change", function() {						// ON SOUND OPTIONS CHANGE
@@ -251,27 +246,22 @@
 			}); 
 	
 		$("#moveDoneBut").on("click", function() {							// ON MOVE DONE CLICKED
-			_this.inMove=0;													// No longer in moving mode
+			_this.inMove=0;													// Moving start
 			$("#picOptions").val("Picture options");						// Restore menu
 			$("#paLogo").fadeIn();											// Show logo
 			$("#moveDiv").fadeOut(0);										// Hide move controls
 			$("#cameraDiv").remove();										// Remove camera
+			script.pics[_this.curPic].pos=_this.pos;						// Copy position
+			script.pics[_this.curPic].pos[0][3]=$("#slowInBut").prop("checked") ? 1 : 0;
+			script.pics[_this.curPic].pos[1][3]=$("#slowOutBut").prop("checked") ? 1 : 0;
 			});
 
 		$("#startPic").on("click", function() {								// ON MOVE START CLICK
-			$("#startDiv").css("color","#009900");							// Hilite start text
-			$("#startPic").css("border","2px solid #009900");				// And border
-			$("#endDiv").css("color","#666");								// Mute end text
-			$("#endPic").css("border","2px solid #666");					// And border
-			_this.inMove=1;													// Moving start
+			_this.InitMotionEditor(1);										// Draw motion editor
 			});
 		
 		$("#endPic").on("click", function() {								// ON MOVE END CLICK
-			$("#endDiv").css("color","#009900");							// Hilite end text
-			$("#endPic").css("border","2px solid #009900");					// And border
-			$("#startDiv").css("color","#666");								// Mute end text
-			$("#startPic").css("border","2px solid #666");					// And border
-			_this.inMove=2;													// Moving end
+			_this.InitMotionEditor(2);										// Draw motion editor
 			});
 
 		$("#playerDiv").disableSelection();									// Inhibit selection
@@ -286,11 +276,45 @@
 		$("#sliderDiv").offset({ left:x,top:y });							// Set slider						
 	}
 
-	CPlayer.prototype.DrawCamera=function(cx, cy, width) 				// DRAW CAMERA
+	CPlayer.prototype.InitMotionEditor=function(mode)					// INIT MOTION EDITOR
 	{
+		var onCol="#009900", offCol="#666";									// Colors
+		this.inMove=mode;													// Set moving mode to head
+		if (this.curPic < 0)												// No pic
+			return;															// Quit
+		var num=script.pics[this.curPic];									// Picture to move
+		var str="<img id='screenPic' src='"+bin.pics[num=1].src+"' height='100%'>";
+		$("#screenDiv").html(str);											// Ad pic to screen
+		this.picWid=$("#screenPic").width();								// Save width
+		this.picHgt=$("#screenDiv").height();								// Save height
+		$("#startDiv").css("color",offCol);									// Mute start text
+		$("#endPic").css("border","2px solid "+offCol);						// And border
+		$("#endDiv").css("color",offCol);									// Mute end text
+		$("#startPic").css("border","2px solid "+offCol);					// And border
+		$("#slowInBut").prop("checked",script.pics[this.curPic].pos[0][3] == 1);	// Set in checkbox
+		$("#slowOutBut").prop("checked",script.pics[this.curPic].pos[1][3] == 1)	// Set out
+
+		if (mode == 1 ) {													// Set start
+			$("#startDiv").css("color",onCol);								// Hilite  text
+			$("#startPic").css("border","2px solid "+onCol);				// And border
+			this.DrawCamera(0);												// Camera position
+			}
+		if (mode == 2 ) {													// Set end
+			$("#endDiv").css("color",onCol);								// Hilite  text
+			$("#endPic").css("border","2px solid "+onCol);					// And border
+			this.DrawCamera(1);												// Camera position
+			}
+	}
+
+	CPlayer.prototype.DrawCamera=function(which) 						// DRAW CAMERA
+	{
+		var _this=this;														// Save context
 		$("#cameraDiv").remove();											// Remove old one
-		var w=$("#screenDiv").width()*width;								// Calc width
-		var h=$("#screenDiv").height()*width;								// Calc height
+		var cx=this.pos[which][0];											// Get cx
+		var cy=this.pos[which][1];											// Get cy
+		var wid=this.pos[which][2];											// Get width
+		var w=$("#screenPic").width()*wid-1;								// Calc width
+		var h=$("#screenPic").height()*wid-1;								// Calc height
 		var str="<div id='cameraDiv' style='width:"+w+"px;height:"+h;		// Size
 		str+="px;cursor:url(img/move.cur),auto; ";							// Cursor
 		str+= "px;border:1px solid yellow;position:absolute;border-radius:0px'>"
@@ -302,23 +326,32 @@
 		str+="float:right;margin:-15px;cursor:nw-resize'>"
 		str+="<div style='width:0;height:0;border-bottom: 10px solid yellow;";	
 		str+="border-left: 10px solid transparent'</div></div>";
-		$("#screenDiv").append("</div>"+str);
-		$("#cameraDiv").draggable();
-		$("#camSizerBut").draggable({
-			axis:"x",
+		$("#screenDiv").append("</div>"+str);								// Add camera to screen
+		cx=this.picWid*cx+(cx-w/2)+14;										// Calc camera left
+		cy=this.picHgt*cy+(cy-h/2)+14;										// And top
+		$("#cameraDiv").css({ left:cx, top:cy });							// Position camera
+		$("#cameraDiv").draggable({											// Make camera draggable
+			stop: function(event, ui) {										// On drag stop
+				var x=(ui.position.left-14+$("#cameraDiv").width()/2)/$("#screenPic").width();	// Calc x
+				var y=(ui.position.top-14+$("#cameraDiv").height()/2)/$("#screenPic").height();	// Calc y
+				_this.pos[which][0]=x;										// Set cx
+				_this.pos[which][1]=y;										// Set cy
+				}
+			});
+		$("#camSizerBut").draggable({										// Make resizer draggable
+			axis:"x",														// Constrict to x axis
 			drag: function(event, ui) {										// On drag
 				var x=event.clientX-$("#cameraDiv").offset().left;			// Position of camera left
 				$("#cameraDiv").width(x);									// Size camera width
 				$("#cameraDiv").height(x*.5625);							// Height is proportional
-				$(this).css("display","none");
-					},
-			stop: function(event, ui) {										// On stop
-				$(this).css({display:"inline-block",left:"0px"});
-//				this.moveWid=$("#screenDiv").width()/$("#cameraDiv").width();
+				$(this).css("display","none");								// Hide resizer while dragging
+				},
+			stop: function(event, ui) {										// On drag stop
+				$(this).css({display:"inline-block",left:"0px"});			// Force in box
+				_this.pos[which][2]=$("#cameraDiv").width()/$("#screenPic").width();	// Set width
 				}
 			});
 	}
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -360,9 +393,10 @@
 		var _this=this;														// Save context
 		for (i=0;i<this.pics.length;++i) {									// For each pic
 			str+="<img id='scriptPic-"+i+"' class='pa-scriptPic' ";			// Image 
-			str+="src='"+this.pics[i].src+"' "								// Source
+			str+="src='"+bin.pics[this.pics[i].num].src+"' "				// Get source from bin
 			str+="style='top:"+y+"px'>";									// Pos
-			y+=100;
+			y+=150;
+			
 			}
 		$("#scriptPixDiv").html(str);										// Show pix
 	
@@ -382,11 +416,11 @@
 			}
 	}
 
-	CScript.prototype.AddPic=function(num) 								//	ADD PIC TO SCRIPT
+	CScript.prototype.AddPic=function(picNum) 								//	ADD PIC TO SCRIPT
 	{
 		var o={};															// Blank obj
-		o.src=bin.pics[num].src;											// Add url
-		o.start=0;															// add start time
+		o.num=picNum;														// Add bin index
+		o.pos=[[.5,.5,.5,1],[.5,.5,.75,1]];									// Positions
 		this.pics.push(o);													// Add to pics array
 	}
 
