@@ -49,17 +49,15 @@
 							}
 		.pa-playbut {		cursor: pointer; margin: 0px 36px; 
 							}
-							
 		.pa-options {		border-radius: 10px; padding-left: 8px; width: 150px; vertical-align: 24px; margin-top: 16px;
 							border: 1px solid #999; font-size: 14px; height: 20px; color:#666; cursor:pointer;
 							font-weight: bold; background-color: #ccc;
 							}
 		.pa-move {			display: inline-block; color:#666; margin: 16px; background-color: #eee; 
-							border: 1px solid #666; padding: 12px; padding-right: 7px; border-radius: 8px;
+							border: 1px solid #666; padding: 4px 7px 8px 4px; border-radius: 8px; white-space: nowrap; 
 							}
-		
 		.pa-movePic {		display: inline-block; cursor: pointer; width: 150px; height: 84px; margin: 2px; margin-bottom: -2px;
-							background-color: #666; border: 2px solid #666; overflow: hidden; text-align: left
+							background-color: #666; border: 3px solid #666; overflow: hidden; text-align: left; 
 							}
 	
 		/* BIN --------------------------------------------------------------------------------------------------*/
@@ -88,11 +86,11 @@
 		.pa-is {			border-radius:10px; padding-left: 8px; padding-right: 8px; padding-top: 1px;
 							border: 1px solid #999; font-size:12px; height:20px; width:200px;
 							}
-		.pa-bs {			border-radius:10px; padding-left:8px; padding-right:8px; padding-top:1px;
-							border:1px solid #999; font-size:12px; height:18px; cursor:pointer; width:60px;
+		.pa-bs {			border-radius:10px; padding-left: 8px; padding-right: 8px; padding-top: 1px;
+							border: 1px solid #999; font-size: 12px; height: 18px; cursor: pointer; width: 60px;
 							}
-		.pa-ok {			display:inline-block; border-radius: 20px; height: 18px; width: 22px; cursor:pointer;
-							border:1px solid #666; color:#666; font-size: 10px; padding-top: 4px;
+		.pa-ok {			display:inline-block; border-radius: 20px; height: 18px; width: 22px; cursor: pointer;
+							border: 1px solid #666; color: #666; font-size: 10px; padding-top: 4px;
 							}
 		.pa-arrow {  		cursor:pointer; vertical-align: 2px; display: none;
 							}
@@ -141,15 +139,15 @@
 		<br>
 		<img id="paLogo" src="img/palogo2.png" style="margin-top:8px">
 		<div id="moveDiv" class="pa-move">
+			<div style="display:inline-block"><br>Slow<br>in<br><input id="slowInBut" type="checkbox" checked><br><br></div>
 			<div id="startDiv" style="display:inline-block">
 				<b>Start</b><br><div id="startPic" class="pa-movePic"></div>
-				<br><input id="slowInBut" type="checkbox" checked>Slow in
 			</div>
-			<div id="moveDoneBut" class="pa-ok" style="vertical-align:56px">OK</div>
+			<div id="moveDoneBut" class="pa-ok" style="vertical-align:40px">OK</div>
 			<div id="endDiv" style="display:inline-block">
 				<b>End</b><br><div id="endPic" class="pa-movePic"></div>
-				<br><input id="slowOutBut" type="checkbox" checked>Slow out
 			</div>
+			<div style="display:inline-block"><br>Slow<br>out<br><input id="slowOutBut" type="checkbox" checked><br><br></div>
 		</div>
 	</div>
 
@@ -261,7 +259,7 @@
 
 		$("#playerDiv").disableSelection();									// Inhibit selection
 
-script.AddPic(7);script.Draw();this.curPic=0;$("#picOptions").val("Set motion").trigger("change");
+//script.AddPic(7);script.Draw();this.curPic=0;$("#picOptions").val("Set motion").trigger("change");
 	}
 
 	CPlayer.prototype.Draw=function() 									// UPDATE PLAYER
@@ -283,9 +281,9 @@ script.AddPic(7);script.Draw();this.curPic=0;$("#picOptions").val("Set motion").
 		this.picWid=$("#screenPic").width();								// Save width
 		this.picHgt=$("#screenDiv").height();								// Save height
 		$("#startDiv").css("color",offCol);									// Mute start text
-		$("#endPic").css("border","2px solid "+offCol);						// And border
+		$("#endPic").css("border","3px solid "+offCol);						// And border
 		$("#endDiv").css("color",offCol);									// Mute end text
-		$("#startPic").css("border","2px solid "+offCol);					// And border
+		$("#startPic").css("border","3px solid "+offCol);					// And border
 		$("#slowInBut").prop("checked",script.pics[this.curPic].pos[0][3] == 1);	// Set in checkbox
 		$("#slowOutBut").prop("checked",script.pics[this.curPic].pos[1][3] == 1)	// Set out
 		$("#startPic").html("<img id='startImg' src='"+bin.pics[num].src+"' style='position:relative'>");	
@@ -295,12 +293,12 @@ script.AddPic(7);script.Draw();this.curPic=0;$("#picOptions").val("Set motion").
 
 		if (mode == 1 ) {													// Set start
 			$("#startDiv").css("color",onCol);								// Hilite  text
-			$("#startPic").css("border","2px solid "+onCol);				// And border
+			$("#startPic").css("border","3px solid "+onCol);				// And border
 			this.DrawCamera(0);												// Camera position
 			}
 		if (mode == 2 ) {													// Set end
 			$("#endDiv").css("color",onCol);								// Hilite  text
-			$("#endPic").css("border","2px solid "+onCol);					// And border
+			$("#endPic").css("border","3px solid "+onCol);					// And border
 			this.DrawCamera(1);												// Camera position
 			}
 		}
@@ -322,7 +320,7 @@ script.AddPic(7);script.Draw();this.curPic=0;$("#picOptions").val("Set motion").
 	{
 		var _this=this;														// Save context
 		$("#cameraDiv").remove();											// Remove old one
-		var o=script.pics[_this.curPic].pos[which];
+		var o=script.pics[_this.curPic].pos[which];							// Point at position based on side
 		var w=$("#screenPic").width()*o[2]-1;								// Calc width
 		var h=$("#screenPic").height()*o[2]-1;								// Calc height
 		var str="<div id='cameraDiv' style='width:"+w+"px;height:"+w*.5625;	// Size
