@@ -47,7 +47,7 @@
 		.pa-slider {  		position: absolute; width: 0; height: 0; border-bottom: 10px solid #009900; margin: 0 8px;
 							border-left: 10px solid transparent; border-right: 10px solid transparent; cursor: pointer;
 							}
-		.pa-playbut {		cursor: pointer; margin: 0px 36px; 
+		.pa-playbut {		cursor: pointer; margin: 0px 36px; width: 50px;
 							}
 		.pa-options {		border-radius: 10px; padding-left: 8px; width: 150px; vertical-align: 24px; 
 							border: 1px solid #999; font-size: 14px; height: 20px; color:#666; cursor:pointer;
@@ -174,7 +174,23 @@
 		bin=new CBin();														// Alloc CBin module
 		script=new CScript();												// Alloc CScript module
 		player=new CPlayer();												// Alloc CPlayer module
+
+		$(window).on("keydown",function(e) {								// HANDLE KEYPRESS
+			if (player.inMove) {											// In motion editor
+				var pix=1/$("#screenDiv").width();							// Nudge amount
+				var o=script.pics[player.curPic].pos[player.inMove-1];		// Point at position based on side
+				if (e.which == 37)			o[0]-=pix;						// Nudge camera left
+				else if (e.which == 39)		o[0]+=pix;						// Right
+				else if (e.which == 38)		o[1]-=pix;						// Up
+				else if (e.which == 40)		o[1]+=pix;						// Down
+				player.DrawCamera(player.inMove-1);							// Move camera
+				player.ScalePic(150,84,"#startImg",script.pics[player.curPic].pos[0]); // Set start
+				player.ScalePic(150,84,"#endImg",script.pics[player.curPic].pos[1]);   // Set end
+				}
+			});
+
 script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
+
 		});									
 		
 	function ResizePanes()												//  REACT TO SCREEN SIZE
@@ -251,6 +267,7 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 			$("#paLogo").fadeIn();											// Show logo
 			$("#moveDiv").fadeOut(0);										// Hide move controls
 			$("#cameraDiv").remove();										// Remove camera
+			$("#picOptions").fadeIn();		$("#soundOptions").fadeIn();	// Show option buttons
 			script.pics[_this.curPic].pos[0][3]=$("#slowInBut").prop("checked") ? 1 : 0;
 			script.pics[_this.curPic].pos[1][3]=$("#slowOutBut").prop("checked") ? 1 : 0;
 			_this.Draw();													// Draw screen
@@ -264,15 +281,15 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 		$("#endPic").on("click", function() {								// ON MOVE END CLICK
 			_this.InitMotionEditor(2);										// Draw motion editor
 			});
-
+		
 		$("#playerDiv").disableSelection();									// Inhibit selection
 		this.Draw();														// Draw screen
 	}
 
 	CPlayer.prototype.Draw=function() 									// UPDATE PLAYER
 	{
-		$("#startTime").text(SecondsToTimecode(this.curTime));				// Start display
-		$("#endTime").text(SecondsToTimecode(script.maxTime));				// End display
+		$("#startTime").text(SecondsToTimecode(Math.round(this.curTime)));	// Start display
+		$("#endTime").text(SecondsToTimecode(Math.round(script.maxTime)));	// End display
 		var x=$("#sliderBarDiv").offset().left-8;							// Set left
 		var y=$("#sliderBarDiv").offset().top+10;							// Set top
 		if (script.maxTime) 												// If some time in script
@@ -280,6 +297,7 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 		$("#sliderDiv").offset({ left:x, top:y });							// Set slider						
 		var num=script.GetPicFromTime(this.curTime);						// Get current pic
 		if (num != -1) {													// If on a picture
+			$("#screenPic").show(0);										// Show pic
 			this.curPic=num;												// Set current pic
 			var o=script.pics[num];											// Point at pic
 			$("#screenPic").prop("src",bin.pics[o.num].src);				// Set src
@@ -296,12 +314,15 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 			this.pos[2]=(o.pos[0][2]+((o.pos[1][2]-o.pos[0][2])*pct));		// Calc w
 			this.ScalePic($("#screenDiv").width(),$("#screenDiv").height(),"#screenPic",this.pos); // Set start
 			}
+		else																// No pic
+			$("#screenPic").hide(0);										// Hide it
 	}
 
 	CPlayer.prototype.InitMotionEditor=function(mode)					// INIT MOTION EDITOR
 	{
 		var onCol="#009900", offCol="#666";									// Colors
 		this.inMove=mode;													// Set moving mode to head
+		$("#picOptions").hide(0);		$("#soundOptions").hide(0);			// Hide option buttons
 		var num=script.pics[this.curPic].num;								// Picture to move
 		$("#screenPic").prop("src",bin.pics[num].src);						// Set src
 		var w=$("#screenPic")[0].naturalWidth/$("#screenPic")[0].naturalHeight*$("#screenDiv").height();
@@ -348,7 +369,7 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 	{
 		var _this=this;														// Save context
 		$("#cameraDiv").remove();											// Remove old one
-		var o=script.pics[_this.curPic].pos[which];							// Point at position based on side
+		var o=script.pics[this.curPic].pos[which];							// Point at position based on side
 		var w=$("#screenPic").width()*o[2]-1;								// Calc width
 		var h=$("#screenPic").height()*o[2]-1;								// Calc height
 		var str="<div id='cameraDiv' style='width:"+w+"px;height:"+w*playAspect;	// Size
@@ -400,15 +421,6 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 
 
 
-
-
-
-
-
-
-
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // SCRIPT
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -419,7 +431,7 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 		this.Draw();														// Show bin
 		var _this=this;														// Save context
 		this.maxTime=18.5;													// Maximum time
-		this.speechRate=.16;												// Seconds per char
+		this.speechRate=.065;												// Seconds per char
 
 		$("#scriptPixDiv").droppable({										// HANDLE DROPS TO BIN
 			accept: ".pa-pic",												// Accept only pics from bin	  
@@ -438,6 +450,8 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 
 		$("#scriptTextDiv")[0].addEventListener('input', function() {		// ON SCRIPT CHANGE
 			_this.ResizeImageArea();										// Equilibrate fields
+			_this.maxTime=$("#scriptTextDiv").text().length*_this.speechRate; // Set max time
+			$("#endTime").text(SecondsToTimecode(Math.round(_this.maxTime)));// End display
 			});
 	}
 
@@ -496,7 +510,7 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 		var o={};															// Blank obj
 		o.num=picNum;														// Add bin index
 		o.start=this.pics.length*50;										// Start time in chars
-		o.dur=50;															// Duration in chars
+		o.dur=80;															// Duration in chars
 		o.end=o.start+o.dur;												// End if chars
 		o.pos=[[.5,.5,.5,1],[.5,.5,.75,1]];									// Positions
 		this.pics.push(o);													// Add to pics array
