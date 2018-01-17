@@ -23,12 +23,12 @@
 							}
 		.pa-scriptPix {		display: inline-block; width: 126px; padding: 16px; height:80%; cursor:url(img/moveud.cur),auto;
 							}
-		.pa-scriptPic {		width:128px; position: absolute; left: 16px;
+		.pa-scriptPic {		width: 128px; height: 85px; position: absolute; left: 16px; overflow: hidden;
 							}
 		.pa-scriptText {	display: inline-block; width: calc(100% - 240px); vertical-align: top;
 							padding: 16px; font-size: 24px; line-height: 175%;
 							}
-		.pa-scriptText:focus{ outline:none;
+		.pa-scriptText:focus{ outline:none;	
 							}
 
 		/* PLAYER --------------------------------------------------------------------------------------------------*/
@@ -39,12 +39,12 @@
 		.pa-screen {		width:calc(100% - 32px); background-color: #666; border-radius: 8px;
 							margin: 16px; margin-bottom: -4px; text-align:left; overflow: hidden;
 							}
-		.pa-time {			color: #666; padding: 16px;
+		.pa-time {			color: #666; padding: 12px 16px; font-size: 11px;
 							}
 		.pa-sliderBar {		width:calc(100% -3 2px); background-color: #aaa; height: 8px; 
 							border-radius: 8px; margin: 16px; margin-top: 4px;
 							}
-		.pa-slider {  		position: absolute; width: 0; height: 0; border-bottom: 10px solid #009900;
+		.pa-slider {  		position: absolute; width: 0; height: 0; border-bottom: 10px solid #009900; margin: 0 8px;
 							border-left: 10px solid transparent; border-right: 10px solid transparent; cursor: pointer;
 							}
 		.pa-playbut {		cursor: pointer; margin: 0px 36px; 
@@ -52,6 +52,8 @@
 		.pa-options {		border-radius: 10px; padding-left: 8px; width: 150px; vertical-align: 24px; 
 							border: 1px solid #999; font-size: 14px; height: 20px; color:#666; cursor:pointer;
 							background-color: #ccc; position: absolute; top: calc(100% - 32px);
+							}
+		.pa-options:focus{ outline:none;
 							}
 		.pa-move {			display: inline-block; color:#666; margin: 16px; background-color: #eee; 
 							border: 1px solid #666; padding: 8px 0px 8px 8px;; border-radius: 8px; white-space: nowrap; 
@@ -149,7 +151,7 @@
 				<b>End</b><br><div id="endPic" class="pa-movePic"></div>
 				<br><input id="slowOutBut" type="checkbox" checked>Slow out
 			</div>
-			<br><div id="moveDoneBut" class="pa-bs" style="margin-left:auto;margin-right:auto">Done</div>
+			<br><div id="moveDoneBut" class="pa-bs" style="margin-left:auto;margin-right:auto;margin-top:-8px">Done</div>
 		</div>
 	</div>
 <script>
@@ -172,6 +174,7 @@
 		bin=new CBin();														// Alloc CBin module
 		script=new CScript();												// Alloc CScript module
 		player=new CPlayer();												// Alloc CPlayer module
+script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 		});									
 		
 	function ResizePanes()												//  REACT TO SCREEN SIZE
@@ -210,7 +213,13 @@
 		$("#endPic").height($("#endPic").width*playAspect);					// Scale to aspect
 		$("#sliderDiv").draggable( {										// Draggable slider
 			axis: "x",														// X axis
-			containment: "parent"											// Constrain
+			containment: "parent",											// Constrain
+			drag: function(event, ui) {										// On drag
+				if (!_this.inMove) {										// Not in motion editor
+					_this.curTime=ui.position.left/($("#sliderBarDiv").width()-4)*script.maxTime; // Set time
+					_this.Draw();											// Show position
+					}
+				}
 			})
 
 		$("#playBut").on("click", function() {								// ON PLAYBUT CLICK
@@ -245,6 +254,7 @@
 			script.pics[_this.curPic].pos[0][3]=$("#slowInBut").prop("checked") ? 1 : 0;
 			script.pics[_this.curPic].pos[1][3]=$("#slowOutBut").prop("checked") ? 1 : 0;
 			_this.Draw();													// Draw screen
+			script.Draw();													// Draw script
 			});
 
 		$("#startPic").on("click", function() {								// ON MOVE START CLICK
@@ -256,21 +266,36 @@
 			});
 
 		$("#playerDiv").disableSelection();									// Inhibit selection
-
-script.AddPic(7);script.Draw();this.curPic=0;
 		this.Draw();														// Draw screen
 	}
 
 	CPlayer.prototype.Draw=function() 									// UPDATE PLAYER
 	{
-		$("#startTime").text("00:00.0");
-		$("#endTime").text("03:18.5");
+		$("#startTime").text(SecondsToTimecode(this.curTime));				// Start display
+		$("#endTime").text(SecondsToTimecode(script.maxTime));				// End display
 		var x=$("#sliderBarDiv").offset().left-8;							// Set left
 		var y=$("#sliderBarDiv").offset().top+10;							// Set top
-		$("#sliderDiv").offset({ left:x,top:y });							// Set slider						
-		var num=script.pics[this.curPic].num;								// Picture to move
-		$("#screenPic").prop("src",bin.pics[num].src);						// Set src
-		this.ScalePic($("#screenDiv").width(),$("#screenDiv").height(),"#screenPic",this.pos); // Set start
+		if (script.maxTime) 												// If some time in script
+			x+=this.curTime/script.maxTime*($("#sliderBarDiv").width()-6);	// Move slider into position
+		$("#sliderDiv").offset({ left:x, top:y });							// Set slider						
+		var num=script.GetPicFromTime(this.curTime);						// Get current pic
+		if (num != -1) {													// If on a picture
+			this.curPic=num;												// Set current pic
+			var o=script.pics[num];											// Point at pic
+			$("#screenPic").prop("src",bin.pics[o.num].src);				// Set src
+			var pct=(this.curTime-(o.start*script.speechRate))/(o.dur*script.speechRate);	// Point in move
+			if (o.pos[0][3] && o.pos[0][3])									// Both
+				pct=1.0-((Math.cos(3.1414*pct)+1)/2.0);						// Full cosine curve
+			else if (o.pos[0][3])											// Slow in
+				pct=1.0-(Math.cos(1.5707*pct));								// 1st quadrant of cosine curve
+			else if (o.pos[1][3])											// Slow out
+				pct=1.0-(Math.cos(1.5707+(1.5707*pct))+1.0);				// 2nd quadrant of cosine curve
+			pct=Math.min(Math.max(pct,0),1);								// Cap 0-1
+			this.pos[0]=(o.pos[0][0]+((o.pos[1][0]-o.pos[0][0])*pct));		// Calc x
+			this.pos[1]=(o.pos[0][1]+((o.pos[1][1]-o.pos[0][1])*pct));		// Calc y
+			this.pos[2]=(o.pos[0][2]+((o.pos[1][2]-o.pos[0][2])*pct));		// Calc w
+			this.ScalePic($("#screenDiv").width(),$("#screenDiv").height(),"#screenPic",this.pos); // Set start
+			}
 	}
 
 	CPlayer.prototype.InitMotionEditor=function(mode)					// INIT MOTION EDITOR
@@ -393,6 +418,8 @@ script.AddPic(7);script.Draw();this.curPic=0;
 		this.pics=[];														// Alloc array									
 		this.Draw();														// Show bin
 		var _this=this;														// Save context
+		this.maxTime=18.5;													// Maximum time
+		this.speechRate=.16;												// Seconds per char
 
 		$("#scriptPixDiv").droppable({										// HANDLE DROPS TO BIN
 			accept: ".pa-pic",												// Accept only pics from bin	  
@@ -424,17 +451,23 @@ script.AddPic(7);script.Draw();this.curPic=0;
 		var i,y=24,str=""
 		var _this=this;														// Save context
 		for (i=0;i<this.pics.length;++i) {									// For each pic
-			str+="<img id='scriptPic-"+i+"' class='pa-scriptPic' ";			// Image 
-			str+="src='"+bin.pics[this.pics[i].num].src+"' "				// Get source from bin
+			str+="<div id='scriptPic-"+i+"' class='pa-scriptPic' ";			// Container div 
 			str+="style='top:"+y+"px'>";									// Pos
-			y+=150;
+			str+="<img id='scriptImg-"+i+"' style='position:relative' ";	// Img
+			str+="src='"+bin.pics[this.pics[i].num].src+"' ";				// Get source from bin
+			str+="></div>"													// End div
+			y+=100;
 			}
 		$("#scriptPixDiv").html(str);										// Show pix
-	
+		
 		for (i=0;i<this.pics.length;++i) {									// For each pic
+			player.ScalePic(128,85,"#scriptImg-"+i,script.pics[i].pos[0]); // Scale to start pos
+			
 			$("#scriptPic-"+i).on("click", function(e) {					// On click
 				if (!player.inMove)	{										// If not in motion editor
-					player.curPic=e.target.id.substr(10);					// Set current pic
+					id=e.target.id.substr(10);								// Get index into script pics
+					player.curPic=id;										// Set current pic
+					player.curTime=_this.pics[id].start*_this.speechRate;	// Set start
 					player.Draw();											// Draw
 					}
 				});	
@@ -458,12 +491,25 @@ script.AddPic(7);script.Draw();this.curPic=0;
 			}
 	}
 
-	CScript.prototype.AddPic=function(picNum) 								//	ADD PIC TO SCRIPT
+	CScript.prototype.AddPic=function(picNum) 							//	ADD PIC TO SCRIPT
 	{
 		var o={};															// Blank obj
 		o.num=picNum;														// Add bin index
+		o.start=this.pics.length*50;										// Start time in chars
+		o.dur=50;															// Duration in chars
+		o.end=o.start+o.dur;												// End if chars
 		o.pos=[[.5,.5,.5,1],[.5,.5,.75,1]];									// Positions
 		this.pics.push(o);													// Add to pics array
+	}
+
+	CScript.prototype.GetPicFromTime=function(now) 						//	GET CURRENT SCRIPT PICTURE
+	{
+		var o=this.pics;													// Point at pics
+		now/=this.speechRate;												// Convert from time to char
+		for (i=0;i<o.length;++i) 											// For each pic
+			if ((now >= o[i].start) && (now < o[i].end))					// In this one
+				return i;
+		return -1;
 	}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -669,6 +715,32 @@ script.AddPic(7);script.Draw();this.curPic=0;
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	function TimecodeToSeconds(timecode) 									// CONVERT TIMECODE TO SECONDS
+		{
+			var h=0,m=0;
+			var v=(""+timecode).split(":");										// Split by colons
+			var s=v[0]															// Add them
+			if (v.length == 2)													// Just minutes, seconds
+				s=v[1],m=v[0];													// Add them
+			else if (v.length == 3)												// Hours, minutes, seconds
+				s=v[2],m=v[1],h=v[0];											// Add them
+			return(Number(h*3600)+Number(m*60)+Number(s));						// Convert
+		}
+		
+		function SecondsToTimecode(secs) 									// CONVERT SECONDS TO TIMECODE
+		{
+			var str="",n;
+			n=Math.floor(secs/3600);											// Get hours
+			if (n) str+=n+":";													// Add to tc
+			n=Math.floor(secs/60);												// Get mins
+			if (n < 10) str+="0";												// Add leading 0
+			str+=n+":";															// Add to tc
+			n=Math.floor(secs%60);												// Get secs
+			if (n < 10) str+="0";												// Add leading 0
+			str+=n;																// Add to tc
+			return str;															// Return timecode			
+		}	
+
 	function DialogBox(title, content, width, callback, callback2) 			// DIALOG BOX
 	{
 		$("#dialogDiv").remove();												
@@ -691,7 +763,6 @@ script.AddPic(7);script.Draw();this.curPic=0;
 		else
 			$("#dialogDiv").dialog("option","position",{ my:"center", at:"center", of:this.parent });
 	}
-
 
 	function trace(msg, p1, p2, p3, p4)										// CONSOLE 
 	{
