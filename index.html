@@ -238,13 +238,28 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 				}
 			})
 
+		$("#playBut").on("dblclick", function() {							// ON PLAYBUT DOUBLE CLICK
+			_this.inPlay=!_this.inPlay;										// Toggle state
+			_this.curTime=0;												// Set curtime to start
+			if (_this.inMove) {												// In motion editor
+				var s=script.pics[_this.curPic].start*script.speechRate;	// Start
+				var se=script.pics[_this.curPic].end*script.speechRate;		// End
+				_this.curTime=s;											// Set curtime
+				_this.Play(s,se);											// Play or pause this clip
+				}
+			else															// Normal plat
+				_this.Play(0,script.maxTime);								// Play or pause
+			});
+
 		$("#playBut").on("click", function() {								// ON PLAYBUT CLICK
 			_this.inPlay=!_this.inPlay;										// Toggle state
-			Sound("click");													// Click
-			if (_this.inPlay)												// If playing
-				$("#playBut").prop("src","img/pausebut.gif");				// Show pause but
-			else															// If paused	
-				$("#playBut").prop("src","img/playbut.gif");				// Show play but
+			if (_this.inMove) {												// In motion editor
+				var s=script.pics[_this.curPic].start*script.speechRate;	// Start
+				var se=script.pics[_this.curPic].end*script.speechRate;		// End
+				_this.Play(s,se);											// Play or pause this clip
+				}
+			else															// Normal plat
+				_this.Play(0,script.maxTime);								// Play or pause
 			});
 
 		$("#picOptions").on("change", function() {							// ON PIC OPTIONS CHANGE
@@ -267,7 +282,7 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 			$("#paLogo").fadeIn();											// Show logo
 			$("#moveDiv").fadeOut(0);										// Hide move controls
 			$("#cameraDiv").remove();										// Remove camera
-			$("#picOptions").fadeIn();		$("#soundOptions").fadeIn();	// Show option buttons
+			$("#picOptions").fadeIn();	$("#soundOptions").fadeIn();		// Show option buttons
 			script.pics[_this.curPic].pos[0][3]=$("#slowInBut").prop("checked") ? 1 : 0;
 			script.pics[_this.curPic].pos[1][3]=$("#slowOutBut").prop("checked") ? 1 : 0;
 			_this.Draw();													// Draw screen
@@ -385,7 +400,7 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 		str+="border-left: 10px solid transparent'</div></div>";
 		$("#screenDiv").append("</div>"+str);								// Add camera to screen
 		var cx=this.picWid*o[0]+(o[0]-w/2)+14;								// Calc camera left
-		var cy=this.picHgt*o[1]+(o[1]-w*playAspect/2)+14;						// And top
+		var cy=this.picHgt*o[1]+(o[1]-w*playAspect/2)+14;					// And top
 		$("#cameraDiv").css({ left:cx, top:cy });							// Position camera
 		$("#cameraDiv").draggable({											// Make camera draggable
 			stop: function(event, ui) {										// On drag stop
@@ -400,21 +415,45 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 			drag: function(event, ui) {										// On drag
 				var x=event.clientX-$("#cameraDiv").offset().left;			// Position of camera left
 				$("#cameraDiv").width(x);									// Size camera width
-				$("#cameraDiv").height(x*playAspect);							// Height is proportional
+				$("#cameraDiv").height(x*playAspect);						// Height is proportional
 				$(this).css("display","none");								// Hide resizer while dragging
 				},
 			stop: function(event, ui) {										// On drag stop
 				$(this).css({display:"inline-block",left:"0px"});			// Force in box
 				o[2]=$("#cameraDiv").width()/$("#screenPic").width();		// Set width
+				o[0]=($("#cameraDiv").position().left-14+$("#cameraDiv").width()/2)/$("#screenPic").width();	// Calc x
+				o[1]=($("#cameraDiv").position().top-14+$("#cameraDiv").height()/2)/$("#screenPic").height();	// Calc y
 				_this.ScalePic(150,84,"#startImg",script.pics[_this.curPic].pos[0]); // Set start
 				_this.ScalePic(150,84,"#endImg",script.pics[_this.curPic].pos[1]);	 // Set end
 				}
 			});
 	}
 
-
-
-
+	CPlayer.prototype.Play=function(start, end)							// START / STOP PLAYING 
+	{
+		var _this=this;														// Save context
+		$("#cameraDiv").remove();											// Remove camera
+		if (this.inPlay) {													// If playing
+			var resetTime=start;											// Time to restart
+			start=this.curTime;												// Set to start
+			this.playerStart=new Date().getTime()							// Set start to now
+			this.playerTimer=setInterval(function() {						// Set timer
+				_this.curTime=start+(new Date().getTime()-_this.playerStart)/1000; // Get elapsed time from start
+				_this.Draw();												// Show screen
+				if (_this.curTime >= end) {									// If past end
+					_this.curTime=resetTime;								// Set to reset point
+					_this.inPlay=false;										// Toggle state
+					_this.Play(0,0);										// Stop player
+					_this.Draw();											// Show screen
+					}
+				},42);														// Set timer ~24ps
+			$("#playBut").prop("src","img/pausebut.gif");					// Show pause but
+			}
+		else{																// If paused	
+			clearInterval(this.playerTimer);								// Kill timer
+			$("#playBut").prop("src","img/playbut.gif");					// Show play but
+			}
+	}
 
 
 
@@ -509,8 +548,8 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 	{
 		var o={};															// Blank obj
 		o.num=picNum;														// Add bin index
-		o.start=this.pics.length*50;										// Start time in chars
 		o.dur=80;															// Duration in chars
+		o.start=this.pics.length*80;										// Start time in chars
 		o.end=o.start+o.dur;												// End if chars
 		o.pos=[[.5,.5,.5,1],[.5,.5,.75,1]];									// Positions
 		this.pics.push(o);													// Add to pics array
