@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html>
 <head>
 	<meta charset="UTF-8" />
@@ -23,7 +23,8 @@
 							}
 		.pa-scriptPix {		display: inline-block; width: 126px; padding: 16px; height:80%; cursor:url(img/moveud.cur),auto;
 							}
-		.pa-scriptPic {		width: 128px; height: 85px; position: absolute; left: 16px; overflow: hidden;
+		.pa-scriptPic {		width: 124px; height: 83px; position: absolute; left: 16px; overflow: hidden;
+							border: 2px solid #999;
 							}
 		.pa-scriptText {	display: inline-block; width: calc(100% - 240px); vertical-align: top;
 							padding: 16px; font-size: 24px; line-height: 175%;
@@ -104,11 +105,7 @@
 		<div id="scriptDiv" class="pa-script">
 			<div id="scriptPixDiv" class="pa-scriptPix"></div>	
 			<div style="position:fixed;background-color:#ccc;width:6px;height:calc(100% - 186px);top:20px;left:160px;border-radius:2px;"></div>	
-			<div id="scriptTextDiv" contenteditable="true" class="pa-scriptText">
-				In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. 
-				This landmark decision sparked the modern Civil Rights movement.
-				Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.
-				</div>		
+			<div id="scriptTextDiv" contenteditable="true" class="pa-scriptText">In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. 			This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.</div>		
 		</div>	
 		<div id="binDiv" class="pa-bin">
 			<div id="binMenuDiv" class="pa-binMenu"></div>
@@ -176,6 +173,8 @@
 		player=new CPlayer();												// Alloc CPlayer module
 
 		$(window).on("keydown",function(e) {								// HANDLE KEYPRESS
+			if (e.which == 32) 												// Spacebar
+				$("#playBut").trigger("click");								// Toggle play
 			if (player.inMove) {											// In motion editor
 				var pix=1/$("#screenDiv").width();							// Nudge amount
 				var o=script.pics[player.curPic].pos[player.inMove-1];		// Point at position based on side
@@ -331,6 +330,7 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 			}
 		else																// No pic
 			$("#screenPic").hide(0);										// Hide it
+		script.Highlight("#0000ff",this.curTime/script.speechRate,2);		// Highlight position in text						
 	}
 
 	CPlayer.prototype.InitMotionEditor=function(mode)					// INIT MOTION EDITOR
@@ -501,15 +501,16 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 
 	CScript.prototype.Draw=function() 									//	DRAW SCRIPT
 	{
-		var i,y=24,str=""
+		var i,y,str=""
 		var _this=this;														// Save context
+		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
 		for (i=0;i<this.pics.length;++i) {									// For each pic
+			y=(this.pics[i].start/cpl*40)+24;								// Calc y pos			
 			str+="<div id='scriptPic-"+i+"' class='pa-scriptPic' ";			// Container div 
 			str+="style='top:"+y+"px'>";									// Pos
 			str+="<img id='scriptImg-"+i+"' style='position:relative' ";	// Img
 			str+="src='"+bin.pics[this.pics[i].num].src+"' ";				// Get source from bin
 			str+="></div>"													// End div
-			y+=100;
 			}
 		$("#scriptPixDiv").html(str);										// Show pix
 		
@@ -522,26 +523,61 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 					player.curPic=id;										// Set current pic
 					player.curTime=_this.pics[id].start*_this.speechRate;	// Set start
 					player.Draw();											// Draw
+					_this.Highlight("#cc0000",_this.pics[id].start,_this.pics[id].end);	// Highlight text					
+					$("[id^=scriptPic-]").css("border","2px solid #999");	// Kill borders
+					$(this).css("border","2px solid #cc0000");				// Add border
 					}
 				});	
 			
 			$("#scriptPic-"+i).draggable( {									// Allow drag
+				axis: "y",
 				start: function(event, ui) {								// If starting					
 					$("#metaDiv").remove();									// Kill meta popup, if any
 					if (!player.inMove)										// If not in motion editor
 						player.curPic=ui.helper[0].id.substr(10);			// Set curpic
+
+					},
+				drag: function(event, ui) {									// If stopped						
+					var id=ui.helper[0].id.substr(10);						// Get id
+					var cpl=$("#scriptTextDiv").width()/15;					// Characters/line
+					var pos=(ui.position.top-16)/40*cpl;					// Calc char pos
+					_this.Highlight("#0000ff",pos,2);						// Highlight position in text						
 					},
 				stop: function(event, ui) {									// If stopped						
-					if (ui.position.left > 180) {							// Out of area
+					if (ui.position.top < -75) {							// Off the top
 						_this.pics.splice(ui.helper[0].id.substr(10),1);	// Delete it
 						Sound("delete");									// Sound
 						if (!player.inMove)									// If not in motion editor
 							player.curPic=-1;								// No current pic
-					}
+						}
+					else{													// Normal move
+						var id=ui.helper[0].id.substr(10);					// Get id
+						var cpl=$("#scriptTextDiv").width()/15;				// Characters/line
+						var pos=(ui.position.top-16)/40*cpl;				// Calc char pos
+						_this.PositionPic(id,pos);							// Position picture
+						_this.Highlight("#cc0000",_this.pics[id].start,_this.pics[id].end);	// Highlight text					
+						}
+	
 				_this.Draw();												// Redraw
 				}	
 			});
-			}
+		}
+	}
+
+	CScript.prototype.PositionPic=function(id, pos) 					//	POSITION PIC IN SCRIPT
+	{
+		if (id == 0) {														// First pic
+			var dest=Math.max(0,this.GetPicFromTime(pos*this.speechRate));	// Get pic we're over
+//				trace(pos,dest)
+			if ((pos > this.pics[dest].start)) {							// If moving down, flop
+				var t=$.parseJSON(JSON.stringify(this.pics[dest]));			// Clone [dest]
+				this.pics[dest]=$.parseJSON(JSON.stringify(this.pics[id]));	// Flop with clone
+				this.pics[id]=t;											// Copy back temp
+				}
+			pos=0;															// Force to top
+		}
+		this.pics[id].start=pos;
+		this.pics[id].end+=this.pics[id].dur;
 	}
 
 	CScript.prototype.AddPic=function(picNum) 							//	ADD PIC TO SCRIPT
@@ -563,6 +599,21 @@ script.AddPic(7);player.curPic=0;script.Draw();player.Draw()
 			if ((now >= o[i].start) && (now < o[i].end))					// In this one
 				return i;
 		return -1;
+	}
+
+	CScript.prototype.Highlight=function(col, pos, width) 				//	HIGHLIGHT SCRIPT TEXT
+	{
+		pos=Math.max(0,pos);												// Cap at 0
+		var txt=$("#scriptTextDiv").text();									// Get raw text
+		var str=txt.substr(0,pos)+"<span style='";							// Add start
+		if (width < 8)														// If narrow
+			str+="border-bottom: 4px solid ";								// Use underline
+		else																// If wide
+			str+="color: ";													// Color
+		str+=col+";'>"														// Finish span
+		str+=txt.substr(pos,width);											// Add highlight portion
+		str+="</span>"+txt.substr(pos+width)								// Close span and add rest of text
+		$("#scriptTextDiv").html(str);										// Set colored text in
 	}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
