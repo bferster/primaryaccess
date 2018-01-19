@@ -177,8 +177,13 @@
 		player=new CPlayer();												// Alloc CPlayer module
 
 		$(window).on("keydown",function(e) {								// HANDLE KEYPRESS
-			if (e.which == 32) 												// Spacebar
+			if (e.which == 32) {											// Spacebar
+				if (document.activeElement.id == "scriptTextDiv")			// If in script
+					return;													// Quit
+				if (document.activeElement.id == "titleDiv")				// If in title
+					return;													// Quit
 				$("#playBut").trigger("click");								// Toggle play
+				}
 			if (player.inMove) {											// In motion editor
 				var pix=1/$("#screenDiv").width();							// Nudge amount
 				var o=script.pics[player.curPic].pos[player.inMove-1];		// Point at position based on side
@@ -192,7 +197,7 @@
 				}
 			});
 
-script.AddPic(7,0);player.curPic=0;script.Draw();player.Draw()
+script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 
 		});									
 		
@@ -212,7 +217,7 @@ script.AddPic(7,0);player.curPic=0;script.Draw();player.Draw()
 		var x=$("#sliderBarDiv").offset().left-8;							// Set left
 		var y=$("#sliderBarDiv").offset().top+10;							// Set top
 		var h=$("#titleDiv").height()+10
-		$("#scriptDivider").css({ "margin-top": h, height: $("#scriptDiv").height()-h-30 });
+		$("#scriptDivider").css({ "margin-top": h, height: $("#scriptDiv").height()-h-36 });
 		$("#sliderDiv").offset({ left:x,top:y });							// Set slider						
 		if (player)	player.Draw();											// Draw screen
 	}
@@ -540,7 +545,7 @@ script.AddPic(7,0);player.curPic=0;script.Draw();player.Draw()
 					player.curPic=id;										// Set current pic
 					player.curTime=_this.pics[id].start*_this.speechRate;	// Set start
 					player.Draw();											// Draw
-					_this.Highlight("#cc0000",_this.pics[id].start,_this.pics[id].end);	// Highlight text					
+					_this.Highlight("#cc0000",_this.pics[id].start,_this.pics[id].dur);	// Highlight text					
 					$("[id^=scriptPic-]").css("border","2px solid #999");	// Kill borders
 					$(this).css("border","2px solid #cc0000");				// Add border
 					}
@@ -552,7 +557,6 @@ script.AddPic(7,0);player.curPic=0;script.Draw();player.Draw()
 					$("#metaDiv").remove();									// Kill meta popup, if any
 					if (!player.inMove)										// If not in motion editor
 						player.curPic=ui.helper[0].id.substr(10);			// Set curpic
-
 					},
 				drag: function(event, ui) {									// If stopped						
 					var id=ui.helper[0].id.substr(10);						// Get id
@@ -569,8 +573,9 @@ script.AddPic(7,0);player.curPic=0;script.Draw();player.Draw()
 					else{													// Normal move
 						var id=ui.helper[0].id.substr(10);					// Get id
 						var pos=_this.GetPosFromPic(ui.position.top);		// Calc char pos
-						_this.PositionPic(id,pos);							// Position picture
-						_this.Highlight("#cc0000",_this.pics[id].start,_this.pics[id].end);	// Highlight text					
+						_this.SetPicStartTime(id,pos);						// Set pic start time
+						_this.ResolvePicTimes();							// Make pic times a solid stream
+						_this.Highlight("#cc0000",_this.pics[id].start,_this.pics[id].dur);	// Highlight text					
 						}
 	
 				_this.Draw();												// Redraw
@@ -579,20 +584,19 @@ script.AddPic(7,0);player.curPic=0;script.Draw();player.Draw()
 		}
 	}
 
-	CScript.prototype.PositionPic=function(id, pos) 					//	POSITION PIC IN SCRIPT
+	CScript.prototype.SetPicStartTime=function(id, pos) 				//	SET PIC START TIME
 	{
 		if (id == 0) {														// First pic
 			var dest=Math.max(0,this.GetPicFromTime(pos*this.speechRate));	// Get pic we're over
-/*				trace(pos,dest)
-			if ((pos > this.pics[dest].start)) {							// If moving down, flop
+			if (dest && (pos > this.pics[dest].start)) {					// If moving down, flop
 				var t=$.parseJSON(JSON.stringify(this.pics[dest]));			// Clone [dest]
 				this.pics[dest]=$.parseJSON(JSON.stringify(this.pics[id]));	// Flop with clone
 				this.pics[id]=t;											// Copy back temp
+				this.pics[dest].start=t.start;								// Set time
 				}
-*/			pos=0;															// Force to top
+			pos=0;															// Force to top
 		}
-		this.pics[id].start=pos;
-		this.pics[id].end+=this.pics[id].dur;
+		this.pics[id].start=Math.round(pos);								// Set start
 	}
 
 	CScript.prototype.GetPosFromPic=function(pos) 
@@ -607,15 +611,29 @@ script.AddPic(7,0);player.curPic=0;script.Draw();player.Draw()
 		var o={};															// Blank obj
 		var n=this.pics.length;												// Number of pics
 		o.num=picNum;														// Add bin index
-		o.start=pos;														// Beginning
-		o.dur=script.maxTime/this.speechRate;								// Fill max
-		if (n) {															// If not 1st one
-			this.pics[n-1].dur=pos-this.pics[n-1].start;					// Set previous clip's dur
-			this.pics[n-1].end=this.pics[n-1].start+this.pics[n-1].dur;		// Set previous clip's end
-			}
-		o.end=o.start+o.dur;												// End if chars
 		o.pos=[[.5,.5,.5,1],[.5,.5,.75,1]];									// Positions
 		this.pics.push(o);													// Add to pics array
+		this.SetPicStartTime(n,pos);										// Set pic start time
+		this.ResolvePicTimes();												// Make times a solid stream
+	}
+
+	CScript.prototype.ResolvePicTimes=function() 						// RESOLVE PIC TIMES
+	{
+		var i,pre;
+		var o=this.pics;													// Point at pics
+		o.sort(function(a,b) { return a.start-b.start });					// Sort by start
+		var last=o.length-1;												// Point at last pic
+		var e=Math.round(this.maxTime/this.speechRate);						// End of script in chars
+		if (last < 0)														// No pics yet
+			return;															// Quit
+		o[0].start=0;														// First pic always starts at 0
+		for (i=1;i<=last;++i) {												// For each pic past 1st
+			pre=i-1;														// Point a previous pic														
+			o[pre].dur=o[i].start-o[pre].start;								// Dur is delta from this to last
+			o[pre].end=o[pre].start+o[pre].dur;								// Calc end
+			}
+		o[last].dur=e-o[last].start;										// Fill last pix to script end	
+		o[last].end=e;														// Set end
 	}
 
 	CScript.prototype.GetPicFromTime=function(now) 						//	GET CURRENT SCRIPT PICTURE
@@ -632,6 +650,8 @@ script.AddPic(7,0);player.curPic=0;script.Draw();player.Draw()
 	{
 		pos=Math.max(0,pos);												// Cap at 0
 		var txt=$("#scriptTextDiv").text();									// Get raw text
+		if (pos+width > txt.length)
+			width=(txt.length-pos+2)
 		var str=txt.substr(0,pos)+"<span style='";							// Add start
 		if (width < 8)														// If narrow
 			str+="border-bottom: 4px solid ";								// Use underline
