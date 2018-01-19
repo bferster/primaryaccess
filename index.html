@@ -139,7 +139,7 @@
 				<option>Sound options</option>
 				<option>Male voice</option>
 				<option>Female voice</option>
-				<option>Use MP3 file</option>
+				<option>MP3 file</option>
 			</select>
 		<br>
 		<img id="paLogo" src="img/palogo2.png" style="margin-top:8px">
@@ -198,7 +198,6 @@
 			});
 
 script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
-
 		});									
 		
 	function ResizePanes()												//  REACT TO SCREEN SIZE
@@ -234,6 +233,8 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		var _this=this;														// Save context
 		this.curTime=0;														// Start at 0
 		this.pos=[.5,.5,1];													// Current position
+		this.audio=null;													// Hilde audio
+
 		$("#moveDiv").fadeOut(0);											// Hide move controls
 		$("#startPic").height($("#startPic").width*playAspect);				// Scale to aspect
 		$("#endPic").height($("#endPic").width*playAspect);					// Scale to aspect
@@ -283,7 +284,14 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			});
 
 		$("#soundOptions").on("change", function() {						// ON SOUND OPTIONS CHANGE
-			$(this).val("Sound options");									// Restore menu
+			if ($(this).val().match(/male/i)) {								// TTS male
+				script.audioFile=$(this).val();								// Set voice
+				_this.InitAudio(script.audioFile);							// Init audio system		
+				}
+			else if ($(this).val().match(/mp3/i)) {
+				script.audioFile="//stagetools.com/primaryaccess/narration.mp3";
+				_this.InitAudio(script.audioFile);							// Init audio system		
+				}
 			}); 
 	
 		$("#moveDoneBut").on("click", function() {							// ON MOVE DONE CLICKED
@@ -445,6 +453,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		var _this=this;														// Save context
 		$("#cameraDiv").remove();											// Remove camera
 		if (this.inPlay) {													// If playing
+			this.StartAudio(this.curTime);									// Start	
 			var resetTime=start;											// Time to restart
 			start=this.curTime;												// Set to start
 			this.playerStart=new Date().getTime()							// Set start to now
@@ -461,15 +470,50 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			$("#playBut").prop("src","img/pausebut.gif");					// Show pause but
 			}
 		else{																// If paused	
+			this.StartAudio(-1);											// Stop playing
 			clearInterval(this.playerTimer);								// Kill timer
 			$("#playBut").prop("src","img/playbut.gif");					// Show play but
+		}
+	}
+
+	CPlayer.prototype.InitAudio=function(audioFile)						// INIT AUDIO
+	{
+		var _this=this;														// Save context
+		if (audioFile && audioFile.match(/\.mp3/i))	{						// If an mp3 file
+			this.audio=new Audio();											// Init audio object
+			this.audio=new Audio(audioFile);								// Load mp3 file
+			}
+		else{																// If text to speech
+			this.audio=new SpeechSynthesisUtterance();						// Init TTS
 			}
 	}
 
-
-
-
-
+	CPlayer.prototype.StartAudio=function(time)							// PLAY/PAUSE AUDIO
+	{
+		if (!this.audio)													// No audio set up yet
+			return;															// Quit
+		if (script.audioFile && script.audioFile.match(/\.mp3/i)) {			// If an mp3 file
+			if (time < 0)													// If stopping
+				this.audio.pause();											// Stop playing
+			else{															// If playing
+				this.audio.currentTime=this.curTime;						// Cue it up
+				this.audio.play();											// Start playing
+				}
+			}
+		else{																// Text to speech
+			if (time < 0)													// If stopping
+				speechSynthesis.pause();									// Pause TTS
+			else{															// Playing
+				speechSynthesis.cancel();									// Kill queue
+				var voices=window.speechSynthesis.getVoices();				// Get list of voices
+				var pos=this.curTime/script.speechRate;						// Start of text
+				this.audio.voice=voices[1];
+				this.audio.text=$("#scriptTextDiv").text().substr(pos);		// Set text							
+				speechSynthesis.speak(this.audio);							// Start
+				speechSynthesis.resume();									// Resume
+				}
+			}
+		}
 
 
 
@@ -490,7 +534,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		this.maxTime=18.5;													// Maximum time
 		this.speechRate=.065;												// Seconds per char
 		var _this=this;														// Save context
-
+		this.audioFile="";													// Audio file
 		$("#scriptPixDiv").droppable({										// HANDLE DROPS TO BIN
 			accept: ".pa-pic",												// Accept only pics from bin	  
 			drop: function(event,ui) {										// On drop
