@@ -160,6 +160,20 @@
 	</div>
 <script>
 
+function playIt(){
+//			<a id="trigger_me" onclick="playIt()">Play</a>
+	var audioFile="male"
+	player.audio=new window.SpeechSynthesisUtterance();					// Init TTS
+	var i=audioFile.match(/female voice/i) ? player.female : player.male;	// Male or female
+	player.audio.voice=player.voices[i];								// Set voice
+	speechSynthesis.cancel();										// Kill TTS queue
+	var pos=player.curTime/player.speechRate;						// Start of text
+	player.audio.text=$("#scriptTextDiv").text().substr(pos);		// Set text							
+	mtrace(player.audio.voice.name);
+	window.speechSynthesis.speak(player.audio);							// Start
+
+
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // MAIN 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +185,9 @@
 	var playAspect=.6667;
 
 	$(document).ready(function() {								        // ON PAGE LOADED
-		isMobile=navigator.platform.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag
+		isMobile=navigator.platform.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag id ios
+		if (!isMobile)														// Check for Android
+			isMobile=navigator.userAgent.match(/android/i) ? true : false; 	// Set mobile flag
 		var url=window.location.search.substring(1);					 	// Get query string
 		$(window).resize(ResizePanes);                                     	// On window resizing
 		ResizePanes();														// Start up sizing
@@ -238,7 +254,8 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		this.curTime=0;														// Start at 0
 		this.pos=[.5,.5,1];													// Current position
 		this.audio=null;													// Audio object
-		this.male=0;	this.female=1;										// TTS voices
+		this.male=0;	this.female=1;	this.audioRate=1;					// TTS voices, rate
+		this.speechRate=.065;												// Seconds per char
 
 		$("#moveDiv").fadeOut(0);											// Hide move controls
 		$("#startPic").height($("#startPic").width*playAspect);				// Scale to aspect
@@ -272,8 +289,8 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		$("#playBut").on("click", function() {								// ON PLAYBUT CLICK
 			_this.inPlay=!_this.inPlay;										// Toggle state
 			if (_this.inMove) {												// In motion editor
-				var s=script.pics[_this.curPic].start*script.speechRate;	// Start
-				var se=script.pics[_this.curPic].end*script.speechRate;		// End
+				var s=script.pics[_this.curPic].start*_this.speechRate;		// Start
+				var se=script.pics[_this.curPic].end*_this.speechRate;		// End
 				_this.Play(s,se);											// Play or pause this clip
 				}
 			else															// Normal plat
@@ -341,7 +358,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			this.curPic=num;												// Set current pic
 			var o=script.pics[num];											// Point at pic
 			$("#screenPic").prop("src",bin.pics[o.num].src);				// Set src
-			var pct=(this.curTime-(o.start*script.speechRate))/(o.dur*script.speechRate);	// Point in move
+			var pct=(this.curTime-(o.start*this.speechRate))/(o.dur*this.speechRate);	// Point in move
 			if (o.pos[0][3] && o.pos[0][3])									// Both
 				pct=1.0-((Math.cos(3.1414*pct)+1)/2.0);						// Full cosine curve
 			else if (o.pos[0][3])											// Slow in
@@ -356,7 +373,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			}
 		else																// No pic
 			$("#screenPic").hide(0);										// Hide it
-		script.Highlight("#0000ff",this.curTime/script.speechRate,2);		// Highlight position in text						
+		script.Highlight("#0000ff",this.curTime/this.speechRate,2);		// Highlight position in text						
 	}
 
 	CPlayer.prototype.InitMotionEditor=function(mode)					// INIT MOTION EDITOR
@@ -495,6 +512,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			this.audio=new SpeechSynthesisUtterance();						// Init TTS
 			var i=audioFile.match(/female voice/i) ? this.female : this.male;	// Male or female
 			this.audio.voice=this.voices[i];								// Set voice
+			this.audio.rate=this.audioRate;									// Set rate
 			}
 	}
 
@@ -507,13 +525,14 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				this.audio.pause();											// Stop playing
 			else{															// If playing
 				this.audio.currentTime=this.curTime;						// Cue it up
+				this.speechRate=this.audio.duration/$("#scriptTextDiv").text().length;	// Set speechRate
 				this.audio.play();											// Start playing
 				}
 			}
 		else{																// Text to speech
 			speechSynthesis.cancel();										// Kill TTS queue
 			if (time >= 0) {												// If playing
-				var pos=this.curTime/script.speechRate;						// Start of text
+				var pos=this.curTime/this.speechRate;						// Start of text
 				this.audio.text=$("#scriptTextDiv").text().substr(pos);		// Set text							
 				speechSynthesis.speak(this.audio);							// Start
 				}
@@ -550,7 +569,6 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		this.Draw();														// Show bin
 		var _this=this;														// Save context
 		this.maxTime=18.5;													// Maximum time
-		this.speechRate=.065;												// Seconds per char
 		var _this=this;														// Save context
 		this.audioFile="";													// Audio file
 		$("#scriptPixDiv").droppable({										// HANDLE DROPS TO BIN
@@ -572,7 +590,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 
 		$("#scriptTextDiv")[0].addEventListener('input', function() {		// ON SCRIPT CHANGE
 			_this.ResizeImageArea();										// Equilibrate fields
-			_this.maxTime=$("#scriptTextDiv").text().length*_this.speechRate; // Set max time
+			_this.maxTime=$("#scriptTextDiv").text().length*player.speechRate; // Set max time
 			$("#endTime").text(SecondsToTimecode(Math.round(_this.maxTime)));// End display
 			});
 	}
@@ -606,7 +624,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				if (!player.inMove)	{										// If not in motion editor
 					id=e.target.id.substr(10);								// Get index into script pics
 					player.curPic=id;										// Set current pic
-					player.curTime=_this.pics[id].start*_this.speechRate;	// Set start
+					player.curTime=_this.pics[id].start*player.speechRate;	// Set start
 					player.Draw();											// Draw
 					_this.Highlight("#cc0000",_this.pics[id].start,_this.pics[id].dur);	// Highlight text					
 					$("[id^=scriptPic-]").css("border","2px solid #999");	// Kill borders
@@ -651,7 +669,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 	CScript.prototype.SetPicStartTime=function(id, pos) 				//	SET PIC START TIME
 	{
 		if (id == 0) {														// First pic
-			var dest=Math.max(0,this.GetPicFromTime(pos*this.speechRate));	// Get pic we're over
+			var dest=Math.max(0,this.GetPicFromTime(pos*player.speechRate));	// Get pic we're over
 			if (dest && (pos > this.pics[dest].start)) {					// If moving down, flop
 				var t=$.parseJSON(JSON.stringify(this.pics[dest]));			// Clone [dest]
 				this.pics[dest]=$.parseJSON(JSON.stringify(this.pics[id]));	// Flop with clone
@@ -687,7 +705,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		var o=this.pics;													// Point at pics
 		o.sort(function(a,b) { return a.start-b.start });					// Sort by start
 		var last=o.length-1;												// Point at last pic
-		var e=Math.round(this.maxTime/this.speechRate);						// End of script in chars
+		var e=Math.round(this.maxTime/player.speechRate);						// End of script in chars
 		if (last < 0)														// No pics yet
 			return;															// Quit
 		o[0].start=0;														// First pic always starts at 0
@@ -704,11 +722,13 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 	CScript.prototype.GetPicFromTime=function(now) 						//	GET CURRENT SCRIPT PICTURE
 	{
 		var o=this.pics;													// Point at pics
-		now/=this.speechRate;												// Convert from time to char
+		if (!player)														// If no player yet
+			return -1;														// Return no pic
+		now/=player.speechRate;												// Convert from time to char
 		for (i=0;i<o.length;++i) 											// For each pic
 			if ((now >= o[i].start) && (now < o[i].end))					// In this one
-				return i;
-		return -1;
+				return i;													// Return index
+		return -1;															// No pic
 	}
 
 	CScript.prototype.Highlight=function(col, pos, width, noScroll) 	//	HIGHLIGHT SCRIPT TEXT
