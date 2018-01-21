@@ -4,7 +4,7 @@
 	<meta charset="UTF-8" />
 	<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
 	<title>PrimaryAccess</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
@@ -13,13 +13,14 @@
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
 							padding: 0; margin:0px
 							}
-		.pa-main {		 	width: 100%;  background-color:#eee; height: vh; overflow-y: auto; opacity: 0
+		.pa-main {		 	width: 100%;   height: calc(100vh - 18px); overflow-y: auto; min-width: 1000px;
+							background-color:#eee; opacity: 0;
 							}
 		
 		/* SCRIPT --------------------------------------------------------------------------------------------------*/
 
-		.pa-script {		position: absolute; width: 50%; height: 100%; left:0; top:0; 
-							background-color:#fff; height: calc(100% - 150px); overflow-y: scroll;
+		.pa-script {		position: absolute; width: 60%; left:0; top:0; height: calc(100% - 150px);
+							background-color:#fff; overflow-y: scroll; min-width: 600px;
 							}
 		.pa-title {			width: calc(100% - 190px); margin-left: 176px; margin-top: 20px; 
 		 					font-weight: bold; font-size: 30px;
@@ -37,10 +38,10 @@
 
 		/* PLAYER --------------------------------------------------------------------------------------------------*/
 
-		.pa-player {		position: absolute; width: 50%; left:50%; top: 0px; text-align: center;
-							background-color:#ddd;  height:calc(100% - 150px); float: top
+		.pa-player {		position: absolute; width: 40%; left: 60%; top: 0px; text-align: center;
+							background-color:#ddd;  height:calc(100% - 150px); float: top; min-width: 400px;
 							}
-		.pa-screen {		width:calc(100% - 32px); background-color: #666; border-radius: 8px;
+		.pa-screen {		width:calc(100% - 32px); background-color: #666; border-radius: 8px; 
 							margin: 16px; margin-bottom: -4px; text-align:left; overflow: hidden;
 							}
 		.pa-time {			color: #666; padding: 12px 16px; font-size: 11px;
@@ -48,7 +49,7 @@
 		.pa-sliderBar {		width:calc(100% -3 2px); background-color: #aaa; height: 8px; 
 							border-radius: 8px; margin: 16px; margin-top: 4px;
 							}
-		.pa-slider {  		position: absolute; width: 0; height: 0; border-bottom: 10px solid #009900; margin: 0 8px;
+		.pa-slider {  		width: 0; height: 0; border-bottom: 10px solid #009900; margin: 0 8px;
 							border-left: 10px solid transparent; border-right: 10px solid transparent; cursor: pointer;
 							}
 		.pa-playbut {		cursor: pointer; margin: 0px 36px; width: 50px;
@@ -93,7 +94,7 @@
 							border: 1px solid #999; font-size: 12px; height: 20px; width: 200px;
 							}
 		.pa-bs {			border-radius: 10px; padding-left: 8px; padding-right: 8px; background-color:#ccc; color: #333;
-							border: 1px solid #666; font-size: 12px; height: 16px; cursor: pointer; width: 50px;
+							border: 1px solid #999; font-size: 12px; height: 16px; cursor: pointer; width: 50px;
 							}
 		.pa-ok {			display:inline-block; border-radius: 20px; height: 18px; width: 22px; cursor: pointer;
 							border: 1px solid #666; color: #666; font-size: 10px; padding-top: 4px;
@@ -122,11 +123,13 @@
 				<img id='screenPic' src="" style="position:relative">
 			</div>
 			<div class="pa-time">
-				<span id="startTime" style="float:left"></span>
+				<span id="startTime" style="float:left;cursor:pointer"></span>
 				<span id="endTime" style="float:right"></span>
 			</div>
 			<div id="sliderBarDiv" class="pa-sliderBar"></div>
-			<div id="sliderDiv" class="pa-slider"></div>
+			<div id="sliderDiv" style="position:absolute;height:30px">
+				<div class="pa-slider"></div>
+			</div>
 			<select id="picOptions" class="pa-options" style="left:16px">
 				<option>Picture options</option>
 				<option>Set motion</option>
@@ -134,25 +137,25 @@
 				<option>Full screen</option>
 				<option>Add new picture</option>
 				</select>
-			<img id="playBut" class="pa-playbut" src="img/playbut.gif">
-			<select id="soundOptions" class="pa-options"  style="left:calc(100% - 166px">
+			<img id="playBut" class="pa-playbut" src="img/playbut.gif"><br>
+			<img id="paLogo" src="img/palogo2.png" style="margin-top:8px">
+			<select id="soundOptions" class="pa-options" style="left:calc(100% - 166px)">
 				<option>Sound options</option>
 				<option>Male voice</option>
 				<option>Female voice</option>
 				<option>MP3 file</option>
 			</select>
-		<br>
-		<img id="paLogo" src="img/palogo2.png" style="margin-top:8px">
-		<div id="moveDiv" class="pa-move">
-			<div id="startDiv" style="display:inline-block">
-				<b>Start</b><br><div id="startPic" class="pa-movePic"></div>
-				<br><input id="slowInBut" type="checkbox" checked>Slow in
+			<div id="moveDiv" class="pa-move">
+				<div id="startDiv" style="display:inline-block">
+					<b>Start</b><br><div id="startPic" class="pa-movePic"></div>
+					<br><input id="slowInBut" type="checkbox" checked>Slow in
+				</div>
+				<div id="endDiv" style="display:inline-block">
+					<b>End</b><br><div id="endPic" class="pa-movePic"></div>
+					<br><input id="slowOutBut" type="checkbox" checked>Slow out
+				</div>
+				<br><div id="moveDoneBut" class="pa-bs" style="margin-left:auto;margin-right:auto">Done</div>
 			</div>
-			<div id="endDiv" style="display:inline-block">
-				<b>End</b><br><div id="endPic" class="pa-movePic"></div>
-				<br><input id="slowOutBut" type="checkbox" checked>Slow out
-			</div>
-			<br><div id="moveDoneBut" class="pa-bs" style="margin-left:auto;margin-right:auto;margin-top:-8px">Done</div>
 		</div>
 	</div>
 <script>
@@ -168,14 +171,15 @@
 	var playAspect=.6667;
 
 	$(document).ready(function() {								        // ON PAGE LOADED
-		isMobile=navigator.userAgent.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag
+		isMobile=navigator.platform.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag
 		var url=window.location.search.substring(1);					 	// Get query string
 		$(window).resize(ResizePanes);                                     	// On window resizing
 		ResizePanes();														// Start up sizing
 		bin=new CBin();														// Alloc CBin module
 		script=new CScript();												// Alloc CScript module
 		player=new CPlayer();												// Alloc CPlayer module
-		$("#mainDiv").animate({ opacity:1}, 500 );							// Show interface
+		ResizePanes();														// Start up sizing
+		$("#mainDiv").animate({ opacity:1}, 2000 );							// Fade-in interface
 
 		$(window).on("keydown",function(e) {								// HANDLE KEYPRESS
 			if (e.which == 32) {											// Spacebar
@@ -203,23 +207,22 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		
 	function ResizePanes()												//  REACT TO SCREEN SIZE
 	{
-		if ($(window).width() < 800) {										// If narrow
-			$("#scriptDiv").css({ width:"100%", height: "75%" });			// Script is whole width
-			$("#binDiv").css({ top: "75%" });								// Bin below script
-			$("#playerDiv").css({ width:"100%", height:"auto", left:0, top: "calc(75% + 150px)" });	// Player at bottom
-			}
-		else{																// Width screen
-			$("#scriptDiv").css({ width:"60%", height:"calc(100% - 150px)" });	// Split screen
-			$("#playerDiv").css({ width:"40%", height:"calc(100% - 150px)", left:"60%", top:0 });
-			$("#binDiv").css({ top: $("#playerDiv").height() });			// Bin below both script and player
-			}
 		$("#screenDiv").height($("#screenDiv").width()*playAspect);			// 16 x 9 screen		
+		$("#playerDiv").css({ left: $("#scriptDiv").width()+16+"px" });		/// Position player
 		var x=$("#sliderBarDiv").offset().left-8;							// Set left
 		var y=$("#sliderBarDiv").offset().top+10;							// Set top
 		var h=$("#titleDiv").height()+10
 		$("#scriptDivider").css({ "margin-top": h, height: $("#scriptTextDiv").height()+16+"px" });
 		$("#sliderDiv").offset({ left:x,top:y });							// Set slider						
 		if (player)	player.Draw();											// Draw screen
+		if (isMobile) {														// Mobile doesn't show scroll bars, so add a button
+			if (Math.abs($("#binPixDiv")[0].scrollWidth-$("#binPixDiv").outerWidth()) > 5) 	// If it can scroll
+				$("#binRightBut").show();									// Show right
+			else{
+				$("#binRightBut").hide();									// Hide right
+				$("#binPixDiv").css("width","calc(100% - 200px)");			// Shorten container div
+				}
+			}		
 	}
 
 
@@ -261,17 +264,9 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			$("#metaDiv").remove();											// Kill metadata popup
 			});
 
-		$("#playBut").on("dblclick", function() {							// ON PLAYBUT DOUBLE CLICK
-			_this.inPlay=!_this.inPlay;										// Toggle state
-			_this.curTime=0;												// Set curtime to start
-			if (_this.inMove) {												// In motion editor
-				var s=script.pics[_this.curPic].start*script.speechRate;	// Start
-				var se=script.pics[_this.curPic].end*script.speechRate;		// End
-				_this.curTime=s;											// Set curtime
-				_this.Play(s,se);											// Play or pause this clip
-				}
-			else															// Normal plat
-				_this.Play(0,script.maxTime);								// Play or pause
+		$("#startTime").on("click", function() {							// ON START TIME CLICK
+			_this.curTime=0;												// Set curtime to 0
+			_this.Draw();													// Show position
 			});
 
 		$("#playBut").on("click", function() {								// ON PLAYBUT CLICK
@@ -620,17 +615,17 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				});	
 			
 			$("#scriptPic-"+i).draggable( {									// Allow drag
-				axis: "y",
+				axis: "y",													// Constrain to y axis
 				start: function(event, ui) {								// If starting					
 					$("#metaDiv").remove();									// Kill meta popup, if any
 					if (!player.inMove)										// If not in motion editor
 						player.curPic=ui.helper[0].id.substr(10);			// Set curpic
 					},
 				drag: function(event, ui) {									// If stopped						
-					$("#metaDiv").remove();										// Kill metadata popup
+					$("#metaDiv").remove();									// Kill metadata popup
 					var id=ui.helper[0].id.substr(10);						// Get id
 					var pos=_this.GetPosFromPic(ui.position.top);			// Calc char pos
-					_this.Highlight("#0000ff",pos,2);						// Highlight position in text						
+					_this.Highlight("#0000ff",pos,2,true);					// Highlight position in text & inhibit scrolling						
 					},
 				stop: function(event, ui) {									// If stopped						
 					if (ui.position.top < -75) {							// Off the top
@@ -675,14 +670,14 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		return (pos-offy)/40*cpl;											// Return char pos
 	}
 
-	CScript.prototype.AddPic=function(picNum, pos) 						//	ADD PIC TO SCRIPT
+	CScript.prototype.AddPic=function(picNum, when) 					//	ADD PIC TO SCRIPT
 	{
 		var o={};															// Blank obj
 		var n=this.pics.length;												// Number of pics
 		o.num=picNum;														// Add bin index
 		o.pos=[[.5,.4,.75,1],[.5,.5,.5,1]];									// Positions
 		this.pics.push(o);													// Add to pics array
-		this.SetPicStartTime(n,pos);										// Set pic start time
+		this.SetPicStartTime(n,when);										// Set pic start time
 		this.ResolvePicTimes();												// Make times a solid stream
 	}
 
@@ -703,6 +698,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			}
 		o[last].dur=Math.max(0,e-o[last].start);							// Fill last pix to script end	
 		o[last].end=e;														// Set end
+		this.Draw();														// Redraw	
 	}
 
 	CScript.prototype.GetPicFromTime=function(now) 						//	GET CURRENT SCRIPT PICTURE
@@ -715,7 +711,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		return -1;
 	}
 
-	CScript.prototype.Highlight=function(col, pos, width) 				//	HIGHLIGHT SCRIPT TEXT
+	CScript.prototype.Highlight=function(col, pos, width, noScroll) 	//	HIGHLIGHT SCRIPT TEXT
 	{
 		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
 		pos=Math.max(0,pos);												// Cap at 0
@@ -731,6 +727,8 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		str+=txt.substr(pos,width);											// Add highlight portion
 		str+="</span>"+txt.substr(pos+width)								// Close span and add rest of text
 		$("#scriptTextDiv").html(str);										// Set colored text in
+		if (noScroll)														// If dragging pic
+			return;															// Don;t scrooll
 		var y=pos/cpl*40;													// Scroll point
 		$("#scriptDiv").scrollTop(y-$("#scriptDiv").height()/2);			// Scroll text
 	}
@@ -810,11 +808,6 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				_this.ShowMetaData(id);										// Show metadata popup
 				});
 			}
-		if (isMobile) {														// Mobile doesn't show scroll bars
-			if (Math.abs($('#binPixDiv')[0].scrollWidth-$('#binPixDiv').outerWidth()) > 5)	// If it can scroll
-				$("#binRightBut").show();									// Show right
-			$("#binPixDiv").css("width","calc(100% - 200px)");				// Shorten container div
-			}		
 	}
 
 	CBin.prototype.ShowMetaData=function(num) 						//	SHOW METADATA POPUP
@@ -839,7 +832,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		x=Math.min(x,$(window).width()-360);								// Cap to window
 		off-=x;																// Offset from end
 		$("#metaArrow").css("left",Math.min(160+off,320)+"px");				// Position arrow
-		var y=$("#binDiv").position().top-$("#metaDiv").height()-34;		// Align by bottom
+		var y=$("#binDiv").offset().top-$("#metaDiv").height()-16;			//	 Align by bottom
 		$("#metaDiv").offset({left:x,top:y});								// Position popup
 	
 		$("#scriptDiv").on("mouseenter", function() {						// Add over handler
@@ -856,22 +849,27 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			});
 
 		$("#zoomBut").on("click", function() {								// Show image popup
-			_this.ShowPic(o.src,o.title);									// Show popup		
+			_this.ShowPic(num);												// Show popup		
 		});
 	}
 		
-	CBin.prototype.ShowPic=function(url, title, desc) 					//	SHOW PIC
+	CBin.prototype.ShowPic=function(num) 								//	SHOW PIC
 	{
-		var div="#mainDiv";													// Enclosing div	
 		$("#pa-webpage").remove();											// Remove old image, if any
 		$("#metaDiv").remove();												// Kill metadata
+		var o=this.pics[num];												// Point at pic
 		var str="<div id='pa-webpage' class='pa-webpage' style='";			// Add div
-		str+="width:"+($(div).width()/2-40);								// Width
+		str+="width:"+($("#scriptDiv").width()-24);							// Width
 		str+="px;height:"+($("#scriptDiv").height()-44);					// Height
 		str+="px;top:8px;left:8px'>";										// Finish div
-		str+="<b>"+title+"</b><img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer'><br><br>"	// Add close button
-		str+="<div style='overflow-y:auto;height:calc(100% - 30px)'><img src='"+url+"' width='100%'></div>";	
-		$("body").append(str+"</div>");										// Add popup
+		str+="<b>"+o.title+"</b><img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer'><br><br>"	// Add close button
+		str+="<div style='overflow-y:auto;height:calc(100% - 30px)'><img src='"+o.src+"' width='100%'>";	
+		if (o.desc)	{														// If a description
+			str+="<br><br>"+o.desc;												// Add it
+			if (o.link)														// If a link
+				str+=" Click <a href=\""+o.link+"\" target=\"_blank\">here</a> for more information.";  // Add it
+			}
+		$("body").append("</div>"+str+"</div>");							// Add popup
 		$("#pa-webpage").fadeIn(1000);										// Fade in
 		$("#pa-close").click(function() { $("#pa-webpage").remove(); });	// Remove on click of close but
 	}
