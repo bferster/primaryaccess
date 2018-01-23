@@ -13,13 +13,13 @@
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
 							padding: 0; margin:0px; 
 							}
-		.pa-main {		 	width: 100vw; min-width: 1000px; overflow: auto;  background-color:#eee; opacity: 0; 
+		.pa-main {		 	width: 100vw; min-width: 900px; overflow: auto;  background-color:#eee; opacity: 0; 
 							}
 		
 		/* SCRIPT --------------------------------------------------------------------------------------------------*/
 
 		.pa-script {		position: absolute; left:0; top:0; width:60%; height: calc(100% - 150px);
-							background-color:#fff; overflow-y: scroll; min-width: 600px;
+							background-color:#fff; overflow-y: scroll; min-width: 540px;
 							}
 		.pa-title {			width: calc(100% - 200px); margin-left: 176px; margin-top: 20px; 
 		 					font-weight: bold; font-size: 30px;
@@ -38,7 +38,7 @@
 		/* PLAYER --------------------------------------------------------------------------------------------------*/
 
 		.pa-player {		position: absolute; top: 0px; text-align: center; width: 40%;
-							background-color:#ddd;  height:calc(100% - 150px); float: top; min-width: 400px;
+							background-color:#ddd;  height:calc(100% - 150px); float: top; min-width: 360px;
 							}
 		.pa-screen {		width:calc(100% - 32px); background-color: #666; border-radius: 8px; 
 							margin: 16px; margin-bottom: -4px; text-align:left; overflow: hidden;
@@ -109,7 +109,7 @@
 			<div id="titleDiv" contenteditable="true" class="pa-title">Civil Rights</div>
 			<div id="scriptPixDiv" class="pa-scriptPix"></div>	
 			<div id="scriptDivider" style="position:absolute;background-color:#ccc;width:6px;height:calc(100% - 200px);top:20px;left:160px;border-radius:4px;"></div>	
-			<div id="scriptTextDiv" contenteditable="true" class="pa-scriptText">In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. 			This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.</div>		
+			<div id="scriptTextDiv" contenteditable="true" class="pa-scriptText"></div>		
 		</div>	
 		<div id="binDiv" class="pa-bin">
 			<div id="binMenuDiv" class="pa-binMenu"></div>
@@ -211,7 +211,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		var th=$("#titleDiv").height()+10;									// Get height of title bar
 		$("#playerDiv").css({ width:pw+"px", left: sw+"px" });				// Position player
 		$("#screenDiv").height($("#screenDiv").width()*playAspect);			// 16 x 9 screen		
-		$("#playerDiv").css("min-height",$("#screenDiv").height()+300+"px");// Minimum height to preserve work area
+		$("#playerDiv").css("min-height",$("#screenDiv").height()+220+"px");// Minimum height to preserve work area
 		$("#scriptDiv").css({ width:sw+"px", height:$("#playerDiv").height()+"px" });	// Size script
 		var x=$("#sliderBarDiv").offset().left-8;						// Set left
 		var y=$("#sliderBarDiv").offset().top+10;							// Set top
@@ -225,7 +225,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				$("#binPixDiv").css("width","calc(100% - 200px)");			// Shorten container div
 				}
 			}		
-		$("#binDiv").css({ top:$("#playerDiv").height()+"px" });			// Position bin below player
+		$("#binDiv").css({ top:$("#playerDiv").height()+"px",width:pw+sw+"px" });	// Position bin below player
 		if (player)	player.Draw();											// Draw screen
 	}
 
@@ -513,22 +513,24 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			$("#voiceSel").append("<option>"+this.voices[i].name+"</option>");	// Add to select
 		$("#voiceSel").prop("selectedIndex",_this.voice);					// Set current voice
 		$(this).val("Sound options");										// Set menu to default
-		$("#pitchSlider").slider({ value:_this.pitch, step:5, min:0, max:200 });		// Init as slider 0-200
-		$("#rateSlider").slider({ value:_this.audioRate, step:5, min:50, max:150 });	// Init as slider 50-150
-	}
+		$("#pitchSlider").slider({ value:_this.pitch, step:5, min:0, max:200 });			// Init as slider 0-200
+		$("#rateSlider").slider({ value:_this.audioRate, step:5, min:50, max:150 });		// Init as slider 50-150
+		}
 
 	CPlayer.prototype.InitAudio=function()								// INIT AUDIO
 	{
 		this.audio=null;													// Assume no audio						
 		if ((this.voice == 1) && this.mp3)	{								// If an mp3 file
 			this.audio=new Audio();											// Init audio object
-			this.audio=new Audio(this.mp3);								// Load mp3 file
+			this.audio=new Audio(this.mp3);									// Load mp3 file
 			}
 		else if (this.voice > 1) {											// If text to speech
 			speechSynthesis.cancel();										// Kill queue
 			this.audio=new SpeechSynthesisUtterance();						// Init TTS
 			this.audio.voice=this.voices[this.voice-2];						// Set voice
 			}
+		this.maxTime=$("#scriptTextDiv").text().length*.065/(this.audioRate/100);	// Set max time
+		$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));			// End display
 	}
 
 	CPlayer.prototype.StartAudio=function(time)							// PLAY/PAUSE AUDIO
@@ -541,16 +543,19 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			if (time < 0)													// If stopping
 				this.audio.pause();											// Stop playing
 			else{															// If playing
+				this.speechRate=.065/ar;									// Adjust speechRate
 				this.audio.currentTime=this.curTime;						// Cue it up
 				this.audio.playbackRate=ar;									// Set speed from .5 to 1.5
 				this.speechRate=this.audio.duration/ar/$("#scriptTextDiv").text().length;	// Set speechRate
+				this.maxTime=$("#scriptTextDiv").text().length*this.speechRate;		// Set max time
+				$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));	// End display
 				this.audio.play();											// Start playing
 				}
 			}
 		else{																// Text to speech
 			speechSynthesis.cancel();										// Kill TTS queue
 			if (time >= 0) {												// If playing
-				this.speechRate=.07/ar;										// Adjust speechRate
+				this.speechRate=.070/ar;									// Adjust speechRate
 				var pos=this.curTime/this.speechRate;						// Start of text
 				this.audio.text=$("#scriptTextDiv").text().substr(pos);		// Set text							
 				this.audio.rate=Math.max(.1,this.audioRate/100);			// Set rate
@@ -559,11 +564,11 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				else if (ar < 1)	ar=1-(ar*1.5);							// Scale .5-1 to .25-1
 				this.audio.rate=ar;											// Set TTS audio rate .25 to 2
 				speechSynthesis.speak(this.audio);							// Start
+				this.maxTime=$("#scriptTextDiv").text().length*this.speechRate;		// Set max time
+				$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));	// End display
 				}
 			}
-		this.maxTime=$("#scriptTextDiv").text().length*this.speechRate;		// Reset max time
-		$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));	// End display
-		}
+	}
 
 	CPlayer.prototype.GetVoiceList=function(time)						// SET VOICE LIST
 	{
@@ -617,7 +622,10 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				}
 			});
 
-		$("#scriptTextDiv")[0].addEventListener('input', function() {		// ON SCRIPT CHANGE
+var str="In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States."
+$("#scriptTextDiv").text(str);
+			
+			$("#scriptTextDiv")[0].addEventListener('input', function() {		// ON SCRIPT CHANGE
 			_this.ResizeImageArea();										// Equilibrate fields
 			player.maxTime=$("#scriptTextDiv").text().length*player.speechRate; // Set max time
 			$("#endTime").text(SecondsToTimecode(Math.round(player.maxTime)));// End display
@@ -636,7 +644,6 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		var _this=this;														// Save context
 		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
 		var offy=$("#scriptTextDiv").offset().top+24;						// Offset of title
-		player.maxTime=$("#scriptTextDiv").text().length*player.speechRate; // Set max time
 		for (i=0;i<this.pics.length;++i) {									// For each pic
 			y=(this.pics[i].start/cpl*40)+offy;								// Calc y pos			
 			str+="<div id='scriptPic-"+i+"' class='pa-scriptPic' ";			// Container div 
@@ -764,10 +771,13 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 	CScript.prototype.Highlight=function(col, pos, width, noScroll) 	//	HIGHLIGHT SCRIPT TEXT
 	{
 		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
-		pos=Math.max(0,pos);												// Cap at 0
 		var txt=$("#scriptTextDiv").text();									// Get raw text
-		if (pos+width > txt.length)											// If past end
-			width=(txt.length-pos+2);										// Cap
+		var n=txt.length;													// Length of text
+		pos=Math.max(pos,0);												// Cap at 0
+		if (pos >= n)														// Start is past script length
+			return;															// Quit
+		if (pos+width > n)													// If end id past length
+			width=(n-pos+1);												// Cap at end
 		var str=txt.substr(0,pos)+"<span style='";							// Add start
 		if (width < 8)														// If narrow
 			str+="border-bottom: 4px solid ";								// Use underline
