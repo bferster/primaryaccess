@@ -773,7 +773,8 @@ $("#scriptTextDiv").text(str);
 		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
 		var txt=$("#scriptTextDiv").text();									// Get raw text
 		var n=txt.length;													// Length of text
-		pos=Math.max(pos,0);												// Cap at 0
+		pos=Math.max(Math.round(pos),0);									// Cap at 0
+		width=Math.round(width);											// Round
 		if (pos >= n)														// Start is past script length
 			return;															// Quit
 		if (pos+width > n)													// If end id past length
