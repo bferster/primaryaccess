@@ -11,18 +11,17 @@
 	<script src="lib/jquery.ui.touch-punch.min.js"></script>
 	<style type="text/css">
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
-							padding: 0; margin:0px
+							padding: 0; margin:0px; 
 							}
-		.pa-main {		 	width: 100%;   height: calc(100vh - 18px); overflow-y: auto; min-width: 1000px;
-							background-color:#eee; opacity: 0;
+		.pa-main {		 	width: 100vw; min-width: 1000px; overflow: auto;  background-color:#eee; opacity: 0; 
 							}
 		
 		/* SCRIPT --------------------------------------------------------------------------------------------------*/
 
-		.pa-script {		position: absolute; width: 60%; left:0; top:0; height: calc(100% - 150px);
+		.pa-script {		position: absolute; left:0; top:0; width:60%; height: calc(100% - 150px);
 							background-color:#fff; overflow-y: scroll; min-width: 600px;
 							}
-		.pa-title {			width: calc(100% - 190px); margin-left: 176px; margin-top: 20px; 
+		.pa-title {			width: calc(100% - 200px); margin-left: 176px; margin-top: 20px; 
 		 					font-weight: bold; font-size: 30px;
 							}
 		.pa-scriptPix {		display: inline-block; width: 126px; padding: 16px; height:80%; cursor:url(img/moveud.cur),auto;
@@ -38,7 +37,7 @@
 
 		/* PLAYER --------------------------------------------------------------------------------------------------*/
 
-		.pa-player {		position: absolute; width: 40%; left: 60%; top: 0px; text-align: center;
+		.pa-player {		position: absolute; top: 0px; text-align: center; width: 40%;
 							background-color:#ddd;  height:calc(100% - 150px); float: top; min-width: 400px;
 							}
 		.pa-screen {		width:calc(100% - 32px); background-color: #666; border-radius: 8px; 
@@ -46,8 +45,8 @@
 							}
 		.pa-time {			color: #666; padding: 12px 16px; font-size: 11px;
 							}
-		.pa-sliderBar {		width:calc(100% -3 2px); background-color: #aaa; height: 8px; 
-							border-radius: 8px; margin: 16px; margin-top: 4px;
+		.pa-sliderBar {		width:calc(100% - 32px); background-color: #aaa; height: 8px; 
+							border-radius: 8px; margin-left: 16px; margin-top: 4px;
 							}
 		.pa-slider {  		width: 0; height: 0; border-bottom: 10px solid #009900; margin: 0 8px;
 							border-left: 10px solid transparent; border-right: 10px solid transparent; cursor: pointer;
@@ -69,7 +68,7 @@
 	
 		/* BIN --------------------------------------------------------------------------------------------------*/
 
-		.pa-bin {			position: absolute; width: 100%; left:0; top: calc(100% - 150px);
+		.pa-bin {			position: absolute; width: 100%; left:0; top: calc(100% - 150px); height:149px;
 							background-color:#eee; 	border-top: 1px solid #ccc;
 							}
 		.pa-binMenu {		display: inline-block; vertical-align: top; text-align:center; width: 150px;
@@ -140,13 +139,7 @@
 				</select>
 			<img id="playBut" class="pa-playbut" src="img/playbut.gif"><br>
 			<img id="paLogo" src="img/palogo2.png" style="margin-top:8px">
-			<select id="soundOptions" class="pa-options" style="left:calc(100% - 166px)">
-				<option>Sound options</option>
-				<option>Male voice</option>
-				<option>Female voice</option>
-				<option>MP3 file</option>
-				<option>Settings</option>
-			</select>
+			<div id="soundOptions" class="pa-options" style="left:calc(100% - 174px);height:17px">Sound options</div>
 			<div id="moveDiv" class="pa-move">
 				<div id="startDiv" style="display:inline-block">
 					<b>Start</b><br><div id="startPic" class="pa-movePic"></div>
@@ -213,22 +206,27 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		
 	function ResizePanes()												//  REACT TO SCREEN SIZE
 	{
+		var sw=$("#mainDiv").width()*.6;									// Script width
+		var pw=$("#mainDiv").width()*.4;									// Player width
+		var th=$("#titleDiv").height()+10;									// Get height of title bar
+		$("#playerDiv").css({ width:pw+"px", left: sw+"px" });				// Position player
 		$("#screenDiv").height($("#screenDiv").width()*playAspect);			// 16 x 9 screen		
-		$("#playerDiv").css({ left: $("#scriptDiv").width()+16+"px" });		/// Position player
-		var x=$("#sliderBarDiv").offset().left-8;							// Set left
+		$("#playerDiv").css("min-height",$("#screenDiv").height()+300+"px");// Minimum height to preserve work area
+		$("#scriptDiv").css({ width:sw+"px", height:$("#playerDiv").height()+"px" });	// Size script
+		var x=$("#sliderBarDiv").offset().left-8;						// Set left
 		var y=$("#sliderBarDiv").offset().top+10;							// Set top
-		var h=$("#titleDiv").height()+10
-		$("#scriptDivider").css({ "margin-top": h, height: $("#scriptTextDiv").height()+16+"px" });
+		$("#scriptDivider").css({ "margin-top": th, height: $("#scriptTextDiv").height()+16+"px" });
 		$("#sliderDiv").offset({ left:x,top:y });							// Set slider						
-		if (player)	player.Draw();											// Draw screen
 		if (isMobile) {														// Mobile doesn't show scroll bars, so add a button
 			if (Math.abs($("#binPixDiv")[0].scrollWidth-$("#binPixDiv").outerWidth()) > 5) 	// If it can scroll
 				$("#binRightBut").show();									// Show right
-			else{
+			else{															// No scrolling
 				$("#binRightBut").hide();									// Hide right
 				$("#binPixDiv").css("width","calc(100% - 200px)");			// Shorten container div
 				}
 			}		
+		$("#binDiv").css({ top:$("#playerDiv").height()+"px" });			// Position bin below player
+		if (player)	player.Draw();											// Draw screen
 	}
 
 
@@ -244,7 +242,6 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		this.curTime=0;														// Start at 0
 		this.pos=[.5,.5,1];													// Current position
 		this.audio=null;													// Audio object
-		this.male=0;	this.female=1;										// TTS voices
 		this.voice=0;	this.pitch=100;										// TTS options
 		this.speechRate=.065;												// Seconds per char
 		this.maxTime=18.5;													// Maximum time
@@ -301,31 +298,9 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			$(this).val("Picture options");									// Set menu to default
 			});
 
-		$("#soundOptions").on("change", function() {						// ON SOUND OPTIONS CHANGE
-			if ($(this).val().match(/male/i)) {								// TTS male
-				script.audioFile=$(this).val();								// Set voice
-				_this.InitAudio(script.audioFile);							// Init audio system		
-				}
-			else if ($(this).val().match(/mp3/i)) {
-				script.audioFile="//stagetools.com/primaryaccess/narration.mp3";
-				_this.InitAudio(script.audioFile);							// Init audio system		
-				}
-			else if ($(this).val().match(/settings/i)) {					// Settings
-				var x=$("#playerDiv").position().left+$("#playerDiv").width()/2-16;
-				var str="Audio rate<div id='rateSlider' style='float:right;width:150px'></div><br><br>";
-				str+="Audio pitch<div id='pitchSlider'style='float:right;width:150px'></div>";
-				DialogBox("Settings",str,x,100,300, function() {			// Run dialog			
-					_this.pitch=$("#pitchSlider").slider("option", "value"); 	// Get pitch		
-					_this.audioRate=$("#rateSlider").slider("option","value");	// Get rate		
-//					_this.speechRate=.065/(_this.audioRate/100);			// Set new speech rate
-//					trace(_this.speechRate)
-					script.Draw();											// Redraw script
-					_this.Draw();											// Redraw screen
-					});
-				$(this).val("Sound options");								// Set menu to default
-				$("#pitchSlider").slider({ value:_this.pitch, step:5, min:50, max:150 });		// Init as slider 50-150
-				$("#rateSlider").slider({ value:_this.audioRate, step:5, min:50, max:150 });	// Init as slider
-				}
+		$("#soundOptions").on("click", function() {							// ON SOUND OPTIONS CLICK
+			_this.SoundSettings();											// Change sound settings	
+			$(this).val("Sound options");									// Set menu to default
 			}); 
 	
 		$("#moveDoneBut").on("click", function() {							// ON MOVE DONE CLICKED
@@ -512,66 +487,105 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		}
 	}
 
-	CPlayer.prototype.InitAudio=function(audioFile)						// INIT AUDIO
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// SOUND
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+	CPlayer.prototype.SoundSettings=function()						// SOUND SETTINGS DISLOG
 	{
 		var _this=this;														// Save context
-		if (audioFile && audioFile.match(/\.mp3/i))	{						// If an mp3 file
+		var x=$("#playerDiv").position().left+$("#playerDiv").width()-348;	// Flush right
+		var y=$("#soundOptions").position().top-250;
+		var str="Audio rate<div id='rateSlider' style='float:right;width:150px'></div><br><br>";
+		str+="Audio pitch<div id='pitchSlider'style='float:right;width:150px'></div><br><br>";
+		str+="Voice<select id='voiceSel' class='pa-is' style='float:right'width:150px'><option>None</option><option>MP3</option></select><br><br>";
+		str+="MP3 file<input id='mp3Inp' type='text' class='pa-is' style='float:right;width:150px' value='http://stagetools.com/primaryaccess/narration.mp3'>";
+		DialogBox("Sound Settings",str,x,y,300, function() {				// Run dialog			
+			_this.pitch=$("#pitchSlider").slider("option", "value"); 		// Get pitch		
+			_this.audioRate=$("#rateSlider").slider("option","value");		// Get rate		
+			_this.voice=$("#voiceSel").prop("selectedIndex");				// Get voice
+			_this.mp3=$("#mp3Inp").val();									// Get MP3 file
+			_this.InitAudio();												// Init audio
+			script.Draw();													// Redraw script
+			_this.Draw();													// Redraw screen
+			});
+		for (i=0;i<this.voices.length;++i)									// For each voice
+			$("#voiceSel").append("<option>"+this.voices[i].name+"</option>");	// Add to select
+		$("#voiceSel").prop("selectedIndex",_this.voice);					// Set current voice
+		$(this).val("Sound options");										// Set menu to default
+		$("#pitchSlider").slider({ value:_this.pitch, step:5, min:0, max:200 });		// Init as slider 0-200
+		$("#rateSlider").slider({ value:_this.audioRate, step:5, min:50, max:150 });	// Init as slider 50-150
+	}
+
+	CPlayer.prototype.InitAudio=function()								// INIT AUDIO
+	{
+		this.audio=null;													// Assume no audio						
+		if ((this.voice == 1) && this.mp3)	{								// If an mp3 file
 			this.audio=new Audio();											// Init audio object
-			this.audio=new Audio(audioFile);								// Load mp3 file
+			this.audio=new Audio(this.mp3);								// Load mp3 file
 			}
-		else{																// If text to speech
+		else if (this.voice > 1) {											// If text to speech
 			speechSynthesis.cancel();										// Kill queue
 			this.audio=new SpeechSynthesisUtterance();						// Init TTS
-			var i=audioFile.match(/female voice/i) ? this.female : this.male;	// Male or female
-			this.audio.voice=this.voices[i];								// Set voice
+			this.audio.voice=this.voices[this.voice-2];						// Set voice
 			}
 	}
 
 	CPlayer.prototype.StartAudio=function(time)							// PLAY/PAUSE AUDIO
 	{
+		this.speechRate=.065;												// Default speechRate
 		if (!this.audio)													// No audio set up yet
 			return;															// Quit
-		if (script.audioFile && script.audioFile.match(/\.mp3/i)) {			// If an mp3 file
+		var ar=this.audioRate/100;											// Speed
+		if (this.voice == 1) {												// If an mp3 file
 			if (time < 0)													// If stopping
 				this.audio.pause();											// Stop playing
 			else{															// If playing
-				var ar=this.audioRate/100;									// Speed
 				this.audio.currentTime=this.curTime;						// Cue it up
 				this.audio.playbackRate=ar;									// Set speed from .5 to 1.5
 				this.speechRate=this.audio.duration/ar/$("#scriptTextDiv").text().length;	// Set speechRate
-				this.maxTime=$("#scriptTextDiv").text().length*this.speechRate;	// Reset max time
-				$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));// End display
 				this.audio.play();											// Start playing
 				}
 			}
 		else{																// Text to speech
 			speechSynthesis.cancel();										// Kill TTS queue
 			if (time >= 0) {												// If playing
+				this.speechRate=.07/ar;										// Adjust speechRate
 				var pos=this.curTime/this.speechRate;						// Start of text
 				this.audio.text=$("#scriptTextDiv").text().substr(pos);		// Set text							
 				this.audio.rate=Math.max(.1,this.audioRate/100);			// Set rate
-				this.audio.pitch=Math.max(0,this.pitch/100);				// Set pitch
-				this.audio.rate=.5
+				this.audio.pitch=(this.pitch/100);							// Set pitch 0-2
+				if (ar > 1)			ar=1+(ar-1)*2;							// Scale 1-1.5 to 1-2
+				else if (ar < 1)	ar=1-(ar*1.5);							// Scale .5-1 to .25-1
+				this.audio.rate=ar;											// Set TTS audio rate .25 to 2
 				speechSynthesis.speak(this.audio);							// Start
 				}
 			}
+		this.maxTime=$("#scriptTextDiv").text().length*this.speechRate;		// Reset max time
+		$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));	// End display
 		}
 
 	CPlayer.prototype.GetVoiceList=function(time)						// SET VOICE LIST
 	{
 		var _this=this;														// Save context
-		this.voices=speechSynthesis.getVoices();							// Get voices
-		this.voices.forEach(function(voice,index) {							// For each voice
-			if (voice.lang == "en-US")	{									// Just look at English
-				if (voice.name.match(/david/i)) 		_this.male=index;	// Use David on Windows
-				else if (voice.name.match(/aaron/i)) 	_this.male=index;	// Use Aaron on IOS
-				else if (voice.name.match(/zira/i)) 	_this.female=index;	// Use Zira on Windows
-				else if (voice.name.match(/alex/i)) 	_this.male=index;	// Use Alex on Mac
-				else if (voice.name.match(/victoria/i)) _this.female=index;	// Use Victoria on Mac
-				else if (voice.name.match(/samantha/i)) _this.female=index;	// Prefer Samantha over Victoria
-				}
-			});
+		this.voices=[];														// New array
+		voices=speechSynthesis.getVoices();									// Get voices
+		voices.forEach(function(voice,index) {								// For each voice
+			if (voice.lang == "en-US")										// Just look at English
+				_this.voices.push(voice);									// Add voice
+				});
 	}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -586,7 +600,6 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		this.pics=[];														// Alloc array									
 		var _this=this;														// Save context
 		var _this=this;														// Save context
-		this.audioFile="";													// Audio file
 		$("#scriptPixDiv").droppable({										// HANDLE DROPS TO BIN
 			accept: ".pa-pic",												// Accept only pics from bin	  
 			drop: function(event,ui) {										// On drop
@@ -1002,9 +1015,8 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		var o={};
 		o.script=$("#scriptText").text();										// Get script text 
 		o.audioRate=player.audioRate;											// Get rate multiplier
-		o.voice=player.voice;													// Get TTS voice
 		o.pitch=player.pitch;													// Get TTS pitch
-		o.audioFile=script.audioFile;											// Get audio file
+		o.mp3=player.mp3;													// Get audio file
 		o.binPics=$.parseJSON(JSON.stringify(bin.pics));						// Clone bin pics
 		o.scriptPics=$.parseJSON(JSON.stringify(script.pics));					// Clone script pics
 	}
@@ -1049,7 +1061,6 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		$("#dialogDiv").remove();												// Kill old one, if any
 		var str="<div id='dialogDiv' class='pa-meta' style='width:"+width+"px'>"; // Add div
 		str+="<b>"+title+"</b><br><br>"+content+"<br><br>";						// Content	
-		x-=(width/2);															// Center
 		str+="<div style='float:right'>"										// Div to hold buttons
 		str+="<div id='okBut' class='pa-bs'>OK</div>&nbsp";						// OK Button
 		str+="<div id='cancelBut' class='pa-bs'>Cancel</div></div";				// Cancel
