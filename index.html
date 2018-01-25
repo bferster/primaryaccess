@@ -180,10 +180,10 @@
 
 		$(window).on("keydown",function(e) {								// HANDLE KEYPRESS
 			if (e.which == 32) {											// Spacebar
-				if (document.activeElement.id == "scriptTextDiv")			// If in script
-					return;													// Quit
-				if (document.activeElement.id == "titleDiv")				// If in title
-					return;													// Quit
+				var id=document.activeElement.id;							// Target id
+				if (id  == "scriptTextDiv")		return;						// If in script
+				if (id == "titleDiv")			return;						// If in title
+				if (id && id.match(/add/))		return;						// If in add pic dialog
 				$("#playBut").trigger("click");								// Toggle play
 				}
 			if (player.inMove) {											// In motion editor
@@ -194,8 +194,8 @@
 				else if (e.which == 38)		o[1]-=pix;						// Up
 				else if (e.which == 40)		o[1]+=pix;						// Down
 				player.DrawCamera(player.inMove-1);							// Move camera
-				player.ScalePic(150,84,"#startImg",script.pics[player.curPic].pos[0]); // Set start
-				player.ScalePic(150,84,"#endImg",script.pics[player.curPic].pos[1]);   // Set end
+				player.ScalePic(100,66,"#startImg",script.pics[player.curPic].pos[0]); // Set start
+				player.ScalePic(100,66,"#endImg",script.pics[player.curPic].pos[1]);   // Set end
 				}
 			});
 
@@ -310,7 +310,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			$("#picOptions").val("Picture options");						// Restore menu
 			$("#moveDiv").fadeOut(0);										// Hide move controls
 			$("#cameraDiv").remove();										// Remove camera
-			$("#playerDiv").height($("#playerDiv").height()-150);			// Shorten
+			$("#playerDiv").height($("#scriptDiv").height());				// Shorten
 			script.pics[_this.curPic].pos[0][3]=$("#slowInBut").prop("checked") ? 1 : 0;
 			script.pics[_this.curPic].pos[1][3]=$("#slowOutBut").prop("checked") ? 1 : 0;
 			_this.Draw();													// Draw screen
@@ -373,7 +373,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		this.picWid=$("#screenPic").width();								// Save width
 		this.picHgt=$("#screenDiv").height();								// Save height
 	
-		$("#playerDiv").height($("#playerDiv").height()+150)
+		$("#playerDiv").height($("#scriptDiv").height()+150);				// Extend full screen
 		$("#startDiv").css("color",offCol);									// Mute start text
 		$("#endPic").css("border","3px solid "+offCol);						// And border
 		$("#endDiv").css("color",offCol);									// Mute end text
@@ -382,8 +382,8 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		$("#slowOutBut").prop("checked",script.pics[this.curPic].pos[1][3] == 1)	// Set out
 		$("#startPic").html("<img id='startImg' src='"+bin.pics[num].src+"' style='position:relative'>");	
 		$("#endPic").html("<img id='endImg' src='"+bin.pics[num].src+"' style='position:relative'>");	
-		this.ScalePic(150,84,"#startImg",script.pics[this.curPic].pos[0]);	// Init start
-		this.ScalePic(150,84,"#endImg",script.pics[this.curPic].pos[1]);	// Init end
+		this.ScalePic(100,66,"#startImg",script.pics[this.curPic].pos[0]);	// Init start
+		this.ScalePic(100,66,"#endImg",script.pics[this.curPic].pos[1]);	// Init end
 
 		if (mode == 1 ) {													// Set start
 			$("#startDiv").css("color",onCol);								// Hilite  text
@@ -437,8 +437,8 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			stop: function(event, ui) {										// On drag stop
 				o[0]=(ui.position.left-14+$("#cameraDiv").width()/2)/$("#screenPic").width();	// Calc x
 				o[1]=(ui.position.top-14+$("#cameraDiv").height()/2)/$("#screenPic").height();	// Calc y
-				_this.ScalePic(150,84,"#startImg",script.pics[_this.curPic].pos[0]); // Set start
-				_this.ScalePic(150,84,"#endImg",script.pics[_this.curPic].pos[1]);	 // Set end
+				_this.ScalePic(100,66,"#startImg",script.pics[_this.curPic].pos[0]); // Set start
+				_this.ScalePic(100,66,"#endImg",script.pics[_this.curPic].pos[1]);	 // Set end
 				}
 			});
 		$("#camSizerBut").draggable({										// Make resizer draggable
@@ -455,8 +455,8 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				o[2]=$("#cameraDiv").width()/$("#screenPic").width();		// Set width
 				o[0]=($("#cameraDiv").position().left-14+$("#cameraDiv").width()/2)/$("#screenPic").width();	// Calc x
 				o[1]=($("#cameraDiv").position().top-14+$("#cameraDiv").height()/2)/$("#screenPic").height();	// Calc y
-				_this.ScalePic(150,84,"#startImg",script.pics[_this.curPic].pos[0]); // Set start
-				_this.ScalePic(150,84,"#endImg",script.pics[_this.curPic].pos[1]);	 // Set end
+				_this.ScalePic(100,66,"#startImg",script.pics[_this.curPic].pos[0]); // Set start
+				_this.ScalePic(100,66,"#endImg",script.pics[_this.curPic].pos[1]);	 // Set end
 				}
 			});
 	}
@@ -922,6 +922,7 @@ $("#scriptTextDiv").text(str);
 	{
 		var _this=this;														// Save context
 		var x=$("#playerDiv").position().left+$("#playerDiv").width()/2-266;// Center in screen
+		x=Math.min(x,$("#mainDiv").width()-550);							// Cap to left
 		var y=$("#screenDiv").height()-280;									// Bottom of screen
 		var str="<br><div style='display:inline-block'><table style='width:300px'>";	// Info div/table
 		str+="<tr><td>Title</td><td><input id='addTitle' type='text' class='pa-is' style='width:100%'</td></tr>";
