@@ -99,6 +99,11 @@
 							}
 		.pa-arrow {  		cursor:pointer; vertical-align: 2px; display: none;
 							}
+		.pa-popup {			position: absolute;  width: 200px; padding: 16px;left: calc(50% - 100px); top: calc(50% - 50px);
+							border-radius: 8px; background-color: #eee; border: 1px solid #999; box-shadow: 4px 4px 12px 2px #aaa; 
+							font-size: 14px; display: none;
+							}
+
  </style>
 
 </head>
@@ -227,7 +232,9 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				}
 			}		
 		$("#binDiv").css({ top:$("#playerDiv").height()+"px",width:pw+sw+"px" });	// Position bin below player
-		if (player)	player.Draw();											// Draw screen
+		if (script) script.Draw();											// Redraw script
+		if (player)	player.Draw();											// Redraw player
+		if (bin)	bin.Draw();												// Redraw bin
 	}
 
 
@@ -295,9 +302,11 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				}
 			else if ($(this).val() == "Add new picture")					// Add pic
 				bin.AddPic();												// Run pic dialog
-			else if ($(this).val() == "Load show")
-				doc.Save();
-		$(this).val("Picture options");									// Set menu to default
+			else if ($(this).val() == "Full screen")						// Full screen
+				PopUp("Not implemented yet...",2000,"screenDiv");			// TBD	
+			else if ($(this).val() == "Load show")							// Load show
+				PopUp("Not implemented yet...",2000,"screenDiv");			// TBD	
+			$(this).val("Picture options");									// Set menu to default
 			});
 
 		$("#soundOptions").on("click", function() {							// ON SOUND OPTIONS CLICK
@@ -365,6 +374,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 	{
 		var onCol="#009900", offCol="#666";									// Colors
 		this.inMove=mode;													// Set moving mode to head
+		var _this=this;														// Save context
 		var num=script.pics[this.curPic].num;								// Picture to move
 		$("#screenPic").prop("src",bin.pics[num].src);						// Set src
 		var w=$("#screenPic")[0].naturalWidth/$("#screenPic")[0].naturalHeight*$("#screenDiv").height();
@@ -384,6 +394,30 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		$("#endPic").html("<img id='endImg' src='"+bin.pics[num].src+"' style='position:relative'>");	
 		this.ScalePic(100,66,"#startImg",script.pics[this.curPic].pos[0]);	// Init start
 		this.ScalePic(100,66,"#endImg",script.pics[this.curPic].pos[1]);	// Init end
+		
+		$("#startPic").draggable({ zIndex: 100, axis: "x",					// Make start draggable to copy position to end
+				stop: function(event, ui) {									// On drag stop
+					if (ui.position.left > 100) {							// Over end 
+						script.pics[_this.curPic].pos[1]=script.pics[_this.curPic].pos[0].slice(0);	// Clone key
+						Sound("ding");										// Ding					
+						_this.ScalePic(100,66,"#endImg",script.pics[_this.curPic].pos[1]);	 // Set end
+						$(this).css("left",0);								// Revert
+						$("#endPic").trigger("click");						// Highight end				
+						}
+					}
+				})
+
+		$("#endPic").draggable({ zIndex: 100, axis: "x",					// Make end draggable to copy position to start
+				stop: function(event, ui) {									// On drag stop
+					if (ui.position.left < 100) {							// Over end 
+						script.pics[_this.curPic].pos[0]=script.pics[_this.curPic].pos[1].slice(0);	// Clone key
+						Sound("ding");										// Ding					
+						_this.ScalePic(100,66,"#startImg",script.pics[_this.curPic].pos[0]);	 // Set start
+						$(this).css("left",0);								// Revert image
+						$("#startPic").trigger("click");					// Highight start					
+						}
+					}
+				})
 
 		if (mode == 1 ) {													// Set start
 			$("#startDiv").css("color",onCol);								// Hilite  text
@@ -549,11 +583,14 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				this.speechRate=.065/ar;									// Adjust speechRate
 				this.audio.currentTime=this.curTime;						// Cue it up
 				this.audio.playbackRate=ar;									// Set speed from .5 to 1.5
-				if (this.audio.duration)									// If a duration set
+				if (this.audio.duration) {									// If a duration set
 					this.speechRate=this.audio.duration/ar/$("#scriptTextDiv").text().length;	// Set speechRate to match mp3 file
-				this.maxTime=$("#scriptTextDiv").text().length*this.speechRate;		// Set max time
-				$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));	// End display
-				this.audio.play();											// Start playing
+					this.maxTime=$("#scriptTextDiv").text().length*this.speechRate;		// Set max time
+					$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));	// End display
+					this.audio.play();										// Start playing
+					}
+				else														// Not loaded yet
+					PopUp("MP3 file has not loaded yet",2000,"screenDiv");	// Popup
 				}
 			}
 		else{																// Text to speech
@@ -608,22 +645,21 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 	{
 		this.pics=[];														// Alloc array									
 		var _this=this;														// Save context
-		var _this=this;														// Save context
-		$("#scriptPixDiv").droppable({										// HANDLE DROPS TO BIN
-			accept: ".pa-pic",												// Accept only pics from bin	  
+
+		$("#scriptDiv").droppable({											// HANDLE DROPS TO BIN
+			accept: ".pa-pic", 												// Accept only pics from bin	  
 			drop: function(event,ui) {										// On drop
-				    if ($(this)) {											// If something
-						$("#metaDiv").remove();								// Kill popup
-						var id=ui.draggable[0].id.substr(7);				// Get id
-						if (!player.inMove)									// If not in motion editor
-							player.curPic=_this.pics.length;				// This is current pic
-						var pos=$("#"+ui.draggable[0].id).offset().top;		// Get y pos of image
-						pos=_this.GetPosFromPic(pos);						// Get char pos
-						_this.AddPic(id,pos);								// Add to script
-						Sound("ding");										// Ding
-						_this.Draw();										// Show script
-						$("#scriptPic-"+(_this.pics.length-1)).trigger("click");	// Set as current
-						}
+				$("#metaDiv").remove();										// Kill popup
+				var id=ui.draggable[0].id.substr(7);						// Get id
+				if (!player.inMove)											// If not in motion editor
+					player.curPic=_this.pics.length;						// This is current pic
+				var pos=$("#"+ui.draggable[0].id).offset().top;				// Get y pos of image
+				var pos=ui.offset.top+$("#scriptDiv").scrollTop();			// Get unscrolled pos
+				pos=_this.GetPosFromPic(pos);								// Get char pos
+				_this.AddPic(id,pos);										// Add to script
+				Sound("ding");												// Ding
+				_this.Draw();												// Show script
+				$("#scriptPic-"+(_this.pics.length-1)).trigger("click");	// Set as current
 				}
 			});
 
@@ -649,6 +685,7 @@ $("#scriptTextDiv").text(str);
 		var _this=this;														// Save context
 		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
 		var offy=$("#scriptTextDiv").offset().top+24;						// Offset of title
+		offy+=$("#scriptDiv").scrollTop();									// Account for scroll
 		for (i=0;i<this.pics.length;++i) {									// For each pic
 			y=(this.pics[i].start/cpl*40)+offy;								// Calc y pos			
 			str+="<div id='scriptPic-"+i+"' class='pa-scriptPic' ";			// Container div 
@@ -727,6 +764,7 @@ $("#scriptTextDiv").text(str);
 	{
 		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
 		var offy=$("#scriptTextDiv").offset().top+24;						// Offset of title
+		offy+=$("#scriptDiv").scrollTop();									// Account for scroll
 		return (pos-offy)/40*cpl;											// Return char pos
 	}
 
@@ -853,6 +891,7 @@ $("#scriptTextDiv").text(str);
 	CBin.prototype.Draw=function() 										//	DRAW BIN
 	{
 		var i,str="";
+		var _this=this;														// Save context
 		str+="<ul id='pixList' style='list-style-type:none;padding:0;margin:0'>"
 		for (i=0;i<this.pics.length;++i) {									// For each pic
 			str+="<li id='binPic-"+i+"' class='pa-pic'";					// List start
@@ -861,7 +900,14 @@ $("#scriptTextDiv").text(str);
 
 		$("#binPixDiv").html(str+"</ul>");									// Add to div
 		$("#pixList").sortable({ 											// Make it sortable
-			sort: function() {	$("#metaDiv").remove();	}					// Kill meta popup, if any on sort
+			sort: function(event, ui) {										// On pic drag
+				$("#metaDiv").remove();										// Kill meta popup, if any on sort
+				if (ui.offset.left < 120) {									// In script pic area
+					var pos=ui.offset.top+$("#scriptDiv").scrollTop();		// Get unscrolled pos
+					pos=script.GetPosFromPic(pos);							// Calc char pos
+					script.Highlight("#0000ff",pos,2,true);					// Highlight position in text & inhibit scrolling						
+					}
+				}
 			});
 		$("#pixList").disableSelection();									// Imnhibit selection
 	
@@ -981,7 +1027,7 @@ $("#scriptTextDiv").text(str);
 		str+="px;height:"+h+"px;top:8px;left:8px'>";						// Finish div
 		str+="<b> PrimaryAccess User&apos;s Guide</b><img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer;padding-bottom:12px'><br>"	// Add close button
 		str+="<iframe src='https://docs.google.com/document/d/e/2PACX-1vQQlE8nxS33bkI5CY--daR1ibM-7q6B-GFrztW6cq9lN6FNztpA_b0nrQiV33krohd5O6dvyU1ibiGU/pub?embedded=true' "; 
-		str+="style='width:100%;height:"+(h-30)+"px'></iframe>";
+		str+="style='width:100%;height:"+(h-30)+"px;overflow-y:scroll'></iframe>";
 		$("body").append(str+"</div>");										// Add popup
 		$("#pa-webpage").fadeIn(1000);										// Fade in
 		$("#pa-webpage").draggable();										// Make it draggable
@@ -1102,6 +1148,14 @@ $("#scriptTextDiv").text(str);
 			return str;															// Return timecode			
 		}	
 
+	function PopUp(msg, time, div)											// TIMED POPUP
+	{
+		$("#popupDiv").remove();												// Kill old one, if any
+		var str="<div id='popupDiv' class='pa-popup'>"+msg+"</div>"; 			// Add div
+		$(div ? "#"+div : "body").append(str);									// Add popup to div or body
+		$("#popupDiv").fadeIn(500).delay(time ? time : 2000).fadeOut(500)		// Animate in and out		
+	}
+
 	function DialogBox(title, content, x, y, width, callback, callback2) 	// DIALOG BOX
 	{
 		$("#dialogDiv").remove();												// Kill old one, if any
@@ -1111,7 +1165,7 @@ $("#scriptTextDiv").text(str);
 		str+="<div id='okBut' class='pa-bs'>OK</div>&nbsp";						// OK Button
 		str+="<div id='cancelBut' class='pa-bs'>Cancel</div></div";				// Cancel
 		$("body").append(str+"</div>");											// Add popup
-		$("#dialogDiv").offset({left:x,top:y});									// Position popup
+		$("#dialogDiv").offset({ left:x, top:y} );								// Position popup
 
 		$("#okBut").on("click",function() {										// CLICK ON OK
 			if (callback)														// If an ok callback spec'd
