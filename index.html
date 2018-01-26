@@ -142,7 +142,7 @@
 				</select>
 			<img id="playBut" class="pa-playbut" src="img/playbut.gif"><br>
 			<!--img id="paLogo" src="img/palogo2.png"-->
-			<div id="soundOptions" class="pa-options" style="height:17px;padding:0">Sound options</div>
+			<div id="soundOptions" class="pa-options" style="height:17px;padding:0" onclick="player.SoundSettings()">Sound options</div>
 			<div id="moveDiv" class="pa-move">
 				<div id="startDiv" style="display:inline-block">
 					<b>Start</b><br><div id="startPic" class="pa-movePic"></div>
@@ -157,6 +157,35 @@
 		</div>
 	</div>
 <script>
+
+	function PlayTTS()
+	{
+		player.inPlay=!player.inPlay;										// Toggle state
+		if (player.inMove) {												// In motion editor
+			var s=script.pics[player.curPic].start*player.speechRate;		// Start
+			var se=script.pics[player.curPic].end*player.speechRate;		// End
+			player.Play(s,se);												// Play or pause this clip
+			}
+		else																// Normal plat
+			player.Play(0,player.maxTime);									// Play or pause
+		if (!player.audio || (player.voice < 2))							// No TTS audio
+			return;															// Quit
+		speechSynthesis.cancel();											// Kill TTS queue
+		if (!player.inPlay)													// Stop signal
+			return;															// Quit
+		var ar=player.audioRate/100;										// Speed
+		player.speechRate=.070/ar;											// Adjust speechRate
+		var pos=player.curTime/player.speechRate;							// Start of text
+			player.audio.text=$("#scriptTextDiv").text().substr(pos);		// Set text							
+		player.audio.rate=Math.max(.1,player.audioRate/100);				// Set rate 
+		player.audio.pitch=(player.pitch/100);								// Set pitch 0-2
+		if (ar > 1)			ar=1+(ar-1)*2;									// Scale 1-1.5 to 1-2
+		else if (ar < 1)	ar=1-(ar*1.6);									// Scale .5-1 to .25-1
+		player.audio.rate=ar;												// Set TTS audio rate .25 to 2
+		speechSynthesis.speak(player.audio);								// Start
+		player.maxTime=$("#scriptTextDiv").text().length*player.speechRate;	// Set max time
+		$("#endTime").text(SecondsToTimecode(Math.round(player.maxTime)));	// End display
+	}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // MAIN 
@@ -583,7 +612,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				this.speechRate=.065/ar;									// Adjust speechRate
 				this.audio.currentTime=this.curTime;						// Cue it up
 				this.audio.playbackRate=ar;									// Set speed from .5 to 1.5
-				if (this.audio.duration) {									// If a duration set
+				if (this.audio.duration > 0) {								// If a duration set
 					this.speechRate=this.audio.duration/ar/$("#scriptTextDiv").text().length;	// Set speechRate to match mp3 file
 					this.maxTime=$("#scriptTextDiv").text().length*this.speechRate;		// Set max time
 					$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));	// End display
