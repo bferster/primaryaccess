@@ -629,8 +629,9 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				this.speechRate=.065/ar;									// Adjust speechRate
 				this.audio.currentTime=this.curTime;						// Cue it up
 				this.audio.playbackRate=ar;									// Set speed from .5 to 1.5
-				if (this.audio.duration > 0) {								// If a duration set
-					this.speechRate=this.audio.duration/ar/$("#scriptTextDiv").text().length;	// Set speechRate to match mp3 file
+				if (this.audio.duration) {									// If a some duration
+					if (this.audio.duration != Infinity)					// Not infinity
+						this.speechRate=this.audio.duration/ar/$("#scriptTextDiv").text().length;	// Set speechRate to match mp3 file
 					this.maxTime=$("#scriptTextDiv").text().length*this.speechRate;		// Set max time
 					$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));	// End display
 					this.audio.play();										// Start playing
@@ -642,6 +643,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		else{																// Text to speech
 			speechSynthesis.cancel();										// Kill TTS queue
 			if (time >= 0) {												// If playing
+				this.InitAudio();
 				this.speechRate=.070/ar;									// Adjust speechRate
 				var pos=this.curTime/this.speechRate;						// Start of text
 				this.audio.text=$("#scriptTextDiv").text().substr(pos);		// Set text							
@@ -1218,7 +1220,7 @@ $("#scriptTextDiv").text(str);
 	{
 		$("#dialogDiv").remove();												// Kill old one, if any
 		var str="<div id='dialogDiv' class='pa-meta' style='width:"+width+"px'>"; // Add div
-		str+="<span style='color:#999'><b>"+title+"</b></span><br><br>"+content+"<br><br>";						// Content	
+		str+="<b>"+title+"</b><br><br>"+content+"<br><br>";						// Content	
 		str+="<div style='float:right'>"										// Div to hold buttons
 		str+="<div id='okBut' class='pa-bs'>OK</div>&nbsp";						// OK Button
 		str+="<div id='cancelBut' class='pa-bs'>Cancel</div></div";				// Cancel
