@@ -13,13 +13,13 @@
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
 							padding: 0; margin:0px; 
 							}
-		.pa-main {		 	width: 100vw; min-width: 900px; overflow: auto;  background-color:#eee; opacity: 0; 
+		.pa-main {		 	width: 100vw; min-width: 800px; overflow: auto;  background-color:#eee; opacity: 0; 
 							}
 		
 		/* SCRIPT --------------------------------------------------------------------------------------------------*/
 
-		.pa-script {		position: absolute; left:0; top:0; width:60%; height: calc(100% - 150px);
-							background-color:#fff; overflow-y: scroll; min-width: 450px;
+		.pa-script {		position: absolute; left:0; top:0; height: calc(100% - 150px); 
+							background-color:#fff; overflow-y: scroll;
 							}
 		.pa-title {			width: calc(100% - 200px); margin-left: 176px; margin-top: 20px; 
 		 					font-weight: bold; font-size: 30px;
@@ -37,8 +37,8 @@
 
 		/* PLAYER --------------------------------------------------------------------------------------------------*/
 
-		.pa-player {		position: absolute; top: 0px; text-align: center; width: 40%;
-							background-color:#ddd;  height:calc(100% - 150px); float: top; min-width: 450px;
+		.pa-player {		position: absolute; top: 0px; text-align: center; min-width: 380px;
+							background-color:#ddd;  height:calc(100% - 150px); float: top;
 							}
 		.pa-screen {		width:calc(100% - 32px); background-color: #666; border-radius: 8px; 
 							margin: 16px; margin-bottom: -4px; text-align:left; overflow: hidden;
@@ -51,7 +51,7 @@
 		.pa-slider {  		width: 0; height: 0; border-bottom: 10px solid #009900; margin: 0 8px;
 							border-left: 10px solid transparent; border-right: 10px solid transparent; cursor: pointer;
 							}
-		.pa-playbut {		cursor: pointer; margin: 16px 0px 8px 0px; width: 50px;
+		.pa-playbut {		cursor: pointer; margin: 16px 0px 0px 0px; width: 50px;
 							}
 		.pa-options {		position: absolute; border-radius: 10px; width: 130px; height: 20px; padding: 0 8px;
 							border: 1px solid #999;  color:#666; cursor:pointer; background-color: #ccc;
@@ -64,7 +64,10 @@
 		.pa-movePic {		display: inline-block; cursor: pointer; width: 100px; height: 66px; margin: 2px; margin-bottom: -2px;
 							background-color: #666; border: 3px solid #666; overflow: hidden; text-align: left; 
 							}
-	
+		.pa-voice {			font-size: 10px; color: #999; 
+							}
+
+
 		/* BIN --------------------------------------------------------------------------------------------------*/
 
 		.pa-bin {			position: absolute; width: 100%; left:0; top: calc(100% - 150px); height:149px;
@@ -82,6 +85,8 @@
 		
 		/* MISC --------------------------------------------------------------------------------------------------*/
 	
+		.pa-splash			{ position:absolute; left: calc(50% - 182px); top:  calc(40% - 51px);
+							}
 		.pa-arrow-down {  	position: absolute; left: calc(50% - 14px); top: 100%; width: 0; height: 0; 
 							border-left: 10px solid transparent; border-right: 10px solid transparent;  border-top: 10px solid #bbb;
 							}
@@ -103,7 +108,6 @@
 							border-radius: 8px; background-color: #eee; border: 1px solid #999; box-shadow: 4px 4px 12px 2px #aaa; 
 							font-size: 14px; display: none;
 							}
-
  </style>
 
 </head>
@@ -141,7 +145,7 @@
 				<option>Load show</option>
 				</select>
 			<img id="playBut" class="pa-playbut" src="img/playbut.gif"><br>
-			<!--img id="paLogo" src="img/palogo2.png"-->
+			<span id="activeVoice" class="pa-voice" ></span><br>
 			<div id="soundOptions" class="pa-options" style="height:17px;padding:0" onclick="player.SoundSettings()">Sound options</div>
 			<div id="moveDiv" class="pa-move">
 				<div id="startDiv" style="display:inline-block">
@@ -156,6 +160,7 @@
 			</div>
 		</div>
 	</div>
+	<img id="splashDiv" class="pa-splash" src="img/palogo.gif">
 <script>
 
 	function PlayTTS()
@@ -196,7 +201,9 @@
 	var script=null;														// CScript
 	var player=null;														// CPplayer
 	var isMobile=false;														// Is a mobile platform
+	var noSplash=false;														// Splash screen inhibitor
 	var playAspect=.6667;													// Image aspect ratio
+
 
 	$(document).ready(function() {								        // ON PAGE LOADED
 		isMobile=navigator.platform.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag id ios
@@ -210,7 +217,11 @@
 		script=new CScript();												// Alloc CScript module
 		player=new CPlayer();												// Alloc CPlayer module
 		ResizePanes();														// Start up sizing
-		$("#mainDiv").animate({ opacity:1}, 2000 );							// Fade-in interface
+		$("#splashDiv").delay(noSplash?1:1000).animate({ opacity:0},noSplash?1:500, // Hide logo
+				function() {	 											// When done
+					$("#mainDiv").animate({ opacity:1},noSplash?500:2000, 	// Show interface
+						function() { $("#splashDiv").remove();	});			// Remove splash screen
+				});
 
 		$(window).on("keydown",function(e) {								// HANDLE KEYPRESS
 			if (e.which == 32) {											// Spacebar
@@ -238,16 +249,17 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		
 	function ResizePanes()												//  REACT TO SCREEN SIZE
 	{
-		var sw=$("#mainDiv").width()*.5;									// Script width
-		var pw=$("#mainDiv").width()*.5;									// Player width
+		var sw=$("#mainDiv").width()*.6;									// Script width
+		var pw=$("#mainDiv").width()*.4;									// Player width
 		var th=$("#titleDiv").height()+10;									// Get height of title bar
 		$("#playerDiv").css({ width:pw+"px", left: sw+"px" });				// Position player
 		$("#screenDiv").height($("#screenDiv").width()*playAspect);			// 16 x 9 screen		
-		$("#playerDiv").css("min-height",$("#screenDiv").height()+126+"px");// Minimum height to preserve work area
+		$("#playerDiv").css("min-height",$("#screenDiv").height()+132+"px");// Minimum height to preserve work area
 		$("#scriptDiv").css({ width:sw+"px", height:$("#playerDiv").height()+"px" });	// Size script
 		var oh=$("#screenDiv").height()+82;									// Options height
-		$("#picOptions").css({ left:(pw/2-180)+"px",top:oh+"px" });			// Set option					
-		$("#soundOptions").css({ left:(pw/2+50)+"px",top:oh+"px" });		 // Set option					
+		pw=$("#screenDiv").width()/2;										// Center of player
+		$("#picOptions").css({ left:(pw-160)+"px",top:oh+"px" });			// Set option					
+		$("#soundOptions").css({ left:(pw+60)+"px",top:oh+"px" });			// Set option					
 		var x=$("#sliderBarDiv").offset().left-8;							// Set left
 		var y=$("#sliderBarDiv").offset().top+10;							// Set top
 		$("#scriptDivider").css({ "margin-top": th, height: $("#scriptTextDiv").height()+16+"px" });
@@ -507,7 +519,8 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		$("#camSizerBut").draggable({										// Make resizer draggable
 			axis:"x",														// Constrict to x axis
 			drag: function(event, ui) {										// On drag
-				var x=event.clientX-$("#cameraDiv").offset().left;			// Position of camera left
+				var x=event.pageX-$("#cameraDiv").offset().left;			// Position of camera left
+				trace(event.pageX,event)
 				x=Math.max(x,25);											// Not too small
 				$("#cameraDiv").width(x);									// Size camera width
 				$("#cameraDiv").height(x*playAspect);						// Height is proportional
@@ -561,7 +574,8 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		var _this=this;														// Save context
 		var x=$("#playerDiv").position().left+$("#playerDiv").width()/2-166;// Center in screen
 		var y=$("#screenDiv").height()-220;									// Bottom of screen
-		var str="Audio rate<div id='rateSlider' style='float:right;width:150px'></div><br><br>";
+		var str="Audio rate<div id='rateSlider' style='float:right;width:150px'></div><br>";
+		str+="<div style='float:right;width:75px;border-left:1px solid #66cc66;margin-top:-1px;'>&nbsp;</div><br>";
 		str+="Audio pitch<div id='pitchSlider'style='float:right;width:150px'></div><br><br>";
 		str+="Voice<select id='voiceSel' class='pa-is' style='float:right'width:150px'><option>None</option><option>Use MP3 file</option><option>Default computer voice</option></select><br><br>";
 		str+="MP3 file<input id='mp3Inp' type='text' class='pa-is' style='float:right;width:150px' value='http://stagetools.com/primaryaccess/narration.mp3'>";
@@ -573,6 +587,9 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 			_this.InitAudio();												// Init audio
 			script.Draw();													// Redraw script
 			_this.Draw();													// Redraw screen
+			if (_this.voice == 1) 		$("#activeVoice").text("MP3 file");			// Show voice used	
+			else if (_this.voice > 1) 	$("#activeVoice").text("Computer voice");	// Show voice used	
+			else 						$("#activeVoice").text("");					// Show voice used	
 			});
 		for (i=0;i<this.voices.length;++i)									// For each voice
 			$("#voiceSel").append("<option>"+this.voices[i].name+"</option>");	// Add to select
@@ -996,17 +1013,16 @@ $("#scriptTextDiv").text(str);
 	CBin.prototype.AddPic=function()									// ADD NEW PICTURE DIALOG
 	{
 		var _this=this;														// Save context
-		var x=$("#playerDiv").position().left+$("#playerDiv").width()/2-266;// Center in screen
-		x=Math.min(x,$("#mainDiv").width()-550);							// Cap to left
-		var y=$("#screenDiv").height()-280;									// Bottom of screen
-		var str="<br><div style='display:inline-block'><table style='width:300px'>";	// Info div/table
+		var x=$("#mainDiv").width()/2-266;									// Center in main screen
+		var y=$("#scriptDiv").height()/2-100;								// Center
+		var str="<div style='display:inline-block'><table style='width:300px'>";	// Info div/table
 		str+="<tr><td>Title</td><td><input id='addTitle' type='text' class='pa-is' style='width:100%'</td></tr>";
 		str+="<tr><td>URL</td><td><input id='addUrl' type='text' class='pa-is' style='width:100%'></td></tr>";
 		str+="<tr><td>Desc&nbsp;&nbsp;</td><td><textarea id='addDesc' type='text' class='pa-is' style='width:100%;height:50px'></textarea></td></tr>";
 		str+="<tr><td>Link</td><td><input id='addLink' type='text' class='pa-is' style='width:100%'>";
 		str+="</table></div>";														// End div
-		str+="<div style='display:inline-block;overflow:hidden;width:150px;margin-left:32px;vertical-align:top'>";
-		str+="<img id='addImg' style='width:100%'></div>";
+		str+="<div style='display:inline-block;overflow:hidden;width:160px;margin-left:32px;vertical-align:top'>";
+		str+="<img id='addImg' src='img/newbinpic.png' style='width:100%'></div>";
 			
 		DialogBox("Add new picture",str,x,y,500, function() {				// Run dialog			
 			var o={};
@@ -1055,6 +1071,7 @@ $("#scriptTextDiv").text(str);
 		str+="font-size:13px;width:"+(h*.77);								// Width proportion to 8.x x 11 page
 		str+="px;height:"+h+"px;top:8px;left:8px'>";						// Finish div
 		str+="<b> PrimaryAccess User&apos;s Guide</b><img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer;padding-bottom:12px'><br>"	// Add close button
+//		str+="<div style='-webkit-overflow-scrolling:touch'>";
 		str+="<iframe src='https://docs.google.com/document/d/e/2PACX-1vQQlE8nxS33bkI5CY--daR1ibM-7q6B-GFrztW6cq9lN6FNztpA_b0nrQiV33krohd5O6dvyU1ibiGU/pub?embedded=true' "; 
 		str+="style='width:100%;height:"+(h-30)+"px;overflow-y:scroll'></iframe>";
 		$("body").append(str+"</div>");										// Add popup
@@ -1120,6 +1137,18 @@ $("#scriptTextDiv").text(str);
 			desc: "The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.",
 			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"
 			});
+
+/*			"item-1": "name:Image-1;url:http`//memory.loc.gov/pnp/fsa/8e00000/8e00800/8e00810r.jpg;sp:1325,733,6450;ep:500,533,9075;dur:8;ease:both;title:<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>Japanese Internment",
+			"item-2": "name:Image-2;url:http`//memory.loc.gov/service/pnp/cph/3a10000/3a18000/3a18700/3a18762r.jpg;sp:150,200,9738;ep:2400,3033,7450;dur:8;ease:both;title:",
+			"item-3": "name:Image-3;url:http`//memory.loc.gov/pnp/ppprs/00200/00226v.jpg;sp:3925,1633,3938;ep:263,367,7563;dur:7;ease:both;title:",
+			"item-4": "name:Image-4;url:http`//memory.loc.gov/pnp/ppprs/00100/00173v.jpg;sp:2450,917,6513;ep:1450,667,8000;dur:8;ease:both;title:",
+			"item-5": "name:Image-5;url:http`//memory.loc.gov/pnp/ppprs/00100/00191r.jpg;sp:2512,3817,4150;ep:1063,517,7788;dur:16;ease:both;title:",
+			"item-6": "name:Image-6;url:http`//memory.loc.gov/pnp/ppprs/00100/00115v.jpg;sp:5525,1950,3913;ep:463,1950,8925;dur:15;ease:both;title:",
+			"item-7": "name:Image-7;url:http`//memory.loc.gov/pnp/ppprs/00200/00236v.jpg;sp:900,1633,7375;ep:550,533,8500;dur:5;ease:both;title:",
+			"item-8": "name:Image-8;url:http`//memory.loc.gov/pnp/ppprs/00200/00237v.jpg;sp:1000,1467,7588;ep:4538,4067,3500;dur:25;ease:both;title:",
+			"item-9": "name:Image-9;url:;sp:0,0,10000;ep:0,0,10000;dur:4;ease:both;title:<br/><br/><br/><br/><br/>Thanks to Mrs. Roache <br/>and her <br/>5th grade class <br/>at Buford Middle School",
+
+*/
 		return pics;
 	}
 
@@ -1189,7 +1218,7 @@ $("#scriptTextDiv").text(str);
 	{
 		$("#dialogDiv").remove();												// Kill old one, if any
 		var str="<div id='dialogDiv' class='pa-meta' style='width:"+width+"px'>"; // Add div
-		str+="<b>"+title+"</b><br><br>"+content+"<br><br>";						// Content	
+		str+="<span style='color:#999'><b>"+title+"</b></span><br><br>"+content+"<br><br>";						// Content	
 		str+="<div style='float:right'>"										// Div to hold buttons
 		str+="<div id='okBut' class='pa-bs'>OK</div>&nbsp";						// OK Button
 		str+="<div id='cancelBut' class='pa-bs'>Cancel</div></div";				// Cancel
