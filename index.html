@@ -244,7 +244,7 @@
 				}
 			});
 
-script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
+//script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		});									
 		
 	function ResizePanes()												//  REACT TO SCREEN SIZE
@@ -272,7 +272,7 @@ script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 				$("#binPixDiv").css("width","calc(100% - 200px)");			// Shorten container div
 				}
 			}		
-		$("#binDiv").css({ top:$("#playerDiv").height()+"px",width:pw+sw+"px" });	// Position bin below player
+		$("#binDiv").css({ top:$("#playerDiv").height()+"px",width:$("#mainDiv").width()+"px" });	// Position bin below player
 		if (script) script.Draw();											// Redraw script
 		if (player)	player.Draw();											// Redraw player
 		if (bin)	bin.Draw();												// Redraw bin
