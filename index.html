@@ -553,7 +553,6 @@
 			axis:"x",														// Constrict to x axis
 			drag: function(event, ui) {										// On drag
 				var x=event.pageX-$("#cameraDiv").offset().left;			// Position of camera left
-				trace(event.pageX,event)
 				x=Math.max(x,25);											// Not too small
 				$("#cameraDiv").width(x);									// Size camera width
 				$("#cameraDiv").height(x*playAspect);						// Height is proportional
