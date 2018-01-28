@@ -201,9 +201,9 @@
 	var script=null;														// CScript
 	var player=null;														// CPplayer
 	var isMobile=false;														// Is a mobile platform
+	var isFullScreen=false;													/// Is it full screen?
 	var noSplash=false;														// Splash screen inhibitor
 	var playAspect=.6667;													// Image aspect ratio
-
 
 	$(document).ready(function() {								        // ON PAGE LOADED
 		isMobile=navigator.platform.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag id ios
@@ -231,6 +231,8 @@
 				if (id && id.match(/add/))		return;						// If in add pic dialog
 				$("#playBut").trigger("click");								// Toggle play
 				}
+			if ((e.which == 27) && isFullScreen)							// Escape from full screen
+				player.SetFullScreen(false);								// Regular screen
 			if (player.inMove) {											// In motion editor
 				var pix=1/$("#screenDiv").width();							// Nudge amount
 				var o=script.pics[player.curPic].pos[player.inMove-1];		// Point at position based on side
@@ -252,7 +254,8 @@
 		var sw=$("#mainDiv").width()*.6;									// Script width
 		var pw=$("#mainDiv").width()*.4;									// Player width
 		var th=$("#titleDiv").height()+10;									// Get height of title bar
-		$("#playerDiv").css({ width:pw+"px", left: sw+"px" });				// Position player
+		$("#playerDiv").css({ width:pw+"px", left: sw+"px", top: 0, height: "calc(100% - 150px)" });		// Position player
+		$("#screenDiv").width($("#playerDiv").width()-32);					// Screen width
 		$("#screenDiv").height($("#screenDiv").width()*playAspect);			// 16 x 9 screen		
 		$("#playerDiv").css("min-height",$("#screenDiv").height()+132+"px");// Minimum height to preserve work area
 		$("#scriptDiv").css({ width:sw+"px", height:$("#playerDiv").height()+"px" });	// Size script
@@ -272,7 +275,7 @@
 				$("#binPixDiv").css("width","calc(100% - 200px)");			// Shorten container div
 				}
 			}		
-		$("#binDiv").css({ top:$("#playerDiv").height()+"px",width:$("#mainDiv").width()+"px" });	// Position bin below player
+		$("#binDiv").css({ top:$("#scriptDiv").height()+"px",width:$("#mainDiv").width()+"px" });	// Position bin below player
 		if (script) script.Draw();											// Redraw script
 		if (player)	player.Draw();											// Redraw player
 		if (bin)	bin.Draw();												// Redraw bin
@@ -316,6 +319,11 @@
 				}
 			})
 
+		$("#screenDiv").on("click", function() {							// ON SCREEN CLICK
+			if (isFullScreen)												// If full screen
+				_this.SetFullScreen(false);									// Exit mode
+			});
+			
 		$("#playerDiv").on("click", function() {							// ON PLAYER CLICK
 			$("#metaDiv").remove();											// Kill metadata popup
 			});
@@ -343,8 +351,8 @@
 				}
 			else if ($(this).val() == "Add new picture")					// Add pic
 				bin.AddPic();												// Run pic dialog
-			else if ($(this).val() == "Full screen")						// Full screen
-				PopUp("Not implemented yet...",2000,"screenDiv");			// TBD	
+			else if ($(this).val() == "Full screen") 						// Full screen
+				_this.SetFullScreen(true);										// Show full
 			else if ($(this).val() == "Load show")							// Load show
 				PopUp("Not implemented yet...",2000,"screenDiv");			// TBD	
 			$(this).val("Picture options");									// Set menu to default
@@ -408,7 +416,32 @@
 			}
 		else																// No pic
 			$("#screenPic").hide(0);										// Hide it
-		script.Highlight("#0000ff",this.curTime/this.speechRate,2);		// Highlight position in text						
+		script.Highlight("#0000ff",this.curTime/this.speechRate,2);			// Highlight position in text						
+	}
+
+	CPlayer.prototype.SetFullScreen=function(mode)						// FULL SCREEN
+	{
+		isFullScreen=mode;													// Set flag
+		if (mode) {															// If full screen
+			$("body").css({ "background-color":"#000" });					// Black background
+			$("#picOptions").fadeOut(0);	$("#soundOptions").fadeOut(0);	// Hide options
+			$("#scriptDiv").fadeOut();										// Fade out script
+			$("#binDiv").fadeOut();											// Bin
+			$("#screenDiv").height($(window).height()-168);					// Size screen height
+			$("#screenDiv").width($("#screenDiv").height()/playAspect);		// Width	
+			$("#playerDiv").width($("#screenDiv").width()+32);				// Player width
+			$("#playerDiv").height($("#screenDiv").height()+168-32);		// Height
+			var x=($(window).width()-$("#playerDiv").width())/2;			// Center
+			$("#playerDiv").offset({ left:Math.max(0,x), top:16 });			// Top left
+			this.Draw();													// Redraw
+			}
+		else{																// If regular screen
+			$("body").css({ "background-color":"#fff" });					// White back
+			$("#binDiv").fadeIn();											// Fade bin in
+			$("#scriptDiv").fadeIn();										// Script
+			$("#picOptions").fadeIn(0);	$("#soundOptions").fadeIn(0);		// Show options
+			ResizePanes();
+			}
 	}
 
 	CPlayer.prototype.InitMotionEditor=function(mode)					// INIT MOTION EDITOR
