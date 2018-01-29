@@ -117,7 +117,7 @@
 <body>
 	<div id="mainDiv" class="pa-main">
 		<div id="scriptDiv" class="pa-script">
-			<div id="titleDiv" contenteditable="true" class="pa-titleEdit">Civil Rights</div>
+			<div id="titleDiv" contenteditable="true" class="pa-titleEdit"></div>
 			<div id="scriptPixDiv" class="pa-scriptPix"></div>	
 			<div id="scriptDivider" style="position:absolute;background-color:#ccc;width:6px;height:calc(100% - 200px);top:20px;left:160px;border-radius:4px;"></div>	
 			<div id="scriptTextDiv" contenteditable="true" class="pa-scriptText"></div>		
@@ -220,6 +220,7 @@
 		bin=new CBin();														// Alloc CBin module
 		script=new CScript();												// Alloc CScript module
 		player=new CPlayer();												// Alloc CPlayer module
+		doc.Load("civil");													// Load demo
 		ResizePanes();														// Start up sizing
 		$("#splashDiv").delay(noSplash?1:1000).animate({ opacity:0},noSplash?1:500, // Hide logo
 				function() {	 											// When done
@@ -249,8 +250,6 @@
 				player.ScalePic(100,66,"#endImg",script.pics[player.curPic].pos[1]);   // Set end
 				}
 			});
-
-//script.AddPic(1,0);player.curPic=0;script.Draw();player.Draw()
 		});									
 		
 	function ResizePanes()												//  REACT TO SCREEN SIZE
@@ -358,10 +357,12 @@
 				bin.AddPic();												// Run pic dialog
 			else if ($(this).val() == "Full screen") {						// Full screen
 				_this.SetFullScreen(true);									// Show full
-				PopUp("Click here to go back");								// Tell how to return
+				PopUp("Click here to go back",500);							// Tell how to return
 				}
-			else if ($(this).val() == "Load show")							// Load show
-				PopUp("Not implemented yet...",2000,"screenDiv");			// TBD	
+			else if ($(this).val() == "Load show") {						// Load show
+				PopUp("Not implemented yet...",2000,"screenDiv");			// TBD
+				doc.Load("civil");
+				}	
 			$(this).val("Picture options");									// Set menu to default
 			});
 
@@ -445,7 +446,7 @@
 			var x=($(window).width()-$("#playerDiv").width())/2;			// Center
 			$("#playerDiv").offset({ left:Math.max(0,x), top:16 });			// Top left
 			$("#screenTitleDiv").text($("#titleDiv").text());				// Set title
-			$("#screenTitleDiv").css({ "font-size":h/12+"px",padding:(w/8)+"px","padding-top":(h/2.5)+"px", width:(w-w/4+32)+"px" });			
+			$("#screenTitleDiv").css({ "font-size":h/10+"px",padding:(w/8)+"px","padding-top":(h/2.5)+"px", width:(w-w/4+32)+"px" });			
 			$("#screenTitleDiv").fadeOut(0).fadeIn(500);					// Fade title in
 			this.Draw();													// Redraw
 			}
@@ -759,9 +760,7 @@
 				}
 			});
 
-var str="In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States."
-$("#scriptTextDiv").text(str);
-			
+		
 			$("#scriptTextDiv")[0].addEventListener('input', function() {		// ON SCRIPT CHANGE
 			_this.ResizeImageArea();										// Equilibrate fields
 			player.maxTime=$("#scriptTextDiv").text().length*player.speechRate; // Set max time
@@ -954,12 +953,12 @@ $("#scriptTextDiv").text(str);
 
 	function CBin()														// BIN CONSTRUCTOR
 	{
-		this.pics=this.LoadPics();											// Load default pics									
 		var str="<img style='padding-top:16px' src='img/shantilogo.png'>"; 
 		str+="<br><img  src='img/helpicon.gif'style='width:20px;margin:6px;margin-bottom:12px;cursor:pointer' onclick='bin.ShowHelp()'>"; 
 		str+="<div style='color:#888;font-size:11px;line-height:100%'> &copy; 2018 University<br>of Virginia</div>";
 		$("#binMenuDiv").html(str);											// Show menu
 		$("#binDiv").disableSelection();									// Inhibit selection
+		this.pics=[];														// Alloc pics array
 		this.Draw();														// Show bin
 
 		$("#binLeftBut").on("click", function() {							// Mobile scroll left
@@ -1130,78 +1129,6 @@ $("#scriptTextDiv").text(str);
 		$("#pa-close").click(function() { $("#pa-webpage").remove(); });	// Remove on click of close but
 	}
 
-	CBin.prototype.LoadPics=function() 									//	LOAD IMAGES
-	{
-		var pics=[];
-		pics.push({ src:"//stagetools.com/primaryaccess/Test.jpg", 
-			title:"Martin Luther King at Civil rights march",
-			date: "1963",
-			desc: "Martin Luther King delivers his \"I have a dream\" speech at the Lincoln Memorial",
-			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"
-			});
-		pics.push({ src:"//stagetools.com/primaryaccess/Test2.jpg", 
-			title:"Rosa Parks sitting on bus",
-			date: "1955",
-			desc: "Rosa Parks prompted outcry when she sat in the front of the bus.",
-			link: "//teacher.scholastic.com/rosa"
-			});
-		pics.push({ src:"//stagetools.com/primaryaccess/Test10.jpg", 
-			title:"Brown vs. Board of Education",
-			date: "1954",
-			desc: "George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.",
-			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"
-			});
-		pics.push({ src:"//stagetools.com/primaryaccess/Test3.jpg", 
-			title:"The Little Rock Nine",
-			date: "1957",
-			desc: "After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.",
-			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"
-			});
-		pics.push({ src:"//stagetools.com/primaryaccess/Test4.jpg", 
-			title:"The Little Rock Nine letter - Page 1",
-			date: "1957",
-			desc: "Letter from Daisy Bates to Roy Wilkins.",
-			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"
-			});
-		pics.push({ src:"//stagetools.com/primaryaccess/Test5.jpg", 
-			title:"The Little Rock Nine letter - Page 2",
-			date: "1957",
-			desc: "Letter from Daisy Bates to Roy Wilkins.",
-			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"
-			});			
-		pics.push({ src:"//stagetools.com/primaryaccess/Test6.jpg", 
-			title:"Greensboro Lunch Counter Sit-in",
-			date: "1960",
-			desc: "Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.",
-			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"
-			});
-		pics.push({ src:"//stagetools.com/primaryaccess/Test7.jpg", 
-			title:"Roger Wilkins, head of NAACP",
-			date: "1957",
-			desc: "Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.",
-			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"
-			});
-		pics.push({ src:"//stagetools.com/primaryaccess/Test8.jpg", 
-			title:"Civil rights march on Washington",
-			date: "1963",
-			desc: "The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.",
-			link: "//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"
-			});
-
-/*			"item-1": "name:Image-1;url:http`//memory.loc.gov/pnp/fsa/8e00000/8e00800/8e00810r.jpg;sp:1325,733,6450;ep:500,533,9075;dur:8;ease:both;title:<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>Japanese Internment",
-			"item-2": "name:Image-2;url:http`//memory.loc.gov/service/pnp/cph/3a10000/3a18000/3a18700/3a18762r.jpg;sp:150,200,9738;ep:2400,3033,7450;dur:8;ease:both;title:",
-			"item-3": "name:Image-3;url:http`//memory.loc.gov/pnp/ppprs/00200/00226v.jpg;sp:3925,1633,3938;ep:263,367,7563;dur:7;ease:both;title:",
-			"item-4": "name:Image-4;url:http`//memory.loc.gov/pnp/ppprs/00100/00173v.jpg;sp:2450,917,6513;ep:1450,667,8000;dur:8;ease:both;title:",
-			"item-5": "name:Image-5;url:http`//memory.loc.gov/pnp/ppprs/00100/00191r.jpg;sp:2512,3817,4150;ep:1063,517,7788;dur:16;ease:both;title:",
-			"item-6": "name:Image-6;url:http`//memory.loc.gov/pnp/ppprs/00100/00115v.jpg;sp:5525,1950,3913;ep:463,1950,8925;dur:15;ease:both;title:",
-			"item-7": "name:Image-7;url:http`//memory.loc.gov/pnp/ppprs/00200/00236v.jpg;sp:900,1633,7375;ep:550,533,8500;dur:5;ease:both;title:",
-			"item-8": "name:Image-8;url:http`//memory.loc.gov/pnp/ppprs/00200/00237v.jpg;sp:1000,1467,7588;ep:4538,4067,3500;dur:25;ease:both;title:",
-			"item-9": "name:Image-9;url:;sp:0,0,10000;ep:0,0,10000;dur:4;ease:both;title:<br/><br/><br/><br/><br/>Thanks to Mrs. Roache <br/>and her <br/>5th grade class <br/>at Buford Middle School",
-
-*/
-		return pics;
-	}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // DOC
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1213,18 +1140,31 @@ $("#scriptTextDiv").text(str);
 	CDoc.prototype.Save=function() 											//	SERIALIZE AND SAVE
 	{
 		var o={};
-		o.script=$("#scriptText").text();										// Get script text 
+		o.script=$("#scriptTextDiv").text();									// Get script text 
+		o.title=$("#titleDiv").text();											// Get title text 
+		o.voice=player.voice;													// Get audio mode
 		o.audioRate=player.audioRate;											// Get rate multiplier
 		o.pitch=player.pitch;													// Get TTS pitch
-		o.mp3=player.mp3;													// Get audio file
+		o.mp3=player.mp3;														// Get audio file
 		o.binPics=$.parseJSON(JSON.stringify(bin.pics));						// Clone bin pics
 		o.scriptPics=$.parseJSON(JSON.stringify(script.pics));					// Clone script pics
+		trace(JSON.stringify(o,8))
 	}
 
-	CDoc.prototype.Load=function() 											//	SERIALIZE
+	CDoc.prototype.Load=function(json) 										//	LOAD JSON AND SET
 	{
+		if (json == "civil")
+			json='{"script":"In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.","title":"Civil Rights","audioRate":100,"pitch":100,"voice":0,"mp3":"http://stagetools.com/primaryaccess/narration.mp3","binPics":[{"src":"//stagetools.com/primaryaccess/Test.jpg","title":"Martin Luther King at Civil rights march","date":"1963","desc":"Martin Luther King delivers his &quot;I have a dream&quot; speech at the Lincoln Memorial","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"},{"src":"//stagetools.com/primaryaccess/Test2.jpg","title":"Rosa Parks sitting on bus","date":"1955","desc":"Rosa Parks prompted outcry when she sat in the front of the bus.","link":"//teacher.scholastic.com/rosa"},{"src":"//stagetools.com/primaryaccess/Test10.jpg","title":"Brown vs. Board of Education","date":"1954","desc":"George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"},{"src":"//stagetools.com/primaryaccess/Test3.jpg","title":"The Little Rock Nine","date":"1957","desc":"After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test4.jpg","title":"The Little Rock Nine letter - Page 1","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test5.jpg","title":"The Little Rock Nine letter - Page 2","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test6.jpg","title":"Greensboro Lunch Counter Sit-in","date":"1960","desc":"Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"},{"src":"//stagetools.com/primaryaccess/Test7.jpg","title":"Roger Wilkins, head of NAACP","date":"1957","desc":"Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test8.jpg","title":"Civil rights march on Washington","date":"1963","desc":"The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"}],"scriptPics":[]}';
+		var o=$.parseJSON(json);												// Make json into object
+		$("#scriptTextDiv").text(o.script);										// Get script text 
+		$("#titleDiv").text(o.title);											// Get title text 
+		player.voice=o.voice;													// Get audio mode
+		player.audioRate=o.audioRate;											// Get rate multiplier
+		player.pitch=o.pitch;													// Get TTS pitch
+		player.mp3=o.mp3;														// Get audio file
+		bin.pics=$.parseJSON(JSON.stringify(o.binPics));						// Clone bin pics
+		script.pics=$.parseJSON(JSON.stringify(o.scriptPics));					// Clone script pics
 	}
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
