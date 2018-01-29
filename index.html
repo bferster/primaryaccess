@@ -627,7 +627,7 @@
 		str+="<div style='float:right;width:75px;border-left:1px solid #66cc66;margin-top:-1px;'>&nbsp;</div><br>";
 		str+="Audio pitch<div id='pitchSlider'style='float:right;width:150px'></div><br><br>";
 		str+="Voice<select id='voiceSel' class='pa-is' style='float:right'width:150px'><option>None</option><option>Use MP3 file</option><option>Default computer voice</option></select><br><br>";
-		str+="MP3 file<input id='mp3Inp' type='text' class='pa-is' style='float:right;width:150px' value='http://stagetools.com/primaryaccess/narration.mp3'>";
+		str+="MP3 file<input id='mp3Inp' type='text' class='pa-is' style='float:right;width:150px'>";
 		DialogBox("Sound Settings",str,x,y,300, function() {				// Run dialog			
 			_this.pitch=$("#pitchSlider").slider("option", "value"); 		// Get pitch		
 			_this.audioRate=$("#rateSlider").slider("option","value");		// Get rate		
@@ -642,18 +642,19 @@
 			});
 		for (i=0;i<this.voices.length;++i)									// For each voice
 			$("#voiceSel").append("<option>"+this.voices[i].name+"</option>");	// Add to select
+		$("#mp3Inp").val(this.mp3);											// Set mp3
 		$("#voiceSel").prop("selectedIndex",_this.voice);					// Set current voice
 		$(this).val("Sound options");										// Set menu to default
-		$("#pitchSlider").slider({ value:_this.pitch, step:5, min:0, max:200 });			// Init as slider 0-200
-		$("#rateSlider").slider({ value:_this.audioRate, step:5, min:50, max:150 });		// Init as slider 50-150
+		$("#pitchSlider").slider({ value:_this.pitch, step:5, min:0, max:200 });		// Init as slider 0-200
+		$("#rateSlider").slider({ value:_this.audioRate, step:5, min:50, max:150 });	// Init as slider 50-150
 		}
-
+		
 	CPlayer.prototype.InitAudio=function()								// INIT AUDIO
 	{
 		this.audio=null;													// Assume no audio						
 		if ((this.voice == 1) && this.mp3)	{								// If an mp3 file
 			this.audio=new Audio();											// Init audio object
-			this.audio=new Audio(this.mp3);									// Load mp3 file
+			this.audio=new Audio(ConvertFromGoogleDrive(this.mp3));			// Load mp3 file
 			}
 		else if (this.voice > 1) {											// If text to speech
 			speechSynthesis.cancel();										// Kill queue
@@ -1154,7 +1155,7 @@
 	CDoc.prototype.Load=function(json) 										//	LOAD JSON AND SET
 	{
 		if (json == "civil")
-			json='{"script":"In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.","title":"Civil Rights","audioRate":100,"pitch":100,"voice":0,"mp3":"http://stagetools.com/primaryaccess/narration.mp3","binPics":[{"src":"//stagetools.com/primaryaccess/Test.jpg","title":"Martin Luther King at Civil rights march","date":"1963","desc":"Martin Luther King delivers his &quot;I have a dream&quot; speech at the Lincoln Memorial","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"},{"src":"//stagetools.com/primaryaccess/Test2.jpg","title":"Rosa Parks sitting on bus","date":"1955","desc":"Rosa Parks prompted outcry when she sat in the front of the bus.","link":"//teacher.scholastic.com/rosa"},{"src":"//stagetools.com/primaryaccess/Test10.jpg","title":"Brown vs. Board of Education","date":"1954","desc":"George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"},{"src":"//stagetools.com/primaryaccess/Test3.jpg","title":"The Little Rock Nine","date":"1957","desc":"After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test4.jpg","title":"The Little Rock Nine letter - Page 1","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test5.jpg","title":"The Little Rock Nine letter - Page 2","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test6.jpg","title":"Greensboro Lunch Counter Sit-in","date":"1960","desc":"Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"},{"src":"//stagetools.com/primaryaccess/Test7.jpg","title":"Roger Wilkins, head of NAACP","date":"1957","desc":"Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test8.jpg","title":"Civil rights march on Washington","date":"1963","desc":"The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"}],"scriptPics":[]}';
+			json='{"script":"In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.","title":"Civil Rights","audioRate":100,"pitch":100,"voice":0,"mp3":"https://drive.google.com/open?id=1wJx4FrSMA9g45XvuQ_3PkX4E1e3qluD7","binPics":[{"src":"//stagetools.com/primaryaccess/Test.jpg","title":"Martin Luther King at Civil rights march","date":"1963","desc":"Martin Luther King delivers his &quot;I have a dream&quot; speech at the Lincoln Memorial","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"},{"src":"//stagetools.com/primaryaccess/Test2.jpg","title":"Rosa Parks sitting on bus","date":"1955","desc":"Rosa Parks prompted outcry when she sat in the front of the bus.","link":"//teacher.scholastic.com/rosa"},{"src":"//stagetools.com/primaryaccess/Test10.jpg","title":"Brown vs. Board of Education","date":"1954","desc":"George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"},{"src":"//stagetools.com/primaryaccess/Test3.jpg","title":"The Little Rock Nine","date":"1957","desc":"After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test4.jpg","title":"The Little Rock Nine letter - Page 1","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test5.jpg","title":"The Little Rock Nine letter - Page 2","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test6.jpg","title":"Greensboro Lunch Counter Sit-in","date":"1960","desc":"Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"},{"src":"//stagetools.com/primaryaccess/Test7.jpg","title":"Roger Wilkins, head of NAACP","date":"1957","desc":"Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test8.jpg","title":"Civil rights march on Washington","date":"1963","desc":"The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"}],"scriptPics":[]}';
 		var o=$.parseJSON(json);												// Make json into object
 		$("#scriptTextDiv").text(o.script);										// Get script text 
 		$("#titleDiv").text(o.title);											// Get title text 
@@ -1228,6 +1229,17 @@
 			});
 	}	
 
+	function ConvertFromGoogleDrive(url)									// CONVERT GOOGLE DRIVE LINK TO DIRECT LINK
+	{
+		if (url && url.match(/drive\.google/i)) {								// A google drive image
+			var id=url.match(/\?id=(.+)/i);										// Extract id
+			if (!id)															// Nothing there
+				id=url.match(/\/d\/(.*?)\//);									// Try this way
+			if (id)																// An id found
+				url="//drive.google.com/uc?export=view&id="+id[1];				// Construct 'direct' link
+			}
+		return url;																// Return link
+	}
 	function trace(msg, p1, p2, p3, p4)										// CONSOLE 
 	{
 		
