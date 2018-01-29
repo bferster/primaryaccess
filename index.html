@@ -24,7 +24,8 @@
 		.pa-title {			width: calc(100% - 200px); margin-left: 176px; margin-top: 20px; 
 		 					font-weight: bold; font-size: 30px;
 							}
-		.pa-scriptPix {		display: inline-block; width: 126px; padding: 16px; height:80%; cursor:url(img/moveud.cur),auto;
+		.pa-scriptPix {		display: inline-block; width: 126px; padding: 16px; height: 80%;
+							color: #999; text-align:center; cursor:url(img/moveud.cur),auto;
 							}
 		.pa-scriptPic {		width: 124px; height: 83px; position: absolute; left: 16px; overflow: hidden;
 							border: 2px solid #999;
@@ -104,9 +105,9 @@
 							}
 		.pa-arrow {  		cursor:pointer; vertical-align: 2px; display: none;
 							}
-		.pa-popup {			position: absolute;  width: 200px; padding: 16px;left: calc(50% - 100px); top: calc(50% - 50px);
-							border-radius: 8px; background-color: #eee; border: 1px solid #999; box-shadow: 4px 4px 12px 2px #aaa; 
-							font-size: 14px; display: none;
+		.pa-popup {			position: absolute;  width: auto; padding: 8px; left: calc(50% - 100px); top: calc(50% - 50px);
+							border-radius: 8px; background-color: #eee; border: 1px solid #999; box-shadow: 4px 2px 12px 2px #aaa; 
+							font-size: 14px; text-align:center; display: none;
 							}
  </style>
 
@@ -254,7 +255,8 @@
 		var sw=$("#mainDiv").width()*.6;									// Script width
 		var pw=$("#mainDiv").width()*.4;									// Player width
 		var th=$("#titleDiv").height()+10;									// Get height of title bar
-		$("#playerDiv").css({ width:pw+"px", left: sw+"px", top: 0, height: "calc(100% - 150px)" });		// Position player
+		var ph=$(window).outerHeight()-150;									// Player/script height			
+		$("#playerDiv").css({ width:pw+"px", left: sw+"px", top: 0, height:ph+"px" });	// Position player
 		$("#screenDiv").width($("#playerDiv").width()-32);					// Screen width
 		$("#screenDiv").height($("#screenDiv").width()*playAspect);			// 16 x 9 screen		
 		$("#playerDiv").css("min-height",$("#screenDiv").height()+132+"px");// Minimum height to preserve work area
@@ -275,7 +277,7 @@
 				$("#binPixDiv").css("width","calc(100% - 200px)");			// Shorten container div
 				}
 			}		
-		$("#binDiv").css({ top:$("#scriptDiv").height()+"px",width:$("#mainDiv").width()+"px" });	// Position bin below player
+		$("#binDiv").css({ top:$("#playerDiv").height()+"px",width:$("#mainDiv").width()+"px" });	// Position bin below player
 		if (script) script.Draw();											// Redraw script
 		if (player)	player.Draw();											// Redraw player
 		if (bin)	bin.Draw();												// Redraw bin
@@ -320,7 +322,7 @@
 			})
 
 		$("#screenDiv").on("click", function() {							// ON SCREEN CLICK
-			if (isFullScreen)												// If full screen
+			if (isFullScreen) 												// If full screen
 				_this.SetFullScreen(false);									// Exit mode
 			});
 			
@@ -351,8 +353,10 @@
 				}
 			else if ($(this).val() == "Add new picture")					// Add pic
 				bin.AddPic();												// Run pic dialog
-			else if ($(this).val() == "Full screen") 						// Full screen
-				_this.SetFullScreen(true);										// Show full
+			else if ($(this).val() == "Full screen") {						// Full screen
+				_this.SetFullScreen(true);									// Show full
+				PopUp("Click here to go back");								// Tell how to return
+				}
 			else if ($(this).val() == "Load show")							// Load show
 				PopUp("Not implemented yet...",2000,"screenDiv");			// TBD	
 			$(this).val("Picture options");									// Set menu to default
@@ -761,7 +765,7 @@ $("#scriptTextDiv").text(str);
 
 	CScript.prototype.Draw=function() 									//	DRAW SCRIPT
 	{
-		var i,y,str=""
+		var i,y,str="<br>Drag<br>pictures<br>here"
 		var _this=this;														// Save context
 		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
 		var offy=$("#scriptTextDiv").offset().top+24;						// Offset of title
