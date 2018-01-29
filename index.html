@@ -21,7 +21,7 @@
 		.pa-script {		position: absolute; left:0; top:0; height: calc(100% - 150px); 
 							background-color:#fff; overflow-y: scroll;
 							}
-		.pa-title {			width: calc(100% - 200px); margin-left: 176px; margin-top: 20px; 
+		.pa-titleEdit {		width: calc(100% - 200px); margin-left: 176px; margin-top: 20px; 
 		 					font-weight: bold; font-size: 30px;
 							}
 		.pa-scriptPix {		display: inline-block; width: 126px; padding: 16px; height: 80%;
@@ -43,6 +43,9 @@
 							}
 		.pa-screen {		width:calc(100% - 32px); background-color: #666; border-radius: 8px; 
 							margin: 16px; margin-bottom: -4px; text-align:left; overflow: hidden;
+							}
+		.pa-title {			position: absolute; top: 0; left:0;  width: 100%; text-align: center;
+							color:#fff; font-weight:bold; text-shadow: 2px 2px 8px #000;
 							}
 		.pa-time {			color: #666; padding: 12px 16px; font-size: 11px;
 							}
@@ -67,7 +70,6 @@
 							}
 		.pa-voice {			font-size: 10px; color: #999; 
 							}
-
 
 		/* BIN --------------------------------------------------------------------------------------------------*/
 
@@ -115,7 +117,7 @@
 <body>
 	<div id="mainDiv" class="pa-main">
 		<div id="scriptDiv" class="pa-script">
-			<div id="titleDiv" contenteditable="true" class="pa-title">Civil Rights</div>
+			<div id="titleDiv" contenteditable="true" class="pa-titleEdit">Civil Rights</div>
 			<div id="scriptPixDiv" class="pa-scriptPix"></div>	
 			<div id="scriptDivider" style="position:absolute;background-color:#ccc;width:6px;height:calc(100% - 200px);top:20px;left:160px;border-radius:4px;"></div>	
 			<div id="scriptTextDiv" contenteditable="true" class="pa-scriptText"></div>		
@@ -128,7 +130,8 @@
 		</div>
 		<div id="playerDiv" class="pa-player">
 			<div id="screenDiv" class="pa-screen">
-				<img id='screenPic' src="" style="position:relative">
+				<img id="screenPic" src="" style="position:relative">
+				<div id="screenTitleDiv" class="pa-title"></div>
 			</div>
 			<div class="pa-time">
 				<span id="startTime" style="float:left;cursor:pointer"></span>
@@ -421,6 +424,8 @@
 		else																// No pic
 			$("#screenPic").hide(0);										// Hide it
 		script.Highlight("#0000ff",this.curTime/this.speechRate,2);			// Highlight position in text						
+		if (isFullScreen && !this.curTime)									// If full screen
+			$("#screenTitleDiv").fadeIn(0);									// Fade title in
 	}
 
 	CPlayer.prototype.SetFullScreen=function(mode)						// FULL SCREEN
@@ -432,14 +437,20 @@
 			$("#scriptDiv").fadeOut();										// Fade out script
 			$("#binDiv").fadeOut();											// Bin
 			$("#screenDiv").height($(window).height()-168);					// Size screen height
-			$("#screenDiv").width($("#screenDiv").height()/playAspect);		// Width	
-			$("#playerDiv").width($("#screenDiv").width()+32);				// Player width
-			$("#playerDiv").height($("#screenDiv").height()+168-32);		// Height
+			var h=$("#screenDiv").height();									// Save height
+			$("#screenDiv").width(h/playAspect);							// Width	
+			var w=$("#screenDiv").width();									// Save width
+			$("#playerDiv").width(w+32);									// Player width
+			$("#playerDiv").height(h+168-32);								// Player height
 			var x=($(window).width()-$("#playerDiv").width())/2;			// Center
 			$("#playerDiv").offset({ left:Math.max(0,x), top:16 });			// Top left
+			$("#screenTitleDiv").text($("#titleDiv").text());				// Set title
+			$("#screenTitleDiv").css({ "font-size":h/12+"px",padding:(w/8)+"px","padding-top":(h/2.5)+"px", width:(w-w/4+32)+"px" });			
+			$("#screenTitleDiv").fadeOut(0).fadeIn(500);					// Fade title in
 			this.Draw();													// Redraw
 			}
 		else{																// If regular screen
+			$("#screenTitleDiv").text("");									// No title
 			$("body").css({ "background-color":"#fff" });					// White back
 			$("#binDiv").fadeIn();											// Fade bin in
 			$("#scriptDiv").fadeIn();										// Script
@@ -578,6 +589,7 @@
 		var _this=this;														// Save context
 		$("#cameraDiv").remove();											// Remove camera
 		if (this.inPlay) {													// If playing
+			$("#screenTitleDiv").fadeOut(750);								// Fadeout title, if any
 			this.StartAudio(this.curTime);									// Start	
 			var resetTime=start;											// Time to restart
 			start=this.curTime;												// Set to start
