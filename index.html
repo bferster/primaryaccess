@@ -356,6 +356,7 @@
 
 		$("#picOptions").on("change", function() {							// ON PIC OPTIONS CHANGE
 			if (($(this).val() == "Set motion") && (_this.curPic != -1)) {	// If setting motion on a valid pic
+				doc.Do();													// Save a do
 				_this.InitMotionEditor(1);									// Draw motion editor
 				$("#moveDiv").fadeIn();										// Show move controls
 				}
@@ -366,12 +367,14 @@
 				PopUp("Click here to go back",500);							// Tell how to return
 				}
 			else if ($(this).val() == "Load show") {						// Load show
+				doc.Do();													// Save a do
 				PopUp("Not implemented yet...",2000,"screenDiv");			// TBD
 				}	
 			$(this).val("Picture options");									// Set menu to default
 			});
 
 		$("#soundOptions").on("click", function() {							// ON SOUND OPTIONS CLICK
+			doc.Do();														// Save a do
 			_this.SoundSettings();											// Change sound settings	
 			$(this).val("Sound options");									// Set menu to default
 			}); 
@@ -752,6 +755,7 @@
 		$("#scriptDiv").droppable({											// HANDLE DROPS TO BIN
 			accept: ".pa-pic", 												// Accept only pics from bin	  
 			drop: function(event,ui) {										// On drop
+				doc.Do();													// Save a do
 				$("#metaDiv").remove();										// Kill popup
 				var id=ui.draggable[0].id.substr(7);						// Get id
 				if (!player.inMove)											// If not in motion editor
@@ -766,8 +770,7 @@
 				}
 			});
 
-		
-			$("#scriptTextDiv")[0].addEventListener('input', function() {		// ON SCRIPT CHANGE
+		$("#scriptTextDiv")[0].addEventListener('input', function() {		// ON SCRIPT CHANGE
 			_this.ResizeImageArea();										// Equilibrate fields
 			player.maxTime=$("#scriptTextDiv").text().length*player.speechRate; // Set max time
 			$("#endTime").text(SecondsToTimecode(Math.round(player.maxTime)));// End display
@@ -826,6 +829,7 @@
 					_this.Highlight("#0000ff",pos,2,true);					// Highlight position in text & inhibit scrolling						
 					},
 				stop: function(event, ui) {									// If stopped						
+					doc.Do();												// Save a do
 					if (ui.position.top < -75) {							// Off the top
 						_this.pics.splice(ui.helper[0].id.substr(10),1);	// Delete it
 						Sound("delete");									// Sound
@@ -1081,6 +1085,7 @@
 			
 		DialogBox("Add new picture",str,x,y,500, function() {				// Run dialog			
 			var o={};
+			doc.Do();														// Save a do
 			o.src=$("#addUrl").val() ? $("#addUrl").val() : "";				// Add src
 			o.title=$("#addTitle").val() ? $("#addTitle").val() : "";		// Add title
 			o.desc=$("#addDesc").val() ? $("#addDesc").val() : "";			// Add desc
@@ -1142,6 +1147,10 @@
 	function CDoc()															// CONSTRUCTOR
 	{
 		this.curGDoc=null;														// ID of gdrive spreadsheet
+		this.curUndo=0;															// Undo counter
+		this.changed=false;														// Changed flag
+		this.undos=[];															// Holds undos
+		this.lastScriptLength=0;												// Script length
 	}
 
 	CDoc.prototype.Save=function() 											//	SERIALIZE AND SAVE
@@ -1171,6 +1180,12 @@
 	
 	}
 
+	CDoc.prototype.Do=function() 											//	SAVE UNDO
+	{
+		this.changed=true;														// Set changed flag
+		this.curUndo++;															// Inc undo count
+	}
+	
 	CDoc.prototype.Load=function(json) 										//	LOAD JSON AND SET
 	{
 		if (json == "civil")
