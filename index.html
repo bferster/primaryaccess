@@ -175,11 +175,12 @@
 	  
 	 function handleClientLoad() { 											// ON GDRIVE API LOAD
 		var url=window.location.search.substring(1);						// Get query string
-		if (url)															// If a doc defined
+		if (url) {															// If a doc defined
 			url=url.replace(/&fs/i,"");										// Remove full screen tag
-			gapi.load('client:auth2', function() {							// Add client
+			gapi.load('client', function() {								// Add client
 				gdrive.LoadFile(url);										// Get from Google doc
 				});
+			}
 		 }
 	  
 	function PlayTTS()
@@ -259,7 +260,7 @@
 			if ((e.which == 27) && isFullScreen)							// Escape from full screen
 				player.SetFullScreen(false);								// Regular screen
 			if ((e.which == 84) && e.altKey && e.ctrlKey)					// TEST KEY
-					doc.Save();
+				doc.Save();
 	
 			if (player.inMove) {											// In motion editor
 				var pix=1/$("#screenDiv").width();							// Nudge amount
@@ -1181,9 +1182,9 @@
 		o.mp3=player.mp3;														// Get audio file
 		o.binPics=$.parseJSON(JSON.stringify(bin.pics));						// Clone bin pics
 		o.scriptPics=$.parseJSON(JSON.stringify(script.pics));					// Clone script pics
-//		trace(JSON.stringify(o,8))
+		trace(JSON.stringify(o,8))
 
-gTest()
+
 
 /*		gdrive.AccessAPI(function() {											// Auth
 			trace("out")
@@ -1218,6 +1219,7 @@ gTest()
 	{
 		if (json == "civil")
 			json='{"script":"In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.","title":"Civil Rights","audioRate":100,"pitch":100,"voice":0,"mp3":"https://drive.google.com/open?id=1wJx4FrSMA9g45XvuQ_3PkX4E1e3qluD7","binPics":[{"src":"//stagetools.com/primaryaccess/Test.jpg","title":"Martin Luther King at Civil rights march","date":"1963","desc":"Martin Luther King delivers his &quot;I have a dream&quot; speech at the Lincoln Memorial","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"},{"src":"//stagetools.com/primaryaccess/Test2.jpg","title":"Rosa Parks sitting on bus","date":"1955","desc":"Rosa Parks prompted outcry when she sat in the front of the bus.","link":"//teacher.scholastic.com/rosa"},{"src":"//stagetools.com/primaryaccess/Test10.jpg","title":"Brown vs. Board of Education","date":"1954","desc":"George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"},{"src":"//stagetools.com/primaryaccess/Test3.jpg","title":"The Little Rock Nine","date":"1957","desc":"After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test4.jpg","title":"The Little Rock Nine letter - Page 1","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test5.jpg","title":"The Little Rock Nine letter - Page 2","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test6.jpg","title":"Greensboro Lunch Counter Sit-in","date":"1960","desc":"Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"},{"src":"//stagetools.com/primaryaccess/Test7.jpg","title":"Roger Wilkins, head of NAACP","date":"1957","desc":"Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test8.jpg","title":"Civil rights march on Washington","date":"1963","desc":"The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"}],"scriptPics":[]}';
+		
 		var o=$.parseJSON(json);												// Make json into object
 		$("#scriptTextDiv").text(o.script);										// Get script text 
 		$("#titleDiv").text(o.title);											// Get title text 
@@ -1227,6 +1229,7 @@ gTest()
 		player.mp3=o.mp3;														// Get audio file
 		bin.pics=$.parseJSON(JSON.stringify(o.binPics));						// Clone bin pics
 		script.pics=$.parseJSON(JSON.stringify(o.scriptPics));					// Clone script pics
+		ResizePanes();															// Redraw
 	}
 
 	CDoc.prototype.AddCSV=function(csv) 									//	ADD CSV TO SHOW
