@@ -1253,6 +1253,12 @@
 				for (j=0;j<o.length;++j)										// For each bin pic
 					if (newPic(o[j].src))										// If not in bin already
 						bin.pics.push(o[j]);									// Add it
+				o=$.parseJSON(v[2]);											// Point at obj
+				if (o.pitch)		player.pitch=o.pitch;						// Set pitch
+				if (o.audioRate)	player.audioRate=o.audioRate;				// Set rate
+				if (o.voice)		player.voice=o.voice;						// Set voice
+				if (o.mp3)			player.mp3=o.mp3;							// Set voice
+				script.pics=$.parseJSON(JSON.stringify(o.scriptPics));			// Clone script pics
 				}
 			}
 		ResizePanes();															// Redraw
