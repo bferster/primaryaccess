@@ -177,7 +177,7 @@
 		var url=window.location.search.substring(1);						// Get query string
 		if (url) {															// If a doc defined
 			url=url.replace(/&fs/i,"");										// Remove full screen tag
-			gapi.load('client', function() {								// Add client
+			gapi.load('client', function() {								// Add client and auth
 				gdrive.LoadFile(url);										// Get from Google doc
 				});
 			}
