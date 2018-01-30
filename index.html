@@ -8,7 +8,6 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-	<script type="text/javascript" src="https://apis.google.com/js/client.js"></script>
 	<script src="lib/jquery.ui.touch-punch.min.js"></script>
 	<style type="text/css">
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
@@ -166,8 +165,23 @@
 		</div>
 	</div>
 	<img id="splashDiv" class="pa-splash" src="img/palogo.gif">
-<script>
-
+	
+	<script async defer src="https://apis.google.com/js/api.js"
+	onload="this.onload=function(){};handleClientLoad()"
+	onreadystatechange="if (this.readyState === 'complete') this.onload()">
+  </script>
+  
+  <script>
+	  
+	 function handleClientLoad() { 											// ON GDRIVE API LOAD
+		var url=window.location.search.substring(1);						// Get query string
+		if (url)															// If a doc defined
+			url=url.replace(/&fs/i,"");										// Remove full screen tag
+			gapi.load('client:auth2', function() {							// Add client
+				gdrive.LoadFile(url);										// Get from Google doc
+				});
+		 }
+	  
 	function PlayTTS()
 	{
 		player.inPlay=!player.inPlay;										// Toggle state
@@ -186,7 +200,7 @@
 		var ar=player.audioRate/100;										// Speed
 		player.speechRate=.070/ar;											// Adjust speechRate
 		var pos=player.curTime/player.speechRate;							// Start of text
-			player.audio.text=$("#scriptTextDiv").text().substr(pos);		// Set text							
+		player.audio.text=$("#scriptTextDiv").text().substr(pos);			// Set text							
 		player.audio.rate=Math.max(.1,player.audioRate/100);				// Set rate 
 		player.audio.pitch=(player.pitch/100);								// Set pitch 0-2
 		if (ar > 1)			ar=1+(ar-1)*2;									// Scale 1-1.5 to 1-2
@@ -223,13 +237,16 @@
 		script=new CScript();												// Alloc CScript module
 		player=new CPlayer();												// Alloc CPlayer module
 		gdrive=new Gdrive();												// Alloc GDrive module
-		doc.Load("civil");													// Load demo
+		if (!url) 															// No doc set
+			doc.Load("civil");												// Load demo
 		ResizePanes();														// Start up sizing
 		$("#splashDiv").delay(noSplash?1:1000).animate({ opacity:0},noSplash?1:500, // Hide logo
 				function() {	 											// When done
+					if (url && url.match(/&fs/i)) 							// Full screen flag
+						player.SetFullScreen(true);							// Set it
 					$("#mainDiv").animate({ opacity:1},noSplash?500:2000, 	// Show interface
-						function() { $("#splashDiv").remove();	});			// Remove splash screen
-				});
+						function() {	$("#splashDiv").remove();	});		// Remove splash screen
+					});		
 
 		$(window).on("keydown",function(e) {								// HANDLE KEYPRESS
 			if (e.which == 32) {											// Spacebar
@@ -1166,18 +1183,29 @@
 		o.scriptPics=$.parseJSON(JSON.stringify(script.pics));					// Clone script pics
 //		trace(JSON.stringify(o,8))
 
+gTest()
+
+/*		gdrive.AccessAPI(function() {											// Auth
+			trace("out")
+			gdrive.Download(gdrive.lastId,function(res) {						// Download file
+							var data=res.match(/<!-- (.+) -->/)[1];				// Extract raw seg data
+							trace(res); 
+							});
+						}); 
+
+
 		gdrive.AccessAPI(function() {											// Auth
 			gdrive.Picker(true,function(res) {									// Run picker
-/*					gdrive.AccessAPI(function() {
+					gdrive.AccessAPI(function() {
 						gdrive.Download(gdrive.lastId,function(res) {			// Download file
 							var data=res.match(/<!-- (.+) -->/)[1];				// Extract raw seg data
 	//						_this.Do();											// Save undo		
 							trace(res); 
 							});
 						}); 
-*/					}); 
+					}); 
 			}); 
-	
+*/	
 	}
 
 	CDoc.prototype.Do=function() 											//	SAVE UNDO
@@ -1201,10 +1229,49 @@
 		script.pics=$.parseJSON(JSON.stringify(o.scriptPics));					// Clone script pics
 	}
 
+	CDoc.prototype.AddCSV=function(csv) 									//	ADD CSV TO SHOW
+	{
+		var i,j,v,o;
+		if (csv) csv.replace(/\\r/,"");											// Remove CRs
+		csv=csv.split("\n");													// Split into line
+		bin.pics=[];
+		for (i=0;i<csv.length;++i) {											// For each line
+			v=csv[i].split("\t");												// Split into fields
+			if (v[0] == "pic") {												// A pic
+				o={	title:v[1],src:v[2],link:v[3],desc:v[4] }					// Add
+				bin.pics.push(o);												// Add to bin
+				}
+			if (v[0] == "script") 												// A title
+				$("#scriptTextDiv").text(v[1]);									// Add to script
+			if (v[0] == "title") 												// A title
+				$("#titleDiv").text(v[1]);										// Add to title
+			if (v[0] == "data") {												// Data
+				o=$.parseJSON(v[2]).binPics;									// Point at pics
+				for (j=0;j<o.length;++j)										// For each bin pic
+					if (newPic(o[j].src))										// If not in bin already
+						bin.pics.push(o[j]);									// Add it
+				}
+			}
+		ResizePanes();															// Redraw
+
+		function newPic(src) {													// SEE IF PIC IS ALREADY IN BIN
+			var k;
+			for (k=0;k<bin.pics.length;++k)										// For each bin pic
+				if (bin.pics[k].src == src)										// It matches
+					return false;												// Already in
+			return true;														// Didn't find one
+			}
+	}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GOOGLE DRIVE ACCESS 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	function gTest()
+	{
+		gdrive.LoadFile("12mLmXY0LILmspBDOd2DuEcti7kqe5pwWIGh4jdKSQF8");
+ 	}
 
 	function Gdrive()															// CONSTRUCTOR
 	{
@@ -1216,6 +1283,33 @@
 		this.lastId="";																// Id of last one saved/loaded
 		this.lastName="";															// Name of last file
 	}
+
+	Gdrive.prototype.LoadFile=function(id)									// CHECK FOR AUTHORIZATION & LOAD FILE
+	{
+		gapi.client.init({															// Init client
+        apiKey: this.key,   														// Set apikey
+		clientId:this.clientId,														// Set clientId
+        scope: "https://www.googleapis.com/auth/drive.metadata.readonly",			// Set scope
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
+        }).then(function () {														// Once initted
+			gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);		// Listen for sign-in change
+ 	        updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());		// Sign in?
+			gapi.auth2.getAuthInstance().signIn();									// Sign in
+ 			});
+    
+		  function updateSigninStatus(isSignedIn) {									// ON SIGN-IN CHANGE
+				if (isSignedIn) {													// If signed in
+					var str="https://www.googleapis.com/drive/v3/files/"+id+"/export?mimeType=text/tab-separated-values";
+						var accessToken=gapi.auth.getToken().access_token;				// Get access token
+					var xhr=new XMLHttpRequest();									// Ajax
+					xhr.open("GET",str);											// Set open url
+					xhr.setRequestHeader('Authorization','Bearer '+accessToken);	// Set header
+					xhr.onload=function()  {  doc.AddCSV(xhr.responseText);   };	// On load
+					xhr.send();														// Do it
+					}
+		  	}
+	}
+
 
 	Gdrive.prototype.AccessAPI=function(apiCall, callback)						// CHECK FOR AUTHORIZATION and ACCESS API
 	{
@@ -1241,43 +1335,11 @@
 			}
 	}
 
-	Gdrive.prototype.CreateFolder=function(folderName, callback)				// CREATE NEW FOLDER ON G-DRIVE
-	{
-		var _this=this;																// Save context
-		var token=gapi.auth.getToken().access_token;								// Get access token
-		var request=gapi.client.drive.files.list({									// Make request object
-			q:"title='"+folderName+"' and mimeType='application/vnd.google-apps.folder' and trashed = false" // Look for name and folder mimetype
-			});
-		request.execute(function(resp) {											// Get data
-			if (resp.items.length) {												// If folder exists
-				_this.folderId=resp.items[0].id;									// Get folder's id									
-				callback(_this.folderId);											// Run callback with id
-			}
-			else{																	// Need to create it
-				var request2=gapi.client.request({									// Make request object
-					path: "/drive/v2/files/",
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						"Authorization": "Bearer "+token,             
-						},
-				body:{
-						title: folderName,
-						mimeType: "application/vnd.google-apps.folder",
-						}
-					});
-				request2.execute(function(resp) {									// Get data
-					_this.folderId=resp.id;											// Save last id set
-					callback(_this.folderId);										// Run callback with id
-				});	
-				}	
-			});
-		}
-
 	Gdrive.prototype.Download=function(id, callback)							// DOWNLOAD DATA FROM G-DRIVE
 	{
 		var request = gapi.client.drive.files.get({ 'fileId': id });				// Request file
 		request.execute(function(resp) {											// Get data
+				trace(resp)
 			if (resp.downloadUrl) {													// If a link
 				var accessToken=gapi.auth.getToken().access_token;					// Get access token
 				var xhr=new XMLHttpRequest();										// Ajax
@@ -1400,8 +1462,8 @@
 				s=v[2],m=v[1],h=v[0];											// Add them
 			return(Number(h*3600)+Number(m*60)+Number(s));						// Convert
 		}
-		
-		function SecondsToTimecode(secs) 									// CONVERT SECONDS TO TIMECODE
+
+	function SecondsToTimecode(secs) 										// CONVERT SECONDS TO TIMECODE
 		{
 			var str="",n;
 			n=Math.floor(secs/3600);											// Get hours
@@ -1458,6 +1520,7 @@
 			}
 		return url;																// Return link
 	}
+	
 	function trace(msg, p1, p2, p3, p4)										// CONSOLE 
 	{
 		
