@@ -77,7 +77,7 @@
 		.pa-bin {			position: absolute; width: 100%; left:0; top: calc(100% - 150px); height:149px;
 							background-color:#eee; 	border-top: 1px solid #ccc;
 							}
-		.pa-binMenu {		display: inline-block; vertical-align: top; text-align:center; width: 150px;
+		.pa-binMenu {		display: inline-block; vertical-align: top; text-align:center; width: 142px; padding-left: 8px;
 							}							
 		.pa-pix {			display: inline-block; overflow-x: scroll;  white-space: nowrap; width: calc(100% - 160px); 
 							}
@@ -1182,7 +1182,6 @@
 	{
 		if (json == "civil")
 			json='{"script":"In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.","title":"Civil Rights","audioRate":100,"pitch":100,"voice":0,"mp3":"https://drive.google.com/open?id=1wJx4FrSMA9g45XvuQ_3PkX4E1e3qluD7","binPics":[{"src":"//stagetools.com/primaryaccess/Test.jpg","title":"Martin Luther King at Civil rights march","date":"1963","desc":"Martin Luther King delivers his &quot;I have a dream&quot; speech at the Lincoln Memorial","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"},{"src":"//stagetools.com/primaryaccess/Test2.jpg","title":"Rosa Parks sitting on bus","date":"1955","desc":"Rosa Parks prompted outcry when she sat in the front of the bus.","link":"//teacher.scholastic.com/rosa"},{"src":"//stagetools.com/primaryaccess/Test10.jpg","title":"Brown vs. Board of Education","date":"1954","desc":"George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"},{"src":"//stagetools.com/primaryaccess/Test3.jpg","title":"The Little Rock Nine","date":"1957","desc":"After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test4.jpg","title":"The Little Rock Nine letter - Page 1","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test5.jpg","title":"The Little Rock Nine letter - Page 2","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test6.jpg","title":"Greensboro Lunch Counter Sit-in","date":"1960","desc":"Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"},{"src":"//stagetools.com/primaryaccess/Test7.jpg","title":"Roger Wilkins, head of NAACP","date":"1957","desc":"Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test8.jpg","title":"Civil rights march on Washington","date":"1963","desc":"The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"}],"scriptPics":[]}';
-		
 		var o=$.parseJSON(json);												// Make json into object
 		$("#scriptTextDiv").text(o.script);										// Get script text 
 		$("#titleDiv").text(o.title);											// Get title text 
@@ -1325,169 +1324,7 @@
       		if (data.action == google.picker.Action.PICKED) 						// If picked
 				gdrive.LoadFile(data.docs[0].id);									// Load file
      		}
- 
-		return;
-
-		gapi.client.init({															// Init client
-        apiKey: this.key,   														// Set apikey
-		clientId:this.clientId,														// Set clientId
-        scope: "https://www.googleapis.com/auth/drive.metadata.readonly",			// Set scope
-        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
-        }).then(function () {														// Once initted
-			gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);		// Listen for sign-in change
- 	        updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());		// Sign in?
-			gapi.auth2.getAuthInstance().signIn();									// Sign in
- 			});
-    
-		  function updateSigninStatus(isSignedIn) {									// ON SIGN-IN CHANGE
-				if (isSignedIn) {													// If signed in
-					var str="https://www.googleapis.com/drive/v3/files/"+id+"/export?mimeType=text/tab-separated-values";
-						var accessToken=gapi.auth.getToken().access_token;				// Get access token
-					var xhr=new XMLHttpRequest();									// Ajax
-					xhr.open("GET",str);											// Set open url
-					xhr.setRequestHeader('Authorization','Bearer '+accessToken);	// Set header
-					xhr.onload=function()  {  doc.AddCSV(xhr.responseText);   };	// On load
-					xhr.send();														// Do it
-					}
-		  	}
-	}
-
-
-	Gdrive.prototype.AccessAPI=function(apiCall, callback)						// CHECK FOR AUTHORIZATION and ACCESS API
-	{
-		gapi.auth.authorize({														// Get logged-in status
-			"client_id": this.clientId, "scope": this.scope, 						// Client info
-			"immediate": false},handleAuthResult);									// Immediate
-	
-		function handleAuthResult(authResult) {									// ON GDRIVE RESPONSE
-			trace(123)	
-			if (authResult && !authResult.error)  									// If logged in
-					gapi.client.load('drive', 'v2', function() {					// Load API
-						trace("in")
-						apiCall(callback);											// Run API callback
-					});
-				else{																// Not logged in
-				trace("out")
-	
-				gapi.auth.authorize(											// Ask for auth
-						{"client_id": this.clientId, "scope": this.scope, 			// Client info
-						"immediate": false},handleAuthResult						// Force looking for auth
-						);
-				}
-			}
-	}
-
-	Gdrive.prototype.Download=function(id, callback)							// DOWNLOAD DATA FROM G-DRIVE
-	{
-		var request = gapi.client.drive.files.get({ 'fileId': id });				// Request file
-		request.execute(function(resp) {											// Get data
-				trace(resp)
-			if (resp.downloadUrl) {													// If a link
-				var accessToken=gapi.auth.getToken().access_token;					// Get access token
-				var xhr=new XMLHttpRequest();										// Ajax
-				xhr.open("GET",resp.downloadUrl);									// Set open url
-				xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);		// Set header
-				xhr.onload = function()  {  callback(xhr.responseText);   };		// On load
-				xhr.send();															// Do it
-				}
-			});
-	}
-
-
-	Gdrive.prototype.Upload=function(name, data, id, callback)					// UPLOAD DATA TO G-DRIVE
-	{
-		const boundary = '-------314159265358979323846264';							// Bounds	
-		const delimiter = "\r\n--" + boundary + "\r\n";								// Opener
-		const close_delim = "\r\n--" + boundary + "--";								// Closer
-		var metadata={ 																// Set metadata
-			'title': name, 'mimeType': this.contentType, 							// Name and mimetype							
-				};
-		var base64Data=btoa(data); 													// Encode to base-64 Stringify if JSON
-		var _this=this;																// Save context
-		id=id ? "/"+id : "";														// Add id if set
-		var multipartRequestBody =													// Multipart request
-			delimiter +
-			'Content-Type: application/json\r\n\r\n' +
-			JSON.stringify(metadata) +
-			delimiter +
-			'Content-Type: ' + this.contentType + '\r\n' +							// Set content type
-			'Content-Transfer-Encoding: base64\r\n' +								// Base 64
-			'\r\n' +
-			base64Data +															// Add metadate
-			close_delim;															// Closer
-		var request = gapi.client.request({											// Create request
-			'path': '/upload/drive/v2/files'+id,									// Service
-			'method': id ? 'PUT' : 'POST',											// Method based on update or create mode
-			'params': id ? {'uploadType': 'multipart', 'alt': 'json'} : {'uploadType': 'multipart'},
-			'headers': {'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'},
-			'body': multipartRequestBody});
-	
-	request.execute(function(arg) {												// Run request
-			_this.lastId=arg.id;													// Save last id set
-			_this.lastName=arg.title;												// Save last name set
-			callback(arg);															// Run callback
-			});
-	}
-
-	Gdrive.prototype.Picker=function(allFiles, callback)						// RUN G-DRIVE PICKER
-	{
-		var _this=this;																// Save context
-			LoadPicker(allFiles, function(s) {										// Load picker
-				callback(s.url);
-				});
-		
-		function LoadPicker(allFiles, callback)									// LOAD G-DRIVE PICKER
-		{
-			var pickerApiLoaded=false;
-			var oauthToken;
-			gapi.load('auth', { 'callback': function() {
-					window.gapi.auth.authorize( {
-						'client_id': _this.clientId,
-						'scope': [ _this.scope,],
-						'immediate': false }, function(authResult) {
-									if (authResult && !authResult.error) {
-									oauthToken=authResult.access_token;
-									createPicker();
-									}
-								});
-					}
-				});
-			
-			gapi.load('picker', {'callback': function() {
-					pickerApiLoaded=true;
-					createPicker();
-					}
-				});
-		
-			function createPicker() {
-				if (pickerApiLoaded && oauthToken) {
-					var view=new google.picker.DocsView().
-						setOwnedByMe(allFiles).
-						setIncludeFolders(true);
-					var picker=new google.picker.PickerBuilder().
-						addView(view).
-						setOAuthToken(oauthToken).
-						setDeveloperKey(_this.key).
-						setCallback(pickerCallback).
-						setSelectableMimeTypes(_this.contentType).
-						build();
-						picker.setVisible(true);
-					}
-				}
-		
-			function pickerCallback(data) {
-				if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
-					var doc=data[google.picker.Response.DOCUMENTS][0];
-					_this.lastId=doc.id;
-					_this.lastName=doc.name;
-					callback(doc)
-					}
-				}
-		
-		}	// End closure
-	}
-
-
+ 	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
@@ -1606,84 +1443,5 @@
   gtag('js', new Date());
   gtag('config', 'UA-113214874-1');
 </script>
-  <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
- 
-  <script>
-/*
-  var developerKey ="AIzaSyASaY6olaf8qWvdTU-YB-nvDqaFVIF8Iy0"
-  var appId = "745573675109";
-  var scope = ['https://www.googleapis.com/auth/drive'];
-  var clientId = "745573675109-ki8osjpngrl93k243qa279ntmb4227qc.apps.googleusercontent.com";
-
-  var pickerApiLoaded = false;
-  var oauthToken;
-
-  // Use the Google API Loader script to load the google.picker script.
-  function loadPicker() {
-	gapi.load('auth', {'callback': onAuthApiLoad});
-	gapi.load('picker', {'callback': onPickerApiLoad});
-  }
-
-  function onAuthApiLoad() {
-	window.gapi.auth.authorize(
-		{
-		  'client_id': clientId,
-		  'scope': scope,
-		  'immediate': false
-		},
-		handleAuthResult);
-  }
-
-  function onPickerApiLoad() {
-	pickerApiLoaded = true;
-	createPicker();
-  }
-
-  function handleAuthResult(authResult) {
-	if (authResult && !authResult.error) {
-	  oauthToken = authResult.access_token;
-	  createPicker();
-	}
-  }
-
-  // Create and render a Picker object for searching images.
-  function createPicker() {
-	if (pickerApiLoaded && oauthToken) {
-	  var view = new google.picker.View(google.picker.ViewId.DOCS);
-	  view.setMimeTypes("image/png,image/jpeg,image/jpg");
-	  var picker = new google.picker.PickerBuilder()
-		  .enableFeature(google.picker.Feature.NAV_HIDDEN)
-		  .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
-		  .setAppId(appId)
-		  .setOAuthToken(oauthToken)
-		  .addView(view)
-		  .addView(new google.picker.DocsUploadView())
-		  .setDeveloperKey(developerKey)
-		  .setCallback(pickerCallback)
-		  .build();
-	   picker.setVisible(true);
-	}
-  }
-
-  // A simple callback implementation.
-  function pickerCallback(data) {
-	if (data.action == google.picker.Action.PICKED) {
-	  var fileId = data.docs[0].id;
-	  alert('The user selected: ' + fileId);
-	}
-  }
-
-  */
-  </script>
-</head>
-<body>
-  <div id="result"></div>
-
-  <!-- The Google API Loader script. -->
-  <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
-
-</script>
-
-
 </body>
 </html>
