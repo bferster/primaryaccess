@@ -9,6 +9,7 @@
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 	<script src="lib/jquery.ui.touch-punch.min.js"></script>
+	<script type="text/javascript" src="https://apis.google.com/js/client.js"></script>
 	<style type="text/css">
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
 							padding: 0; margin:0px; 
@@ -165,23 +166,7 @@
 		</div>
 	</div>
 	<img id="splashDiv" class="pa-splash" src="img/palogo.gif">
-	
-	<script async defer src="https://apis.google.com/js/api.js"
-	onload="this.onload=function(){};handleClientLoad()"
-	onreadystatechange="if (this.readyState === 'complete') this.onload()">
-  </script>
-  
   <script>
-	  
-	 function handleClientLoad() { 											// ON GDRIVE API LOAD
-		var url=window.location.search.substring(1);						// Get query string
-		if (url) {															// If a doc defined
-			url=url.replace(/&fs/i,"");										// Remove full screen tag
-			gapi.load('client', function() {								// Add client and auth
-				gdrive.LoadFile(url);										// Get from Google doc
-				});
-			}
-		 }
 	  
 	function PlayTTS()
 	{
@@ -238,7 +223,9 @@
 		script=new CScript();												// Alloc CScript module
 		player=new CPlayer();												// Alloc CPlayer module
 		gdrive=new Gdrive();												// Alloc GDrive module
-		if (!url) 															// No doc set
+		if (url) 															// A doc set
+			gdrive.LoadFile(url.split("&")[0]);								// Load Google doc defined		
+		else																// No doc													
 			doc.Load("civil");												// Load demo
 		ResizePanes();														// Start up sizing
 		$("#splashDiv").delay(noSplash?1:1000).animate({ opacity:0},noSplash?1:500, // Hide logo
@@ -260,7 +247,7 @@
 			if ((e.which == 27) && isFullScreen)							// Escape from full screen
 				player.SetFullScreen(false);								// Regular screen
 			if ((e.which == 84) && e.altKey && e.ctrlKey)					// TEST KEY
-				doc.Save();
+				gTest();
 	
 			if (player.inMove) {											// In motion editor
 				var pix=1/$("#screenDiv").width();							// Nudge amount
@@ -386,7 +373,7 @@
 				}
 			else if ($(this).val() == "Load show") {						// Load show
 				doc.Do();													// Save a do
-				PopUp("Not implemented yet...",2000,"screenDiv");			// TBD
+				gdrive.LoadFile("",true);									// Load file from GDrive picker	
 				}	
 			$(this).val("Picture options");									// Set menu to default
 			});
@@ -1182,31 +1169,7 @@
 		o.mp3=player.mp3;														// Get audio file
 		o.binPics=$.parseJSON(JSON.stringify(bin.pics));						// Clone bin pics
 		o.scriptPics=$.parseJSON(JSON.stringify(script.pics));					// Clone script pics
-		trace(JSON.stringify(o,8))
-
-
-
-/*		gdrive.AccessAPI(function() {											// Auth
-			trace("out")
-			gdrive.Download(gdrive.lastId,function(res) {						// Download file
-							var data=res.match(/<!-- (.+) -->/)[1];				// Extract raw seg data
-							trace(res); 
-							});
-						}); 
-
-
-		gdrive.AccessAPI(function() {											// Auth
-			gdrive.Picker(true,function(res) {									// Run picker
-					gdrive.AccessAPI(function() {
-						gdrive.Download(gdrive.lastId,function(res) {			// Download file
-							var data=res.match(/<!-- (.+) -->/)[1];				// Extract raw seg data
-	//						_this.Do();											// Save undo		
-							trace(res); 
-							});
-						}); 
-					}); 
-			}); 
-*/	
+		trace(JSON.stringify(o,8));
 	}
 
 	CDoc.prototype.Do=function() 											//	SAVE UNDO
@@ -1238,6 +1201,11 @@
 		if (csv) csv.replace(/\\r/,"");											// Remove CRs
 		csv=csv.split("\n");													// Split into line
 		bin.pics=[];
+		if (csv[0] && !csv[0].match(/type\ttitle\turl\t\link\tdesc/i)) {		// Check for PA header
+			PopUp("<p style='color:#990000'><b>Not a PrimaryAccess doc!</b></p>",5000); // Popup warning
+			Sound("delete");													// Delete sound
+			return;																// Quit
+			}
 		for (i=0;i<csv.length;++i) {											// For each line
 			v=csv[i].split("\t");												// Split into fields
 			if (v[0] == "pic") {												// A pic
@@ -1279,22 +1247,87 @@
 
 	function gTest()
 	{
-		gdrive.LoadFile("12mLmXY0LILmspBDOd2DuEcti7kqe5pwWIGh4jdKSQF8");
- 	}
+//		gdrive.LoadFile("12mLmXY0LILmspBDOd2DuEcti7kqe5pwWIGh4jdKSQF8",true);
+	 	}
 
 	function Gdrive()															// CONSTRUCTOR
 	{
 		this.clientId="745573675109-ki8osjpngrl93k243qa279ntmb4227qc.apps.googleusercontent.com";	// Google client id
+		this.appID="745573675109";													// Google app id
 		this.scope="https://www.googleapis.com/auth/drive";							// Scope of access
-		this.key="AIzaSyASaY6olaf8qWvdTU-YB-nvDqaFVIF8Iy0";							// Google API key
-		this.folderName="QDrawings";												// Name of folder
+		this.apiKey="AIzaSyASaY6olaf8qWvdTU-YB-nvDqaFVIF8Iy0";							// Google API key
 		this.contentType="image/svg+xml";											// SVG mime type
 		this.lastId="";																// Id of last one saved/loaded
 		this.lastName="";															// Name of last file
 	}
 
-	Gdrive.prototype.LoadFile=function(id)									// CHECK FOR AUTHORIZATION & LOAD FILE
+	Gdrive.prototype.LoadFile=function(id, logIn)								// LOAD GOOGLE SPREADSHEET
 	{
+		var _this=this;																// Save context
+		if (!logIn) {																// If not logging in
+			var str="https://docs.google.com/spreadsheets/d/"+id+"/export?format=tsv";	// Access tto
+			var xhr=new XMLHttpRequest();											// Ajax
+			xhr.open("GET",str);													// Set open url
+			xhr.onload=function() { 												// On successful load
+				_this.lastId=id;													// Save loaded id
+				doc.AddCSV(xhr.responseText);										// Parse CSV  
+				};			
+			xhr.onreadystatechange=function(e)  { 									// On readystate change
+				if ((xhr.readyState === 4) && (xhr.status !== 200)) {  				// Ready, but no load
+					Sound("delete");												// Delete sound
+					PopUp("<p style='color:#990000'><b>Couldn't load Google Doc!</b></p>Make sure that <i>anyone</i><br>can view it in Google",5000); // Popup warning
+					}
+				 };		
+			xhr.send();																// Do it
+			return;																	// Quit
+			}
+
+ 		var pickerApiLoaded=false, oauthToken;
+		gapi.load('auth', { 'callback': onAuthApiLoad });							// Load auth
+		gapi.load('picker', { 'callback': onPickerApiLoad });						// Load picker
+
+		function onAuthApiLoad() {													// ON AUTH API LOADED
+      		window.gapi.auth.authorize({											// Authorize
+            	client_id: _this.clientId,											// Set client ID
+            	scope: "https://www.googleapis.com/auth/drive.metadata.readonly",	// Set scope
+            	immediate: false													// Not immediate
+         		 }, handleAuthResult);
+    		}
+		function onPickerApiLoad() {												// ON PICKER API LOADED
+      		pickerApiLoaded=true;													// Set flag
+      		createPicker();															// Create picker
+   			}
+
+		function handleAuthResult(authResult) {										// ON OATH
+    		 if (authResult && !authResult.error) {									// No error
+        		oauthToken=authResult.access_token;									// Get token
+ 	      		createPicker();
+      			}
+			}
+		function createPicker() {													// CREATE PICKER
+			if (pickerApiLoaded && oauthToken) {
+				var view=new google.picker.DocsView(google.picker.ViewId.DOCS)		// Create view
+					.setMimeTypes("application/vnd.google-apps.spreadsheet")		// Accept Sheets only
+					.setOwnedByMe(true)												// Only ones I own
+					.setIncludeFolders(true);										// Show folders
+				var picker=new google.picker.PickerBuilder()						// Create picker
+					.setAppId(_this.appID)											// Set appID
+					.setOAuthToken(oauthToken)										// Oath token
+					.setDeveloperKey(_this.apiKey)									// Api key
+					.setCallback(pickerCallback)									// Callback
+					.addView(view)													// Add view
+					.build();														// Done
+				picker.setVisible(true);											// Show it
+      			}
+    		}
+
+		function pickerCallback(data) {												// ON PICK
+      		if (data.action == google.picker.Action.PICKED) 						// If picked
+				gdrive.LoadFile(data.docs[0].id);									// Load file
+     		}
+ 
+		return;
+
 		gapi.client.init({															// Init client
         apiKey: this.key,   														// Set apikey
 		clientId:this.clientId,														// Set clientId
@@ -1573,6 +1606,84 @@
   gtag('js', new Date());
   gtag('config', 'UA-113214874-1');
 </script>
-	
+  <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
+ 
+  <script>
+/*
+  var developerKey ="AIzaSyASaY6olaf8qWvdTU-YB-nvDqaFVIF8Iy0"
+  var appId = "745573675109";
+  var scope = ['https://www.googleapis.com/auth/drive'];
+  var clientId = "745573675109-ki8osjpngrl93k243qa279ntmb4227qc.apps.googleusercontent.com";
+
+  var pickerApiLoaded = false;
+  var oauthToken;
+
+  // Use the Google API Loader script to load the google.picker script.
+  function loadPicker() {
+	gapi.load('auth', {'callback': onAuthApiLoad});
+	gapi.load('picker', {'callback': onPickerApiLoad});
+  }
+
+  function onAuthApiLoad() {
+	window.gapi.auth.authorize(
+		{
+		  'client_id': clientId,
+		  'scope': scope,
+		  'immediate': false
+		},
+		handleAuthResult);
+  }
+
+  function onPickerApiLoad() {
+	pickerApiLoaded = true;
+	createPicker();
+  }
+
+  function handleAuthResult(authResult) {
+	if (authResult && !authResult.error) {
+	  oauthToken = authResult.access_token;
+	  createPicker();
+	}
+  }
+
+  // Create and render a Picker object for searching images.
+  function createPicker() {
+	if (pickerApiLoaded && oauthToken) {
+	  var view = new google.picker.View(google.picker.ViewId.DOCS);
+	  view.setMimeTypes("image/png,image/jpeg,image/jpg");
+	  var picker = new google.picker.PickerBuilder()
+		  .enableFeature(google.picker.Feature.NAV_HIDDEN)
+		  .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+		  .setAppId(appId)
+		  .setOAuthToken(oauthToken)
+		  .addView(view)
+		  .addView(new google.picker.DocsUploadView())
+		  .setDeveloperKey(developerKey)
+		  .setCallback(pickerCallback)
+		  .build();
+	   picker.setVisible(true);
+	}
+  }
+
+  // A simple callback implementation.
+  function pickerCallback(data) {
+	if (data.action == google.picker.Action.PICKED) {
+	  var fileId = data.docs[0].id;
+	  alert('The user selected: ' + fileId);
+	}
+  }
+
+  */
+  </script>
+</head>
+<body>
+  <div id="result"></div>
+
+  <!-- The Google API Loader script. -->
+  <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=loadPicker"></script>
+
+</script>
+
+
 </body>
 </html>
