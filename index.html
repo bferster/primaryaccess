@@ -313,6 +313,8 @@
 		this.speechRate=.065;												// Seconds per char
 		this.maxTime=18.5;													// Maximum time
 		this.audioRate=100;													// Rate multiplier
+		this.drift=0;														// TTS drift for char pos
+		this.startCharPos=0;												// Starting char in script of TTS
 
 		$("#moveDiv").fadeOut(0);											// Hide move controls
 		$("#startPic").height($("#startPic").width*playAspect);				// Scale to aspect
@@ -437,7 +439,7 @@
 			}
 		else																// No pic
 			$("#screenPic").hide(0);										// Hide it
-		script.Highlight("#0000ff",this.curTime/this.speechRate,2);			// Highlight position in text						
+		script.Highlight("#0000ff",this.curTime/this.speechRate,-1);		// Highlight position in text						
 		if (isFullScreen && !this.curTime)									// If full screen
 			$("#screenTitleDiv").fadeIn(0);									// Fade title in
 	}
@@ -665,6 +667,7 @@
 	CPlayer.prototype.InitAudio=function()								// INIT AUDIO
 	{
 		this.audio=null;													// Assume no audio						
+		var _this=this;														// Save context
 		if ((this.voice == 1) && this.mp3)	{								// If an mp3 file
 			this.audio=new Audio();											// Init audio object
 			this.audio=new Audio(ConvertFromGoogleDrive(this.mp3));			// Load mp3 file
@@ -672,11 +675,14 @@
 		else if (this.voice > 1) {											// If text to speech
 			speechSynthesis.cancel();										// Kill queue
 			this.audio=new SpeechSynthesisUtterance();						// Init TTS
-			if (this.voice > 2)
-			this.audio.voice=this.voices[this.voice-3];						// Set voice
+			if (this.voice > 2)												// If not default voice
+				this.audio.voice=this.voices[this.voice-3];					// Set voice
+			this.audio.onboundary=function(e) {								// On word boundary
+				_this.drift=e.charIndex+_this.startCharPos-(_this.curTime/_this.speechRate)-2;	// Save drift
+				}
 			}
 		this.maxTime=$("#scriptTextDiv").text().length*.065/(this.audioRate/100);	// Set max time
-		$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));			// End display
+		$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));	// End display
 	}
 
 	CPlayer.prototype.StartAudio=function(time)							// PLAY/PAUSE AUDIO
@@ -684,6 +690,7 @@
 		this.speechRate=.065;												// Default speechRate
 		if (!this.audio)													// No audio set up yet
 			return;															// Quit
+		this.drift=0;														// Assume no drift from charpos to TTS
 		var ar=this.audioRate/100;											// Speed
 		if (this.voice == 1) {												// If an mp3 file
 			if (time < 0)													// If stopping
@@ -709,6 +716,7 @@
 				this.InitAudio();
 				this.speechRate=.070/ar;									// Adjust speechRate
 				var pos=this.curTime/this.speechRate;						// Start of text
+				this.startCharPos=pos;										// Save start char pos
 				this.audio.text=$("#scriptTextDiv").text().substr(pos);		// Set text							
 				this.audio.rate=Math.max(.1,this.audioRate/100);			// Set rate 
 				this.audio.pitch=(this.pitch/100);							// Set pitch 0-2
@@ -831,7 +839,7 @@
 					$("#metaDiv").remove();									// Kill metadata popup
 					var id=ui.helper[0].id.substr(10);						// Get id
 					var pos=_this.GetPosFromPic(ui.position.top);			// Calc char pos
-					_this.Highlight("#0000ff",pos,2,true);					// Highlight position in text & inhibit scrolling						
+					_this.Highlight("#0000ff",pos,-1,true);					// Highlight position in text & inhibit scrolling						
 					},
 				stop: function(event, ui) {									// If stopped						
 					doc.Do();												// Save a do
@@ -923,9 +931,16 @@
 
 	CScript.prototype.Highlight=function(col, pos, width, noScroll) 	//	HIGHLIGHT SCRIPT TEXT
 	{
+		var underBar=false;
 		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
 		var txt=$("#scriptTextDiv").text();									// Get raw text
 		var n=txt.length;													// Length of text
+		if (width < 0) {													// Tracking pos, no pic
+			underBar=true;													// Use underbar
+			width*=-2;														// Double width
+			}
+		if (player.drift) 													// If a drift from time vs TTS
+			pos+=player.drift;												// Shift start
 		pos=Math.max(Math.round(pos),0);									// Cap at 0
 		width=Math.round(width);											// Round
 		if (pos >= n)														// Start is past script length
@@ -933,7 +948,7 @@
 		if (pos+width > n)													// If end id past length
 			width=(n-pos+1);												// Cap at end
 		var str=txt.substr(0,pos)+"<span style='";							// Add start
-		if (width < 8)														// If narrow
+		if (underBar)														// If narrow
 			str+="border-bottom: 4px solid ";								// Use underline
 		else																// If wide
 			str+="color: ";													// Color
@@ -1015,7 +1030,7 @@
 				if (ui.offset.left < 120) {									// In script pic area
 					var pos=ui.offset.top+$("#scriptDiv").scrollTop();		// Get unscrolled pos
 					pos=script.GetPosFromPic(pos);							// Calc char pos
-					script.Highlight("#0000ff",pos,2,true);					// Highlight position in text & inhibit scrolling						
+					script.Highlight("#0000ff",pos,-1,true);				// Highlight position in text & inhibit scrolling						
 					}
 				}
 			});
@@ -1268,7 +1283,6 @@
 			var xhr=new XMLHttpRequest();											// Ajax
 			xhr.open("GET",str);													// Set open url
 			xhr.onload=function() { 												// On successful load
-				_this.lastId=id;													// Save loaded id
 				doc.AddCSV(xhr.responseText);										// Parse CSV  
 				};			
 			xhr.onreadystatechange=function(e)  { 									// On readystate change
