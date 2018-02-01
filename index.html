@@ -390,7 +390,7 @@
 			else if ($(this).val() == "Save show") 							// Save show
 				gdrive.SaveFile(gdrive.lastId);								// Save file
 			else if ($(this).val() == "Get show link") 						// Get link to show
-;//
+				doc.GetLink();												// Show link
 			$(this).val("Picture options");									// Set menu to default
 			});
 
@@ -1209,6 +1209,19 @@
 		script.pics=$.parseJSON(JSON.stringify(o.scriptPics));					// Clone script pics
 		ResizePanes();															// Redraw
 	}
+	
+	CDoc.prototype.GetLink=function() 										//	GET TO SHOW
+	{
+		if (!gdrive.lastId) {													// No id 
+			Sound("delete");													// Delete sound
+			PopUp("You need to load a show<br>to get a link to it",2000,"screenDiv");	// Error
+			return;																// Quit
+			}
+		var str="<b>Links to your show</b><br><p>";								// Title
+		str+="Editing link:&nbsp; www.viseyes.org/pa?"+gdrive.lastId;			// Normal
+		str+="</p><p>Full-screen link:&nbsp;  www.viseyes.org/pa?"+gdrive.lastId+"&fs</p>";	// Full
+		PopUp(str,-1);															// Show with close but
+	}
 
 	CDoc.prototype.AddCSV=function(csv) 									//	ADD CSV TO SHOW
 	{
@@ -1442,9 +1455,16 @@
 
 	function PopUp(msg, time, div)											// TIMED POPUP
 	{
+		var str="";
 		$("#popupDiv").remove();												// Kill old one, if any
-		var str="<div id='popupDiv' class='pa-popup'>"+msg+"</div>"; 			// Add div
+		str+="<div id='popupDiv' class='pa-popup'>"; 							// Add div
+		if (time == -1) {														// If has close but
+			time=100000;														// Increase time
+			str+="<img id='pu-close' src='img/closedot.gif' style='float:right;cursor:pointer'>";	// Add close button
+			}
+		str+=msg+"</div>"; 														// Add div
 		$(div ? "#"+div : "body").append(str);									// Add popup to div or body
+		$("#pu-close").click(function() { $("#popupDiv").remove(); });			// Remove on click of close but
 		$("#popupDiv").fadeIn(500).delay(time ? time : 2000).fadeOut(500)		// Animate in and out		
 	}
 
