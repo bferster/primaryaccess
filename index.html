@@ -1277,6 +1277,16 @@
 	function gTest()
 	{
 //		gdrive.LoadFile("12mLmXY0LILmspBDOd2DuEcti7kqe5pwWIGh4jdKSQF8",true);
+		var o={};																		// New obj
+		o.script=$("#scriptTextDiv").text();										// Get script text 
+		o.title=$("#titleDiv").text();												// Get title text 
+		o.voice=player.voice;														// Get audio mode
+		o.audioRate=player.audioRate;												// Get rate multiplier
+		o.pitch=player.pitch;														// Get TTS pitch
+		o.mp3=player.mp3;															// Get audio file
+		o.binPics=$.parseJSON(JSON.stringify(bin.pics));							// Clone bin pics
+		o.scriptPics=$.parseJSON(JSON.stringify(script.pics));						// Clone script pics
+		trace(JSON.stringify(o));
 	 	}
 
 	function Gdrive()															// CONSTRUCTOR
