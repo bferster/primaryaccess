@@ -148,6 +148,8 @@
 				<option>Full screen</option>
 				<option>Add new picture</option>
 				<option>Load show</option>
+				<option>Save show</option>
+				<option>Get show link</option>
 				</select>
 			<img id="playBut" class="pa-playbut" src="img/playbut.gif"><br>
 			<span id="activeVoice" class="pa-voice" ></span><br>
@@ -170,6 +172,14 @@
 	  
 	function PlayTTS()
 	{
+
+		function PlayTTS()
+	{
+		var audio=new SpeechSynthesisUtterance();					
+		audio.text="Hello from the iPad";						
+		speechSynthesis.speak(audio);							
+	}
+
 		player.inPlay=!player.inPlay;										// Toggle state
 		if (player.inMove) {												// In motion editor
 			var s=script.pics[player.curPic].start*player.speechRate;		// Start
@@ -310,7 +320,7 @@
 		this.pos=[.5,.5,1];													// Current position
 		this.audio=null;													// Audio object
 		this.voice=0;	this.pitch=100;										// TTS options
-		this.speechRate=.065;												// Seconds per char
+		this.speechRate=.064;												// Seconds per char
 		this.maxTime=18.5;													// Maximum time
 		this.audioRate=100;													// Rate multiplier
 		this.drift=0;														// TTS drift for char pos
@@ -377,6 +387,10 @@
 				doc.Do();													// Save a do
 				gdrive.LoadFile("",true);									// Load file from GDrive picker	
 				}	
+			else if ($(this).val() == "Save show") 							// Save show
+				gdrive.SaveFile(gdrive.lastId);								// Save file
+			else if ($(this).val() == "Get show link") 						// Get link to show
+;//
 			$(this).val("Picture options");									// Set menu to default
 			});
 
@@ -701,8 +715,9 @@
 				this.audio.playbackRate=ar;									// Set speed from .5 to 1.5
 				if (this.audio.duration) {									// If a some duration
 					if (this.audio.duration != Infinity)					// Not infinity
-						this.speechRate=this.audio.duration/ar/$("#scriptTextDiv").text().length;	// Set speechRate to match mp3 file
+						this.speechRate=(this.audio.duration-.25)/ar/$("#scriptTextDiv").text().length;	// Set speechRate to match mp3 file
 					this.maxTime=$("#scriptTextDiv").text().length*this.speechRate;		// Set max time
+					trace(this.audio.duration,this.speechRate)
 					$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));	// End display
 					this.audio.play();										// Start playing
 					}
@@ -1173,20 +1188,6 @@
 		this.lastScriptLength=0;												// Script length
 	}
 
-	CDoc.prototype.Save=function() 											//	SERIALIZE AND SAVE
-	{
-		var o={};
-		o.script=$("#scriptTextDiv").text();									// Get script text 
-		o.title=$("#titleDiv").text();											// Get title text 
-		o.voice=player.voice;													// Get audio mode
-		o.audioRate=player.audioRate;											// Get rate multiplier
-		o.pitch=player.pitch;													// Get TTS pitch
-		o.mp3=player.mp3;														// Get audio file
-		o.binPics=$.parseJSON(JSON.stringify(bin.pics));						// Clone bin pics
-		o.scriptPics=$.parseJSON(JSON.stringify(script.pics));					// Clone script pics
-		trace(JSON.stringify(o,8));
-	}
-
 	CDoc.prototype.Do=function() 											//	SAVE UNDO
 	{
 		this.changed=true;														// Set changed flag
@@ -1214,7 +1215,7 @@
 		var i,j,v,o;
 		if (csv) csv.replace(/\\r/,"");											// Remove CRs
 		csv=csv.split("\n");													// Split into line
-		bin.pics=[];
+		bin.pics=[];															// Clear pics
 		if (csv[0] && !csv[0].match(/type\ttitle\turl\t\link\tdesc/i)) {		// Check for PA header
 			PopUp("<p style='color:#990000'><b>Not a PrimaryAccess doc!</b></p>",5000); // Popup warning
 			Sound("delete");													// Delete sound
@@ -1241,6 +1242,7 @@
 				if (o.voice)		player.voice=o.voice;						// Set voice
 				if (o.mp3)			player.mp3=o.mp3;							// Set voice
 				script.pics=$.parseJSON(JSON.stringify(o.scriptPics));			// Clone script pics
+				player.InitAudio();												// Init audio
 				}
 			}
 		ResizePanes();															// Redraw
@@ -1268,11 +1270,77 @@
 	{
 		this.clientId="745573675109-ki8osjpngrl93k243qa279ntmb4227qc.apps.googleusercontent.com";	// Google client id
 		this.appID="745573675109";													// Google app id
-		this.scope="https://www.googleapis.com/auth/drive";							// Scope of access
-		this.apiKey="AIzaSyASaY6olaf8qWvdTU-YB-nvDqaFVIF8Iy0";							// Google API key
+		this.scope="https://www.googleapis.com/auth/spreadsheets";					// Scope of access
+		this.apiKey="AIzaSyASaY6olaf8qWvdTU-YB-nvDqaFVIF8Iy0";						// Google API key
 		this.contentType="image/svg+xml";											// SVG mime type
 		this.lastId="";																// Id of last one saved/loaded
 		this.lastName="";															// Name of last file
+	}
+
+	Gdrive.prototype.SaveFile=function(id)										// SAVE GOOGLE SPREADSHEET
+	{
+		var i,a,o,oauthToken;
+		var _this=this;																// Save context
+		if (!id) {
+			PopUp("You need to load or create a show before saving")
+			return;
+			}
+		gapi.load('auth', { 'callback': onAuthApiLoad });							// Load auth
+		var data={ "majorDimension": "ROWS", "values":[["type", "title", "url", "link", "desc"]] };		// Data to save
+		for (i=0;i<bin.pics.length;++i) {											// For each bin pic
+			a=["pic"];																// Add type
+			o=bin.pics[i];															// Point at pic
+			a.push(o.title ? o.title : "");											// Add title 
+			a.push(o.src ? o.src : "");												// Add src 
+			a.push(o.link ? o.link : "");											// Add link 
+			a.push(o.desc ? o.desc : "");											// Add desc 
+			data.values.push(a)
+			}
+		data.values.push(["script",$("#scriptTextDiv").text(),"","",""]);			// Save script
+		data.values.push(["title",$("#titleDiv").text(),"","",""]);					// Save title
+		o={};																		// New obj
+		o.script=$("#scriptTextDiv").text();										// Get script text 
+		o.title=$("#titleDiv").text();												// Get title text 
+		o.voice=player.voice;														// Get audio mode
+		o.audioRate=player.audioRate;												// Get rate multiplier
+		o.pitch=player.pitch;														// Get TTS pitch
+		o.mp3=player.mp3;															// Get audio file
+		o.binPics=$.parseJSON(JSON.stringify(bin.pics));							// Clone bin pics
+		o.scriptPics=$.parseJSON(JSON.stringify(script.pics));						// Clone script pics
+		data.values.push(["data","Don't edit this line!",JSON.stringify(o,8),"",""]);	// Save data
+
+		function onAuthApiLoad() {													// ON AUTH API LOADED
+      		window.gapi.auth.authorize({											// Authorize
+            	client_id: _this.clientId,											// Set client ID
+            	scope: _this.scope,													// Set scope
+				discoveryDocs:["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+            	immediate: false													// Not immediate
+         		 }, handleAuthResult);
+    		}
+
+		function handleAuthResult(authResult) {										// ON OATH
+    		 if (authResult && !authResult.error) {									// No error
+        		oauthToken=authResult.access_token;									// Get token
+ 	      		writeData();
+      			}
+			}
+		function writeData() {
+			var accessToken=gapi.auth.getToken().access_token;
+			var str="https://sheets.googleapis.com/v4/spreadsheets/"+id+"/values/Sheet1!A1:E50?valueInputOption=USER_ENTERED";
+			var xhr=new XMLHttpRequest();											// Ajax
+ 			xhr.open("PUT",str);													// Set open url
+			xhr.setRequestHeader('Authorization','Bearer '+ accessToken);			// Auth
+			xhr.onload=function() { 												// On successful load
+				Sound("ding");														// Ding sound
+				}
+			xhr.onreadystatechange=function(e)  { 									// On readystate change
+				if ((xhr.readyState === 4) && (xhr.status !== 200)) {  				// Ready, but no load
+					Sound("delete");												// Delete sound
+					PopUp("<p style='color:#990000'><b>Error saving Google Doc!</b></p>",5000); // Popup warning
+					}
+				 };		
+   			xhr.send(JSON.stringify(data));												// Do it
+			}
 	}
 
 	Gdrive.prototype.LoadFile=function(id, logIn)								// LOAD GOOGLE SPREADSHEET
@@ -1302,7 +1370,7 @@
 		function onAuthApiLoad() {													// ON AUTH API LOADED
       		window.gapi.auth.authorize({											// Authorize
             	client_id: _this.clientId,											// Set client ID
-            	scope: "https://www.googleapis.com/auth/drive.metadata.readonly",	// Set scope
+            	scope: _this.scope,													// Set scope
             	immediate: false													// Not immediate
          		 }, handleAuthResult);
     		}
@@ -1335,9 +1403,11 @@
     		}
 
 		function pickerCallback(data) {												// ON PICK
-      		if (data.action == google.picker.Action.PICKED) 						// If picked
+      		if (data.action == google.picker.Action.PICKED) {						// If picked
 				gdrive.LoadFile(data.docs[0].id);									// Load file
-     		}
+				_this.lastId=data.docs[0].id;										// Save id
+			  	}
+			 }
  	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
