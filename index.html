@@ -948,6 +948,8 @@
 		var underBar=false;
 		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
 		var txt=$("#scriptTextDiv").text();									// Get raw text
+//		txt=txt.replace(/<span.+">|<\/span>/g,"");							// Remove
+//		txt=txt.replace(/<br>/g,"~");										// Remove CRs
 		var n=txt.length;													// Length of text
 		if (width < 0) {													// Tracking pos, no pic
 			underBar=true;													// Use underbar
@@ -969,9 +971,10 @@
 		str+=col+";'>"														// Finish span
 		str+=txt.substr(pos,width);											// Add highlight portion
 		str+="</span>"+txt.substr(pos+width)								// Close span and add rest of text
+//		str=str.replace(/~/g,"<br>");										// Restore CRs
 		$("#scriptTextDiv").html(str);										// Set colored text in
 		if (noScroll)														// If dragging pic
-			return;															// Don;t scrooll
+			return;															// Don't scroll
 		var y=pos/cpl*40;													// Scroll point
 		$("#scriptDiv").scrollTop(y-$("#scriptDiv").height()/2);			// Scroll text
 	}
