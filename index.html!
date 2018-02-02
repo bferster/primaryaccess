@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="img/favicon.ico">
-    <title>PrimaryAccess</title>
+    <title>Welcome to PrimaryAccess</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/jumbotron.css" rel="stylesheet">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -45,8 +45,9 @@
             <p>Watch this 5 minute screencast that shows how easy it is to use PrimaryAccess:</p>
 			<iframe width="400" height="225" src="https://www.youtube.com/embed/-amz0WM_tBQ" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>            
 			<br><br><a href="https://docs.google.com/document/d/e/2PACX-1vQQlE8nxS33bkI5CY--daR1ibM-7q6B-GFrztW6cq9lN6FNztpA_b0nrQiV33krohd5O6dvyU1ibiGU/pub" target="_blank" role="button">View PrimaryAccess User's Guide</a> 
-			<br><br><a href="https://docs.google.com/document/d/e/2PACX-1vQQlE8nxS33bkI5CY--daR1ibM-7q6B-GFrztW6cq9lN6FNztpA_b0nrQiV33krohd5O6dvyU1ibiGU/pub" target="_blank" role="button">View PrimaryAccess Teacher's Guide</a> 
-			<br><br><a class="btn  btn-primary" href="http://viseyes.org/pa" role="button">Use PrimaryAccess</a><br><br>
+			<br><a href="https://docs.google.com/document/d/e/2PACX-1vQQlE8nxS33bkI5CY--daR1ibM-7q6B-GFrztW6cq9lN6FNztpA_b0nrQiV33krohd5O6dvyU1ibiGU/pub" target="_blank" role="button">View PrimaryAccess Teacher's Guide</a> 
+			<br><a href="http://viseyes.org/pa/?1bmDdazIXmYWg0pOLlpJZsVhWKeuMoNOuky9ZKPEQ0ho&fs" target="_blank" role="button">Play Sample Movie</a><br> 
+			<br><a class="btn  btn-primary" href="http://viseyes.org/pa" role="button">Use PrimaryAccess</a><br>
 		</div>
       </div>
       <hr>
