@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
+	<title>PrimaryAccess</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+	<script src="lib/jquery.ui.touch-punch.min.js"></script>
+	<style type="text/css">
+		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
+							padding: 0; margin: 0px;
+							}
+		.pa-main {		 	height: 100vh; width: 100vw; min-width: 500px; min-height: 500px; overflow: auto;  
+							background-color:#fff; opacity: 0;
+							}
+		.pa-tabs { 			background-color:#fff;  font-size: 14px; margin: 16px 0 0 16px; cursor: pointer;
+							}
+		.pa-tab { 			display: inline-block; width: auto; border-top-left-radius: 8px;  border-top-right-radius: 8px;
+							padding: 6px 12px 8px 12px; background-color:#eee;   border: 1px solid #999;
+							}
+		.pa-body { 			width: calc(100% - 56px); height: calc(100vh - 88px); padding: 12px 12px; margin-left: 16px; margin-top:-1px;
+							border-bottom-left-radius: 8px;  border-bottom-right-radius: 8px;  border-top-right-radius: 8px;
+							background-color:#fff;  border: 1px solid #999;
+							}
+
+
+		/* MISC --------------------------------------------------------------------------------------------------*/
+	
+		.pa-splash			{ position:absolute; left: calc(50% - 182px); top:  calc(40% - 51px); 
+							color: #999; font-size: 36px; text-align:center; font-weight: bold;
+							}
+		.pa-webpage	{ 		position: absolute; padding: 12px; border-radius: 6px; display: none; padding: 12px; height:auto; font-size: 14px; 
+							border: 1px solid #999; background-color:#eee; font-size: 11px; box-shadow: 4px 4px 12px 2px #aaa;
+							}
+		.pa-is {			border-radius:10px; padding-left: 8px; padding-right: 8px; padding-top: 1px;
+							border: 1px solid #999; font-size: 12px; height: 20px; width: 200px;
+							}
+		.pa-bs {			display: inline-block; border-radius: 10px; padding-left: 8px; padding-right: 8px; background-color:#ccc; color: #333;
+							border: 1px solid #999; font-size: 12px; height: 16px; cursor: pointer; width: 50px; text-align:center;
+							}
+		.pa-ok {			display:inline-block; border-radius: 20px; height: 18px; width: 22px; cursor: pointer;
+							border: 1px solid #666; color: #666; font-size: 10px; padding-top: 4px;
+							}
+		.pa-popup {			position: absolute;  width: auto; padding: 8px; left: calc(50% - 100px); top: calc(50% - 50px);
+							border-radius: 8px; background-color: #eee; border: 1px solid #999; box-shadow: 4px 2px 12px 2px #aaa; 
+							font-size: 14px; text-align:center; display: none;
+							}
+	
+	</style>
+</head>
+<body>
+	<div id="mainDiv" class="pa-main">
+		<div id="tabsDiv" class="pa-tabs">
+			<div id="rosTabDiv" class="pa-tab">Roster (Social Studies 1)</div>
+			<div id="proTabDiv" class="pa-tab">Project (Civil Rights)</div>
+			<div id="picTabDiv" class="pa-tab">Pictures</div>
+		</div>
+	<div id="bodyDiv" class="pa-body"></div>
+	</div>
+	<div id="splashDiv" class="pa-splash"><img src="img/palogo.gif"><br>Project Setup</div>
+
+<script>
+
+	var isMobile=false;														// Is a mobile platform
+	var noSplash=(window.location == "localhost") ? false : true;			// Splash screen inhibitor
+	var curTab="ros";														// Start on roster
+	var roster=null;														// Holds roster module
+	var projects=null;														// Holds projects module
+	var pictures=null;														// Holds pictures module
+
+	$(document).ready(function() {								        // ON PAGE LOADED
+		isMobile=navigator.platform.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag id ios
+		if (!isMobile)														// Check for Android
+			isMobile=navigator.userAgent.match(/android/i) ? true : false; 	// Set mobile flag
+		var url=window.location.search.substring(1);					 	// Get query string
+		roster=new CRoster();												// Alloc CRoster module
+		projects=new CProject();											// Alloc CProject module
+		pictures=new CPicture();											// Alloc CPicture module
+		$(window).resize(ResizePanes);                                     	// On window resizing
+		ResizePanes();														// Start up sizing
+		Draw(curTab);														// Draw body
+
+		$("#splashDiv").delay(noSplash?1:1000).animate({ opacity:0},noSplash?1:500, // Hide logo
+				function() {	 											// When done
+					if (url && url.match(/&fs/i)) 							// Full screen flag
+						player.SetFullScreen(true);							// Set it
+					$("#mainDiv").animate({ opacity:1},noSplash?500:2000, 	// Show interface
+						function() {	$("#splashDiv").remove();	});		// Remove splash screen
+					});		
+
+		$(window).on("keydown",function(e) {								// HANDLE KEYPRESS
+			if ((e.which == 84) && e.altKey && e.ctrlKey)					// TEST KEY
+				gTest();
+			});
+
+		$("#rosTabDiv").on("click", function() {							// Roster tab click
+			Sound("click");													// Click
+			Draw("ros");													// Draw
+			});
+		$("#proTabDiv").on("click", function() {							// Project tab click
+			Sound("click");													// Click
+			Draw("pro");													// Draw
+			});
+		$("#picTabDiv").on("click", function() {							// Picture tab click
+			Sound("click");													// Click
+			Draw("pic");													// Draw
+		});
+	
+	});
+
+	function Draw(tab)
+	{
+		$("[id$=TabDiv]").css({ "border-bottom":"1px solid #999","background-color":"#eee","color":"#000","font-weight":"normal" });
+		$("#"+tab+"TabDiv").css({ "border-bottom":"1px solid #fff","background-color":"#fff","color":"#339933","font-weight":"bold" });
+		if (tab == "ros")		roster.Draw();									// Draw roster
+		else if (tab == "pro")	projects.Draw();								// Draw projects
+		else if (tab == "pic")	pictures.Draw();								// Draw pictures
+	}
+
+	function ResizePanes()													//  REACT TO SCREEN SIZE
+	{
+	}
+
+	function gTest()
+	{
+		trace(123)
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ROSTER
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	function CRoster()														// PLAYER CONSTRUCTOR
+	{
+	}
+
+	CRoster.prototype.Draw=function() 										// UPDATE 
+	{
+		$("#bodyDiv").html("Roster")
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// PROJECT
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	function CProject()														// PROJECT CONSTRUCTOR
+	{
+	}
+
+	CProject.prototype.Draw=function() 										// UPDATE
+	{
+		$("#bodyDiv").html("Project")
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// PICTURE
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	function CPicture()														// PICTURE CONSTRUCTOR
+	{
+	}
+
+	CPicture.prototype.Draw=function() 										// UPDATE
+	{
+		$("#bodyDiv").html("Picture")
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// HELPERS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+	function PopUp(msg, time, div)											// TIMED POPUP
+	{
+		var str="";
+		$("#popupDiv").remove();												// Kill old one, if any
+		str+="<div id='popupDiv' class='pa-popup'>"; 							// Add div
+		if (time == -1) {														// If has close but
+			time=100000;														// Increase time
+			str+="<img id='pu-close' src='img/closedot.gif' style='float:right;cursor:pointer'>";	// Add close button
+			}
+		str+=msg+"</div>"; 														// Add div
+		$(div ? "#"+div : "body").append(str);									// Add popup to div or body
+		$("#pu-close").click(function() { $("#popupDiv").remove(); });			// Remove on click of close but
+		$("#popupDiv").fadeIn(500).delay(time ? time : 2000).fadeOut(500)		// Animate in and out		
+	}
+
+	function DialogBox(title, content, x, y, width, callback, callback2) 	// DIALOG BOX
+	{
+		$("#dialogDiv").remove();												// Kill old one, if any
+		var str="<div id='dialogDiv' class='pa-meta' style='width:"+width+"px'>"; // Add div
+		str+="<b>"+title+"</b><br><br>"+content+"<br><br>";						// Content	
+		str+="<div style='float:right'>"										// Div to hold buttons
+		str+="<div id='okBut' class='pa-bs'>OK</div>&nbsp";						// OK Button
+		str+="<div id='cancelBut' class='pa-bs'>Cancel</div></div";				// Cancel
+		$("body").append(str+"</div>");											// Add popup
+		$("#dialogDiv").offset({ left:x, top:y} );								// Position popup
+
+		$("#okBut").on("click",function() {										// CLICK ON OK
+			if (callback)														// If an ok callback spec'd
+				callback();														// Run it
+			$("#dialogDiv").remove();											// Kill dialog
+			});
+	
+		$("#cancelBut").on("click",function() {									// CLICK ON CANCEL
+			if (callback2)														// If a cancel callback spec'd
+				callback2();													// Run it
+			$("#dialogDiv").remove();											// Kill dialog
+			});
+	}	
+
+	function trace(msg, p1, p2, p3, p4)										// CONSOLE 
+	{
+		
+		if (p4 != undefined)
+			console.log(msg,p1,p2,p3,p4);
+		else if (p3 != undefined)
+			console.log(msg,p1,p2,p3);
+		else if (p2 != undefined)
+			console.log(msg,p1,p2);
+		else if (p1 != undefined)
+			console.log(msg,p1);
+		else
+			console.log(msg);
+	}
+
+	function Sound(sound, mute)												// PLAY SOUND
+	{
+		var snd=new Audio();													// Init audio object
+		if (!snd.canPlayType("audio/mpeg") || (snd.canPlayType("audio/mpeg") == "maybe")) 
+			snd=new Audio("img/"+sound+".ogg");									// Use ogg
+		else	
+			snd=new Audio("img/"+sound+".mp3");									// Use mp3
+		if (!mute)	{															// If not initing or muting	
+			snd.volume=50/100;													// Set volume
+			snd.play();															// Play it
+			}
+		}
+
+</script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-113214874-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-113214874-1');
+</script>
+</body>
+</html>
