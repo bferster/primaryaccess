@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
 	<meta charset="UTF-8" />
@@ -627,7 +627,7 @@
 			this.playerTimer=setInterval(function() {						// Set timer
 				_this.curTime=start+(new Date().getTime()-_this.playerStart)/1000; // Get elapsed time from start
 				_this.Draw();												// Show screen
-				if (_this.curTime >= end) {									// If past end
+				if (_this.curTime >= end-_this.drift*_this.speechRate) {	// If past end + TTS drift
 					_this.curTime=resetTime;								// Set to reset point
 					_this.inPlay=false;										// Toggle state
 					_this.Play(0,0);										// Stop player
@@ -728,8 +728,7 @@
 		else{																// Text to speech
 			speechSynthesis.cancel();										// Kill TTS queue
 			if (time >= 0) {												// If playing
-				this.InitAudio();
-				this.speechRate=.070/ar;									// Adjust speechRate
+				this.InitAudio();											// Init TTS
 				var pos=this.curTime/this.speechRate;						// Start of text
 				this.startCharPos=pos;										// Save start char pos
 				this.audio.text=$("#scriptTextDiv").text().substr(pos);		// Set text							
