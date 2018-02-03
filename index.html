@@ -9,7 +9,9 @@
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 	<script src="lib/jquery.ui.touch-punch.min.js"></script>
-	<script type="text/javascript" src="https://apis.google.com/js/client.js"></script>
+	<!--script type="text/javascript" src="https://apis.google.com/js/client.js"></script-->
+	<!--script src="gdrive.js"></script-->
+	<script src="qfile.js"></script>
 	<style type="text/css">
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
 							padding: 0; margin:0px; 
@@ -215,7 +217,7 @@
 	var bin=null;															// CBin
 	var script=null;														// CScript
 	var player=null;														// CPplayer
-	var gdrive=null;														// GDrive
+	var qmf=null;															// QFile system
 	var isMobile=false;														// Is a mobile platform
 	var isFullScreen=false;													/// Is it full screen?
 	var noSplash=(window.location == "localhost") ? false : true;			// Splash screen inhibitor
@@ -232,11 +234,12 @@
 		bin=new CBin();														// Alloc CBin module
 		script=new CScript();												// Alloc CScript module
 		player=new CPlayer();												// Alloc CPlayer module
-		gdrive=new Gdrive();												// Alloc GDrive module
+//		gdrive=new Gdrive();												// Alloc GDrive module
+		qmf=new QmediaFile("//viseyes.org/pa/",0);							// Alloc file system
 		if (url) 															// A doc set
-			gdrive.LoadFile(url.split("&")[0]);								// Load Google doc defined		
+			doc.GDriveLoad(url.split("&")[0]);								// Load Google doc defined		
 		else																// No doc													
-			doc.Load("civil");												// Load demo
+			doc.LoadJSON("civil");											// Load demo
 		ResizePanes();														// Start up sizing
 		$("#splashDiv").delay(noSplash?1:1000).animate({ opacity:0},noSplash?1:500, // Hide logo
 				function() {	 											// When done
@@ -272,7 +275,14 @@
 				}
 			});
 		});									
-		
+
+	function Draw()														//  RE DRAW SCREEN
+	{
+		if (script) script.Draw();											// Redraw script
+		if (player)	player.Draw();											// Redraw player
+		if (bin)	bin.Draw();												// Redraw bin
+	}
+
 	function ResizePanes()												//  REACT TO SCREEN SIZE
 	{
 		var sw=$("#mainDiv").width()*.6;									// Script width
@@ -301,9 +311,7 @@
 				}
 			}		
 		$("#binDiv").css({ top:$("#playerDiv").height()+"px",width:$("#mainDiv").width()+"px" });	// Position bin below player
-		if (script) script.Draw();											// Redraw script
-		if (player)	player.Draw();											// Redraw player
-		if (bin)	bin.Draw();												// Redraw bin
+		Draw();																// Redraw screen
 	}
 
 
@@ -385,10 +393,10 @@
 				}
 			else if ($(this).val() == "Load show") {						// Load show
 				doc.Do();													// Save a do
-				gdrive.LoadFile("",true);									// Load file from GDrive picker	
+				doc.Load();													// Load file 
 				}	
 			else if ($(this).val() == "Save show") 							// Save show
-				gdrive.SaveFile(gdrive.lastId);								// Save file
+				doc.Save();													// Save file
 			else if ($(this).val() == "Get show link") 						// Get link to show
 				doc.GetLink();												// Show link
 			$(this).val("Picture options");									// Set menu to default
@@ -717,7 +725,6 @@
 					if (this.audio.duration != Infinity)					// Not infinity
 						this.speechRate=(this.audio.duration-.5)/ar/$("#scriptTextDiv").text().length;	// Set speechRate to match mp3 file
 					this.maxTime=$("#scriptTextDiv").text().length*this.speechRate;		// Set max time
-					trace(this.audio.duration,this.speechRate)
 					$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));	// End display
 					this.audio.play();										// Start playing
 					}
@@ -1183,7 +1190,7 @@
 
 	function CDoc()															// CONSTRUCTOR
 	{
-		this.curGDoc=null;														// ID of gdrive spreadsheet
+		this.curShow=null;														// ID of data
 		this.curUndo=0;															// Undo counter
 		this.changed=false;														// Changed flag
 		this.undos=[];															// Holds undos
@@ -1196,11 +1203,11 @@
 		this.curUndo++;															// Inc undo count
 	}
 	
-	CDoc.prototype.Load=function(json) 										//	LOAD JSON AND SET
+	CDoc.prototype.LoadJSON=function(json) 									//	LOAD JSON AND SET
 	{
-		if (json == "civil")
-			json='{"script":"In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.","title":"Civil Rights","audioRate":100,"pitch":100,"voice":0,"mp3":"https://drive.google.com/open?id=1wJx4FrSMA9g45XvuQ_3PkX4E1e3qluD7","binPics":[{"src":"//stagetools.com/primaryaccess/Test.jpg","title":"Martin Luther King at Civil rights march","date":"1963","desc":"Martin Luther King delivers his &quot;I have a dream&quot; speech at the Lincoln Memorial","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"},{"src":"//stagetools.com/primaryaccess/Test2.jpg","title":"Rosa Parks sitting on bus","date":"1955","desc":"Rosa Parks prompted outcry when she sat in the front of the bus.","link":"//teacher.scholastic.com/rosa"},{"src":"//stagetools.com/primaryaccess/Test10.jpg","title":"Brown vs. Board of Education","date":"1954","desc":"George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"},{"src":"//stagetools.com/primaryaccess/Test3.jpg","title":"The Little Rock Nine","date":"1957","desc":"After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test4.jpg","title":"The Little Rock Nine letter - Page 1","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test5.jpg","title":"The Little Rock Nine letter - Page 2","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test6.jpg","title":"Greensboro Lunch Counter Sit-in","date":"1960","desc":"Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"},{"src":"//stagetools.com/primaryaccess/Test7.jpg","title":"Roger Wilkins, head of NAACP","date":"1957","desc":"Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test8.jpg","title":"Civil rights march on Washington","date":"1963","desc":"The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"}],"scriptPics":[]}';
-		var o=$.parseJSON(json);												// Make json into object
+		var o=json;																// Point at data
+		if (json == "civil") 
+			o=$.parseJSON('{"script":"In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.","title":"Civil Rights","audioRate":100,"pitch":100,"voice":0,"mp3":"https://drive.google.com/open?id=1wJx4FrSMA9g45XvuQ_3PkX4E1e3qluD7","binPics":[{"src":"//stagetools.com/primaryaccess/Test.jpg","title":"Martin Luther King at Civil rights march","date":"1963","desc":"Martin Luther King delivers his &quot;I have a dream&quot; speech at the Lincoln Memorial","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"},{"src":"//stagetools.com/primaryaccess/Test2.jpg","title":"Rosa Parks sitting on bus","date":"1955","desc":"Rosa Parks prompted outcry when she sat in the front of the bus.","link":"//teacher.scholastic.com/rosa"},{"src":"//stagetools.com/primaryaccess/Test10.jpg","title":"Brown vs. Board of Education","date":"1954","desc":"George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"},{"src":"//stagetools.com/primaryaccess/Test3.jpg","title":"The Little Rock Nine","date":"1957","desc":"After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test4.jpg","title":"The Little Rock Nine letter - Page 1","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test5.jpg","title":"The Little Rock Nine letter - Page 2","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test6.jpg","title":"Greensboro Lunch Counter Sit-in","date":"1960","desc":"Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"},{"src":"//stagetools.com/primaryaccess/Test7.jpg","title":"Roger Wilkins, head of NAACP","date":"1957","desc":"Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test8.jpg","title":"Civil rights march on Washington","date":"1963","desc":"The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"}],"scriptPics":[]}');
 		$("#scriptTextDiv").text(o.script);										// Get script text 
 		$("#titleDiv").text(o.title);											// Get title text 
 		player.voice=o.voice;													// Get audio mode
@@ -1214,14 +1221,14 @@
 	
 	CDoc.prototype.GetLink=function() 										//	GET TO SHOW
 	{
-		if (!gdrive.lastId) {													// No id 
+		if (!this.doc.curShow) {												// No id 
 			Sound("delete");													// Delete sound
 			PopUp("You need to load a show<br>to get a link to it",2000,"screenDiv");	// Error
 			return;																// Quit
 			}
 		var str="<b>Links to your show</b><br><p>";								// Title
-		str+="Editing link:&nbsp; www.viseyes.org/pa?"+gdrive.lastId;			// Normal
-		str+="</p><p>Full-screen link:&nbsp;  www.viseyes.org/pa?"+gdrive.lastId+"&fs</p>";	// Full
+		str+="Editing link:&nbsp; www.viseyes.org/pa?"+this.curShow;			// Normal
+		str+="</p><p>Full-screen link:&nbsp;  www.viseyes.org/pa?"+this.curShow+"&fs</p>";	// Full
 		PopUp(str,-1);															// Show with close but
 	}
 
@@ -1271,195 +1278,48 @@
 			}
 	}
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// GOOGLE DRIVE ACCESS 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	function gTest()
+	CDoc.prototype.Save=function(csv) 										// SAVE SHOW
 	{
-//		gdrive.LoadFile("12mLmXY0LILmspBDOd2DuEcti7kqe5pwWIGh4jdKSQF8",true);
-		var o={};																		// New obj
-		o.script=$("#scriptTextDiv").text();										// Get script text 
-		o.title=$("#titleDiv").text();												// Get title text 
-		o.voice=player.voice;														// Get audio mode
-		o.audioRate=player.audioRate;												// Get rate multiplier
-		o.pitch=player.pitch;														// Get TTS pitch
-		o.mp3=player.mp3;															// Get audio file
-		o.binPics=$.parseJSON(JSON.stringify(bin.pics));							// Clone bin pics
-		o.scriptPics=$.parseJSON(JSON.stringify(script.pics));						// Clone script pics
-		trace(JSON.stringify(o));
-		gdrive.GoogleDriveLoad(false);
-	
+		curJson={};
+		curJson.script=$("#scriptTextDiv").text();								// Get script text 
+		curJson.title=$("#titleDiv").text();									// Get title text 
+		curJson.voice=player.voice;												// Get audio mode
+		curJson.audioRate=player.audioRate;										// Get rate multiplier
+		curJson.pitch=player.pitch;												// Get TTS pitch
+		curJson.mp3=player.mp3;													// Get audio file
+		curJson.binPics=$.parseJSON(JSON.stringify(bin.pics));					// Clone bin pics
+		curJson.scriptPics=$.parseJSON(JSON.stringify(script.pics));			// Clone script pics
+		qmf.Save(1);															// Save data
 	}
 
-	function Gdrive()															// CONSTRUCTOR
+	CDoc.prototype.Load=function(csv) 										// SAVE SHOW
 	{
-		this.clientId="745573675109-38u53k0dg71c9lj23522csfgr58095h7.apps.googleusercontent.com";	// Google client id
-		this.appID="745573675109";													// Google app id
-		this.scope="https://www.googleapis.com/auth/spreadsheets";					// Scope of access
-		this.apiKey="AIzaSyDUJ3d7mPKO9zX6xuERr43m6cxJrWu8Q5w";						// Google API key
-		this.contentType="image/svg+xml";											// SVG mime type
-		this.lastId="";																// Id of last one saved/loaded
-		this.lastName="";															// Name of last file
+		qmf.Load();																// Get data
 	}
-
-	Gdrive.prototype.SaveFile=function(id)										// SAVE GOOGLE SPREADSHEET
+	
+	CDoc.prototype.GDriveLoad=function(id) 									// LOAD FROM GOOGLE DRIVE
 	{
-		var i,a,o,oauthToken;
-		var _this=this;																// Save context
-		gapi.load('auth', { 'callback': onAuthApiLoad });							// Load auth
-		var data={  "majorDimension": "ROWS", "values":[["type", "title", "url", "link", "desc"]] };		// Data to save
-		for (i=0;i<bin.pics.length;++i) {											// For each bin pic
-			a=["pic"];																// Add type
-			o=bin.pics[i];															// Point at pic
-			a.push(o.title ? o.title : "");											// Add title 
-			a.push(o.src ? o.src : "");												// Add src 
-			a.push(o.link ? o.link : "");											// Add link 
-			a.push(o.desc ? o.desc : "");											// Add desc 
-			data.values.push(a)
-			}
-		data.values.push(["script",$("#scriptTextDiv").text(),"","",""]);			// Save script
-		data.values.push(["title",$("#titleDiv").text(),"","",""]);					// Save title
-		o={};																		// New obj
-		o.script=$("#scriptTextDiv").text();										// Get script text 
-		o.title=$("#titleDiv").text();												// Get title text 
-		o.voice=player.voice;														// Get audio mode
-		o.audioRate=player.audioRate;												// Get rate multiplier
-		o.pitch=player.pitch;														// Get TTS pitch
-		o.mp3=player.mp3;															// Get audio file
-		o.binPics=$.parseJSON(JSON.stringify(bin.pics));							// Clone bin pics
-		o.scriptPics=$.parseJSON(JSON.stringify(script.pics));						// Clone script pics
-		data.values.push(["data","Don't edit this line!",JSON.stringify(o,8),"",""]);	// Save data
-
-		function onAuthApiLoad() {													// ON AUTH API LOADED
-      		window.gapi.auth.authorize({											// Authorize
-            	client_id: _this.clientId,											// Set client ID
-            	scope: _this.scope,													// Set scope
-				discoveryDocs:["https://sheets.googleapis.com/$discovery/rest?version=v4"],
-            	immediate: false													// Not immediate
-         		 }, handleAuthResult);
-    		}
-
-		function handleAuthResult(authResult) {										// ON OATH
-			if (authResult && !authResult.error) {									// No error
-        		oauthToken=authResult.access_token;									// Get token
-				if (id) 	writeData();											// If has an id, writer to it
-				 else		writeNewData();											// Otherwise create a new file
-      			}
-			}
-	
-		function writeNewData()													// CREATE NEW DOC ON G-DRIVE
-		{
-			var d=new Date();														// Get date
-			var name="PrimaryAccess - ";											// Prefix
-			name+=(d.getMonth()+1)+"/"+d.getDate()+" "+d.getHours()+":"+d.getMinutes();	// Add
-			var request=gapi.client.request({										// Make request object
-				path: "/drive/v3/files/", method: "POST",
-		       	headers: {
-		           	"Content-Type": "application/json",
-		           	"Authorization": "Bearer "+oauthToken,             
-		      		},
-		       body:{
-		           	name: name,
-					mimeType: "application/vnd.google-apps.spreadsheet",
-		  	     	}
-		  	 	});
-			request.execute(function(response) {									// Get data
-				id=_this.lastId=response.id;										// Save id
-				writeData(true);													// Write file
-				});	
-			}	
-	
-		function writeData(create) {
-			var accessToken=gapi.auth.getToken().access_token;
-			var str="https://sheets.googleapis.com/v4/spreadsheets/"+id+"/values/Sheet1!A1:E50?valueInputOption=USER_ENTERED";
-			var xhr=new XMLHttpRequest();											// Ajax
- 			xhr.open("PUT",str);													// Set open url
-			xhr.setRequestHeader('Authorization','Bearer '+ accessToken);			// Auth
-			xhr.onload=function() { 												// On successful load
-				Sound("ding");														// Ding sound
-				if (create)
-					PopUp("<p style='color:#009900'><b>New\ doc created</b></p>Make sure to set sharing to<br><i> Anyone can view it</i> in Google Docs",8000);  // Popup success
-				else
-					PopUp("<p style='color:#009900'><b>Successfully saved!</b></p>"); 	// Popup success
+		var str="https://docs.google.com/spreadsheets/d/"+id+"/export?format=tsv";	// Access tto
+		var xhr=new XMLHttpRequest();											// Ajax
+		xhr.open("GET",str);													// Set open url
+		xhr.onload=function() { 												// On successful load
+			doc.AddCSV(xhr.responseText);										// Parse CSV  
+			};			
+		xhr.onreadystatechange=function(e)  { 									// On readystate change
+			if ((xhr.readyState === 4) && (xhr.status !== 200)) {  				// Ready, but no load
+				Sound("delete");												// Delete sound
+				PopUp("<p style='color:#990000'><b>Couldn't load Google Doc!</b></p>Make sure that <i>anyone</i><br>can view it in Google",5000); // Popup warning
 				}
-			xhr.onreadystatechange=function(e)  { 									// On readystate change
-				if ((xhr.readyState === 4) && (xhr.status !== 200)) {  				// Ready, but no load
-					Sound("delete");												// Delete sound
-					PopUp("<p style='color:#990000'><b>Error saving Google Doc!</b></p>",5000); // Popup warning
-					}
-				 };		
-   			xhr.send(JSON.stringify(data));												// Do it
-			}
+				};		
+		xhr.send();																// Do it
 	}
 
-	Gdrive.prototype.LoadFile=function(id, logIn)								// LOAD GOOGLE SPREADSHEET
+	function LoadShow(data) 												// GET DATA FROM LOAD SHOW
 	{
-		var _this=this;																// Save context
-		if (!logIn) {																// If not logging in
-			var str="https://docs.google.com/spreadsheets/d/"+id+"/export?format=tsv";	// Access tto
-			var xhr=new XMLHttpRequest();											// Ajax
-			xhr.open("GET",str);													// Set open url
-			xhr.onload=function() { 												// On successful load
-				doc.AddCSV(xhr.responseText);										// Parse CSV  
-				};			
-			xhr.onreadystatechange=function(e)  { 									// On readystate change
-				if ((xhr.readyState === 4) && (xhr.status !== 200)) {  				// Ready, but no load
-					Sound("delete");												// Delete sound
-					PopUp("<p style='color:#990000'><b>Couldn't load Google Doc!</b></p>Make sure that <i>anyone</i><br>can view it in Google",5000); // Popup warning
-					}
-				 };		
-			xhr.send();																// Do it
-			return;																	// Quit
-			}
+		doc.LoadJSON(data);														// Load show
+	}
 
- 		var pickerApiLoaded=false, oauthToken;
-		gapi.load('auth', { 'callback': onAuthApiLoad });							// Load auth
-		gapi.load('picker', { 'callback': onPickerApiLoad });						// Load picker
 
-		function onAuthApiLoad() {													// ON AUTH API LOADED
-      		window.gapi.auth.authorize({											// Authorize
-            	client_id: _this.clientId,											// Set client ID
-            	scope: _this.scope,													// Set scope
-            	immediate: false													// Not immediate
-         		 }, handleAuthResult);
-    		}
-		function onPickerApiLoad() {												// ON PICKER API LOADED
-      		pickerApiLoaded=true;													// Set flag
-      		createPicker();															// Create picker
-   			}
-
-		function handleAuthResult(authResult) {										// ON OATH
-    		 if (authResult && !authResult.error) {									// No error
-        		oauthToken=authResult.access_token;									// Get token
- 	      		createPicker();
-      			}
-			}
-		function createPicker() {													// CREATE PICKER
-			if (pickerApiLoaded && oauthToken) {
-				var view=new google.picker.DocsView(google.picker.ViewId.DOCS)		// Create view
-					.setMimeTypes("application/vnd.google-apps.spreadsheet")		// Accept Sheets only
-					.setOwnedByMe(true)												// Only ones I own
-					.setIncludeFolders(true);										// Show folders
-				var picker=new google.picker.PickerBuilder()						// Create picker
-					.setAppId(_this.appID)											// Set appID
-					.setOAuthToken(oauthToken)										// Oath token
-					.setDeveloperKey(_this.apiKey)									// Api key
-					.setCallback(pickerCallback)									// Callback
-					.addView(view)													// Add view
-					.build();														// Done
-				picker.setVisible(true);											// Show it
-      			}
-    		}
-
-		function pickerCallback(data) {												// ON PICK
-      		if (data.action == google.picker.Action.PICKED) {						// If picked
-				gdrive.LoadFile(data.docs[0].id);									// Load file
-				_this.lastId=data.docs[0].id;										// Save id
-			  	}
-			 }
- 	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
