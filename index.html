@@ -167,7 +167,7 @@
 			</div>
 		</div>
 	</div>
-	<img id="splashDiv" class="pa-splash" src="img/palogo.gif">
+	<div id="splashDiv" class="pa-splash" style="text-align:center;color:#ccc"><img src="img/palogo.gif"><br>v2.01</div>
   <script>
 	  
 	function PlayTTS()
@@ -218,7 +218,7 @@
 	var gdrive=null;														// GDrive
 	var isMobile=false;														// Is a mobile platform
 	var isFullScreen=false;													/// Is it full screen?
-	var noSplash=false;														// Splash screen inhibitor
+	var noSplash=(window.location == "localhost") ? false : true;			// Splash screen inhibitor
 	var playAspect=.6667;													// Image aspect ratio
 
 	$(document).ready(function() {								        // ON PAGE LOADED
@@ -1308,12 +1308,8 @@
 	{
 		var i,a,o,oauthToken;
 		var _this=this;																// Save context
-		if (!id) {
-			PopUp("You need to load or create a show before saving")
-			return;
-			}
 		gapi.load('auth', { 'callback': onAuthApiLoad });							// Load auth
-		var data={ "majorDimension": "ROWS", "values":[["type", "title", "url", "link", "desc"]] };		// Data to save
+		var data={  "majorDimension": "ROWS", "values":[["type", "title", "url", "link", "desc"]] };		// Data to save
 		for (i=0;i<bin.pics.length;++i) {											// For each bin pic
 			a=["pic"];																// Add type
 			o=bin.pics[i];															// Point at pic
@@ -1346,12 +1342,36 @@
     		}
 
 		function handleAuthResult(authResult) {										// ON OATH
-    		 if (authResult && !authResult.error) {									// No error
+			if (authResult && !authResult.error) {									// No error
         		oauthToken=authResult.access_token;									// Get token
- 	      		writeData();
+				if (id) 	writeData();											// If has an id, writer to it
+				 else		writeNewData();											// Otherwise create a new file
       			}
 			}
-		function writeData() {
+	
+		function writeNewData()													// CREATE NEW DOC ON G-DRIVE
+		{
+			var d=new Date();														// Get date
+			var name="PrimaryAccess - ";											// Prefix
+			name+=(d.getMonth()+1)+"/"+d.getDate()+" "+d.getHours()+":"+d.getMinutes();	// Add
+			var request=gapi.client.request({										// Make request object
+				path: "/drive/v3/files/", method: "POST",
+		       	headers: {
+		           	"Content-Type": "application/json",
+		           	"Authorization": "Bearer "+oauthToken,             
+		      		},
+		       body:{
+		           	name: name,
+					mimeType: "application/vnd.google-apps.spreadsheet",
+		  	     	}
+		  	 	});
+			request.execute(function(response) {									// Get data
+				id=_this.lastId=response.id;										// Save id
+				writeData(true);													// Write file
+				});	
+			}	
+	
+		function writeData(create) {
 			var accessToken=gapi.auth.getToken().access_token;
 			var str="https://sheets.googleapis.com/v4/spreadsheets/"+id+"/values/Sheet1!A1:E50?valueInputOption=USER_ENTERED";
 			var xhr=new XMLHttpRequest();											// Ajax
@@ -1359,7 +1379,10 @@
 			xhr.setRequestHeader('Authorization','Bearer '+ accessToken);			// Auth
 			xhr.onload=function() { 												// On successful load
 				Sound("ding");														// Ding sound
-				PopUp("<p style='color:#009900'><b>Successfully saved!</b></p>"); 	// Popup success
+				if (create)
+					PopUp("<p style='color:#009900'><b>New\ doc created</b></p>Make sure to set sharing to<br><i> Anyone can view it</i> in Google Docs",8000);  // Popup success
+				else
+					PopUp("<p style='color:#009900'><b>Successfully saved!</b></p>"); 	// Popup success
 				}
 			xhr.onreadystatechange=function(e)  { 									// On readystate change
 				if ((xhr.readyState === 4) && (xhr.status !== 200)) {  				// Ready, but no load
