@@ -1289,14 +1289,16 @@
 		o.binPics=$.parseJSON(JSON.stringify(bin.pics));							// Clone bin pics
 		o.scriptPics=$.parseJSON(JSON.stringify(script.pics));						// Clone script pics
 		trace(JSON.stringify(o));
-	 	}
+		gdrive.GoogleDriveLoad(false);
+	
+	}
 
 	function Gdrive()															// CONSTRUCTOR
 	{
-		this.clientId="745573675109-ki8osjpngrl93k243qa279ntmb4227qc.apps.googleusercontent.com";	// Google client id
+		this.clientId="745573675109-38u53k0dg71c9lj23522csfgr58095h7.apps.googleusercontent.com";	// Google client id
 		this.appID="745573675109";													// Google app id
 		this.scope="https://www.googleapis.com/auth/spreadsheets";					// Scope of access
-		this.apiKey="AIzaSyASaY6olaf8qWvdTU-YB-nvDqaFVIF8Iy0";						// Google API key
+		this.apiKey="AIzaSyDUJ3d7mPKO9zX6xuERr43m6cxJrWu8Q5w";						// Google API key
 		this.contentType="image/svg+xml";											// SVG mime type
 		this.lastId="";																// Id of last one saved/loaded
 		this.lastName="";															// Name of last file
@@ -1357,6 +1359,7 @@
 			xhr.setRequestHeader('Authorization','Bearer '+ accessToken);			// Auth
 			xhr.onload=function() { 												// On successful load
 				Sound("ding");														// Ding sound
+				PopUp("<p style='color:#009900'><b>Successfully saved!</b></p>"); 	// Popup success
 				}
 			xhr.onreadystatechange=function(e)  { 									// On readystate change
 				if ((xhr.readyState === 4) && (xhr.status !== 200)) {  				// Ready, but no load
