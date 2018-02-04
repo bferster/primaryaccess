@@ -149,9 +149,9 @@
 				<option>Set motion</option>
 				<option>Full screen</option>
 				<option>Add new picture</option>
-				<option>Load show</option>
-				<option>Save show</option>
-				<option>Get show link</option>
+				<option>Load project</option>
+				<option>Save project</option>
+				<option>Get project link</option>
 				</select>
 			<img id="playBut" class="pa-playbut" src="img/playbut.gif"><br>
 			<span id="activeVoice" class="pa-voice" ></span><br>
@@ -403,13 +403,13 @@
 				_this.SetFullScreen(1);										// Show full
 				PopUp("Click here to go back",500);							// Tell how to return
 				}
-			else if ($(this).val() == "Load show") {						// Load show
+			else if ($(this).val() == "Load project") {						// Load show
 				doc.Do();													// Save a do
 				doc.Load();													// Load file 
 				}	
-			else if ($(this).val() == "Save show") 							// Save show
+			else if ($(this).val() == "Save project") 						// Save show
 				doc.Save();													// Save file
-			else if ($(this).val() == "Get show link") 						// Get link to show
+			else if ($(this).val() == "Get project link") 					// Get link to show
 				doc.GetLink();												// Show link
 			$(this).val("Picture options");									// Set menu to default
 			});
