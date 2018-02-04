@@ -110,7 +110,7 @@
 							}
 		.pa-arrow {  		cursor:pointer; vertical-align: 2px; display: none;
 							}
-		.pa-popup {			position: absolute;  width: auto; padding: 8px; left: calc(50% - 100px); top: calc(50% - 50px);
+		.pa-popup {			position: absolute;  width: auto; padding: 12px; left: calc(50% - 100px); top: calc(50% - 50px);
 							border-radius: 8px; background-color: #eee; border: 1px solid #999; box-shadow: 4px 2px 12px 2px #aaa; 
 							font-size: 14px; text-align:center; display: none;
 							}
@@ -169,7 +169,7 @@
 			</div>
 		</div>
 	</div>
-	<div id="splashDiv" class="pa-splash" style="text-align:center;color:#ccc"><img src="img/palogo.gif"><br>v2.01</div>
+	<div id="splashDiv" class="pa-splash" style="text-align:center;color:#ccc"><img src="img/palogo.gif"><br>v2.03</div>
   <script>
 	  
 	function PlayTTS()
@@ -219,8 +219,8 @@
 	var player=null;														// CPplayer
 	var qmf=null;															// QFile system
 	var isMobile=false;														// Is a mobile platform
-	var isFullScreen=false;													/// Is it full screen?
-	var noSplash=(window.location == "localhost") ? false : true;			// Splash screen inhibitor
+	var isFullScreen=0;														// Is it full screen?
+	var noSplash=(window.location == "localhost") ? true : false;			// Splash screen inhibitor
 	var playAspect=.6667;													// Image aspect ratio
 
 	$(document).ready(function() {								        // ON PAGE LOADED
@@ -234,17 +234,26 @@
 		bin=new CBin();														// Alloc CBin module
 		script=new CScript();												// Alloc CScript module
 		player=new CPlayer();												// Alloc CPlayer module
-//		gdrive=new Gdrive();												// Alloc GDrive module
 		qmf=new QmediaFile("//viseyes.org/pa/",0);							// Alloc file system
-		if (url) 															// A doc set
-			doc.GDriveLoad(url.split("&")[0]);								// Load Google doc defined		
+		if (url) { 															// A doc set
+			if (url.length > 12) {											// A google doc			
+				doc.GDriveLoad(url.split("&")[0]);							// Load Google doc defined	
+				if (url.match(/&fs/i)) 										// Full screen flag
+					isFullScreen=2;											// Starting full										
+				}
+			else{
+				if (!url.match(/\*/)) 										// Full screen flag
+					isFullScreen=2;											// Starting full										
+				qmf.LoadFile("123"+url,true);								// Load, but don't set id, padded
+				}
+			}	
 		else																// No doc													
 			doc.LoadJSON("civil");											// Load demo
 		ResizePanes();														// Start up sizing
 		$("#splashDiv").delay(noSplash?1:1000).animate({ opacity:0},noSplash?1:500, // Hide logo
 				function() {	 											// When done
-					if (url && url.match(/&fs/i)) 							// Full screen flag
-						player.SetFullScreen(true);							// Set it
+					if (isFullScreen) 										// Full screen flag
+						player.SetFullScreen(2);							// Set it
 					$("#mainDiv").animate({ opacity:1},noSplash?500:2000, 	// Show interface
 						function() {	$("#splashDiv").remove();	});		// Remove splash screen
 					});		
@@ -257,8 +266,8 @@
 				if (id && id.match(/add/))		return;						// If in add pic dialog
 				$("#playBut").trigger("click");								// Toggle play
 				}
-			if ((e.which == 27) && isFullScreen)							// Escape from full screen
-				player.SetFullScreen(false);								// Regular screen
+			if ((e.which == 27) && (isFullScreen == 1))						// Escape from full screen
+				player.SetFullScreen(0);									// Regular screen
 			if ((e.which == 84) && e.altKey && e.ctrlKey)					// TEST KEY
 				gTest();
 	
@@ -279,8 +288,11 @@
 	function Draw()														//  RE DRAW SCREEN
 	{
 		if (script) script.Draw();											// Redraw script
-		if (player)	player.Draw();											// Redraw player
 		if (bin)	bin.Draw();												// Redraw bin
+		if (player)	{														// If player ready
+			player.InitAudio();												// Init audio
+			player.Draw();													// Redraw player
+			}
 	}
 
 	function ResizePanes()												//  REACT TO SCREEN SIZE
@@ -355,9 +367,9 @@
 			})
 
 		$("#screenDiv").on("click", function() {							// ON SCREEN CLICK
-			if (isFullScreen) 												// If full screen
-				_this.SetFullScreen(false);									// Exit mode
-			});
+			if (isFullScreen == 1) 											// If full screen
+				_this.SetFullScreen(0);										// Exit mode
+			});	
 			
 		$("#playerDiv").on("click", function() {							// ON PLAYER CLICK
 			$("#metaDiv").remove();											// Kill metadata popup
@@ -388,7 +400,7 @@
 			else if ($(this).val() == "Add new picture")					// Add pic
 				bin.AddPic();												// Run pic dialog
 			else if ($(this).val() == "Full screen") {						// Full screen
-				_this.SetFullScreen(true);									// Show full
+				_this.SetFullScreen(1);										// Show full
 				PopUp("Click here to go back",500);							// Tell how to return
 				}
 			else if ($(this).val() == "Load show") {						// Load show
@@ -1190,7 +1202,6 @@
 
 	function CDoc()															// CONSTRUCTOR
 	{
-		this.curShow=null;														// ID of data
 		this.curUndo=0;															// Undo counter
 		this.changed=false;														// Changed flag
 		this.undos=[];															// Holds undos
@@ -1221,14 +1232,13 @@
 	
 	CDoc.prototype.GetLink=function() 										//	GET TO SHOW
 	{
-		if (!this.doc.curShow) {												// No id 
+		if (!qmf.curFile) {														// No id 
 			Sound("delete");													// Delete sound
 			PopUp("You need to load a show<br>to get a link to it",2000,"screenDiv");	// Error
 			return;																// Quit
 			}
-		var str="<b>Links to your show</b><br><p>";								// Title
-		str+="Editing link:&nbsp; www.viseyes.org/pa?"+this.curShow;			// Normal
-		str+="</p><p>Full-screen link:&nbsp;  www.viseyes.org/pa?"+this.curShow+"&fs</p>";	// Full
+		var str="<b>Link to your show</b><br><p>";								// Title
+		str+="</p><p>www.viseyes.org/pa?"+qmf.curFile+"</p>";					// Get it
 		PopUp(str,-1);															// Show with close but
 	}
 
@@ -1317,13 +1327,22 @@
 	function LoadShow(data) 												// GET DATA FROM LOAD SHOW
 	{
 		doc.LoadJSON(data);														// Load show
+		curJson=JSON.stringify(data);											// Turn data inrto JSON
+		curJson.replace(/\\'/g,"'");											// Unescape '
+		curJson.replace(/\\"/g,'"');											// Unescape "
+		curJson.scriptPics=$.parseJSON(curJson);								// Re-objectify
 	}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	function ShortenString(str, len)										// SHORTEN A STRING TO LENGTH
+	{
+		if (str && str.length > len)											// Too long
+			str=str.substr(0,(len-3)/2)+"..."+str.slice((len-3)/-2);			// Shorten	
+		return str;																// Return string
+	}
 
 	function TimecodeToSeconds(timecode) 									// CONVERT TIMECODE TO SECONDS
 		{
@@ -1389,6 +1408,16 @@
 			$("#dialogDiv").remove();											// Kill dialog
 			});
 	}	
+
+	function AddEscapes(str) 												// ESCAPE TEXT STRING
+	{	
+		if (str) {																// If a string
+			str=""+str;															// Force as string
+			str=str.replace(/"/g,"\\\"");										// " to \"
+			str=str.replace(/'/g,"\\\'");										// ' to \'
+			}
+		return str;																// Return escaped string
+		}
 
 	function ConvertFromGoogleDrive(url)									// CONVERT GOOGLE DRIVE LINK TO DIRECT LINK
 	{

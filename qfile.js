@@ -11,8 +11,6 @@
 		this.email=this.GetCookie("email");										// Get email from cookie
 		this.curFile="";														// Current file
 		this.password=this.GetCookie("password");								// Password
-		this.butsty=" style='border-radius:10px;color#666;padding-left:6px;padding-right:6px' ";	// Button styling
-		this.deleting=false;													// Not deleting
 	}
 	
 	QmediaFile.prototype.Load=function() 									//	LOAD FILE DIALOG
@@ -20,7 +18,7 @@
 		var _this=this;															// Save context
 		var str="<br/>To load one of your projects, type your email address in the box below. If you were given an ID to use, use that instead."
 		str+="<br><br><div style='text-align:center'>";							// Center	
-		str+="<b>Email or Id:&nbsp;&nbsp</b> <input class='pa-is' type='text' id='email' value='"+this.email+"'/>";
+		str+="<b>Email or ID:&nbsp;&nbsp</b> <input class='pa-is' type='text' id='email' value='"+this.email+"'/>";
 		str+="</div><br><div style='text-align:right'><br>";					// Right justify	
 		str+="<div class='pa-bs' id='logBut'>Login</div>&nbsp;&nbsp;";			// OK but
 		str+="<div class='pa-bs' id='cancelBut'>Cancel</div></div>";			// Cancel but
@@ -35,14 +33,21 @@
 			});
 	}	
 
-	QmediaFile.prototype.Save=function(saveAs) 								//	SAVE FILE TO DB
-	{
-		if (saveAs)																// If save as...
-			curShow=this.curFile="";											// Force a new file to be made
-		var str="<br/>To load one of your projects, type your email address in the box below. If you were given an ID to use, use that instead. Type in a password if you want to protect it. "
+	QmediaFile.prototype.Save=function() 									//	SAVE FILE TO DB
+	{	
+		if ((this.password == "undefined" | this.password == undefined))		// No password
+			this.password="";													// Null it out
+		var str="<br/>To save your project, type your email address in the box below. If you were given an ID to use, use that instead. Type in a password if you want to protect it."
 		str+="<br/><blockquote><table cellspacing=0 cellpadding=0 style='font-size:11px'>";
-		str+="<tr><td><b>Email</b><span style='color:#990000'> *</span></td><td><input"+this.butsty+"type='text' id='email' size='20' value='"+this.email+"'/></td></tr>";
-		str+="<tr><td><b>Password</b><span style='color:#990000'></span>&nbsp;&nbsp;</b></td><td><input"+this.butsty+"type='password' id='password' size='20' value='"+this.password+"'/></td></tr>";
+		str+="<tr><td><b>Email or ID</b><span style='color:#990000'> * </span>&nbsp;</td><td><input class='pa-is' type='text' id='email' value='"+this.email+"'/></td></tr>";
+		str+="<tr><td><b>Password</b><span style='color:#990000'></span></b></td><td><input class='pa-is' type='password' id='password' value='"+this.password+"'/></td></tr>";
+		if (this.curFile) {														// If a project loaded, as for save as...
+			str+="<tr><td colspan='2'>&nbsp;</td></tr>";
+			str+="<tr><td colspan='2'><input type='radio' name='rgrp' checked>";
+			str+="Save to current project - (Id: "+this.curFile+")<td><tr>";
+			str+="<tr><td colspan='2'><input type='radio' id='saveNew' name='rgrp'";
+			str+=">Create a fresh project</td></tr>";
+			}
 		str+="</table></blockquote><div style='font-size:12px;text-align:right'><br>";	
 		str+="<div class='pa-bs' id='saveBut'>Save</div>&nbsp;&nbsp;";			// Save but
 		str+="<div class='pa-bs' id='cancelBut'>Cancel</div>";					// Cancel but
@@ -59,48 +64,58 @@
 				 return _this.LightBoxAlert("Need email");						// Quit with alert
 			_this.SetCookie("password",_this.password,7);						// Save cookie
 			_this.SetCookie("email",_this.email,7);								// Save cookie
-			$("#lightBoxDiv").remove();											// Close
 			var url=_this.host+"saveshow.php";									// Base file
-			dat["id"]=curShow;													// Add id
+			if ($("#saveNew").prop("checked"))									// Save as
+				_this.curFile="";												// Force saving to a new file
+			dat["id"]=_this.curFile;											// Add id
 			dat["email"]=_this.email;											// Add email
 			dat["password"]=_this.password;										// Add password
 			dat["ver"]=_this.version;											// Add version
+			dat["title"]=AddEscapes(curJson.title);								// Add title
 			dat["private"]=0;													// Add private
 			dat["script"]="LoadShow("+JSON.stringify(curJson,null,'\t')+")";	// Add jsonp-wrapped script
-			if (curJson.title)													// If a title	
-				dat["title"]=AddEscapes(curJson.title);							// Add title
+			$("#lightBoxDiv").remove();											// Close
 			$.ajax({ url:url,dataType:'text',type:"POST",crossDomain:true,data:dat,  // Post data
 				success:function(d) { 			
 					if (d == -1) 												// Error
-				 		AlertBox("Error","Sorry, there was an error saving that project.(1)");		
+				 		AlertBox("Error","Sorry, there was an error saving that project (1)");		
 					else if (d == -2) 											// Error
-				 		AlertBox("Error","Sorry, there was an error saving that project. (2)");		
+				 		AlertBox("Error","Sorry, there was an error saving that project (2)");		
 					else if (d == -3) 											// Error
-				 		AlertBox("Wrong password","Sorry, the password for this project does not match the one you supplied.");	
+				 		AlertBox("Wrong password","Sorry, the password for this project<br>does not match the one you supplied");	
 				 	else if (d == -4) 											// Error
-				 		AlertBox("Error","Sorry, there was an error updating that project. (4)");		
+				 		AlertBox("Error","Sorry, there was an error updating that project (4)");		
 				 	else if (!isNaN(d)){										// Success if a number
-				 		curShow=this.curFile=d;									// Set current file
+				 		this.curFile=d;											// Set current file
 						Sound("ding");											// Ding
+						PopUp("<span style='color:#009900'<b>Saved!</b></span>",100);	// Saved!
 						Draw();													// Redraw menu
 						}
 					},
 				error:function(xhr,status,error) { trace(error) },				// Show error
 				});		
-			});
+		
+				function AlertBox(title, content) {								// ALERT BOX
+					Sound("delete");
+					var str="<span style='color:#990000'><b>"+title+"</b></span><br><br>";
+					str+=content+"<br>";
+					PopUp(str,4000); 
+					}
+				});
 	
 		$("#cancelBut").on("click", function() {								// CANCEL BUTTON
 			$("#lightBoxDiv").remove();											// Close
 			});
-	}
+		}
 	
-	QmediaFile.prototype.LoadFile=function(id) 								//	LOAD A FILE FROM DB
+	QmediaFile.prototype.LoadFile=function(id, dontSetId) 					//	LOAD A FILE FROM DB
 	{
 		id=id.substr(3);														// Strip off prefix
 		$("#lightBoxDiv").remove();												// Close
 		var url=this.host+"loadshow.php";										// Base file
 		url+="?id="+id;															// Add id
-		this.curFile=id;														// Set as current file
+		if (!dontSetId)															// Unless told otherwise
+			this.curFile=id;													// Set as current file
 		$.ajax({ url:url, dataType:'jsonp'});									// Get data and pass to LoadProject() in Edit
 	}	
 		
@@ -119,26 +134,24 @@
 		var trsty=" style='height:20px;cursor:pointer' onMouseOver='this.style.backgroundColor=\"#dee7f1\"' ";
 		trsty+="onMouseOut='this.style.backgroundColor=\"#f8f8f8\"' onclick='";
 		trsty+="qmf.LoadFile(this.id)'";										// Load
-		qmf.password=$("#password").val();										// Get current password
 		qmf.email=$("#email").val();											// Get current email
 		qmf.SetCookie("email",qmf.email,7);										// Save cookie
 		$("#lightBoxDiv").remove();												// Close old one
 		str="<br>Choose project from the list below:<br>";						// Title
 		str+="<br><div style='width:100%;max-height:300px;overflow-y:auto'>";	// Scrolling div
 		str+="<table style='font-size:12px;width:100%;padding:0px;border-collapse:collapse;'>";
-		str+="<tr></td><td><b>Title </b></td><td><b>Date&nbsp;&&nbsp;time</b></td><td style='float:right'><b> Show ID</b></tr>";
+		str+="<tr></td><td><b>Title </b></td><td><b>Date&nbsp;&&nbsp;time</b></td><td style='float:right'><b> Project ID</b></tr>";
 		str+="<tr><td colspan='3'><hr></td></tr>";
 		for (var i=0;i<files.length;++i) 										// For each file
-			str+="<tr id='qmf"+files[i].id+"' "+trsty+"><td>"+files[i].title+"</td><td>"+files[i].date.substr(5,11)+"</td><td align=right>"+files[i].id+"</td></tr>";
+			str+="<tr id='qmf"+files[i].id+"' "+trsty+"><td>"+ShortenString(files[i].title,30)+"</td><td>"+files[i].date.substr(5,11)+"</td><td align=right>"+files[i].id+"</td></tr>";
 		str+="</table><br><div class='pa-bs' style='float:right' id='cancelBut'>Cancel</div>";	// Cancel but
-		
 		qmf.ShowLightBox("Load a project",str);									// Show lightbox
-		this.deleting=false;													// Done deleting
 		
 		$("#cancelBut").on("click", function() {								// CANCEL BUTTON
 			$("#lightBoxDiv").remove();											// Close
 			});
-							}
+	}
+	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // UNDO / REDO
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -181,7 +194,7 @@
 		for (i=0;i<undos.length;++i) 											// For each undo
 			str+="<tr id='und"+undos[i].id+"' "+trsty+"><td>"+undos[i].date+"</td><td>"+undos[i].name+"</td></tr>";
 		str+="</table></div><div style='font-size:12px;text-align:right'><br>";	// End table
-		str+=" <button"+qmf.butsty+"id='cancelBut'>Cancel</button></div>";		// Add button
+		str+=" <div class='pa-is' id='cancelBut'>Cancel</div></div>";			// Add button
 		qmf.ShowLightBox("Load an undo",str);									// Show lightbox
 	
 		for (i=0;i<sessionStorage.length;++i) 									// For each undo
@@ -194,7 +207,7 @@
 				$("#lightBoxDiv").remove();										// Close
 				});
 	
-		$("#cancelBut").button().click(function() {								// CANCEL BUTTON
+		$("#cancelBut").on("click", function() {								// CANCEL BUTTON
 			Sound("delete");													// Delete sound
 			$("#lightBoxDiv").remove();											// Close
 			});
@@ -252,226 +265,5 @@
 	{
 		Sound("delete");														// Delete sound
 		$("#lightBoxTitle").html("<span style='color:#990000'>"+msg+"</span>");	// Put new
-	}
-	
-	function MakeColorDot(title, name, color)								// MAKE COLORPICKER DOT
-	{
-		var str=title+"&nbsp;&nbsp;<div id='"+name+"' "; 
-		str+="style='vertical-align:-2px;display:inline-block;height:12px;width:12px;border-radius:12px;border:1px ";
-		if (!color || (color == -1)  || (color == "none")) 	
-			str+="dashed #000;background-color:#fff"; 	
-		else
-			str+="solid #000;background-color:"+color; 	
-		str+="' onclick='ColorPicker(\""+name+"\")'>";
-		str+="</div>";
-		return str;
-	}		
-	
-	function ColorPicker(name, transCol) 									//	DRAW COLORPICKER
-	{
-		if (!transCol)															// If no transparent color set
-			transCol="";														// Use null
-		$("#colorPickerDiv").remove();											// Remove old one
-		var x=$("#"+name).offset().left+10;										// Get left
-		var y=$("#"+name).offset().top+10;										// Top
-		var	str="<div id='colorPickerDiv' style='position:absolute;left:"+x+"px;top:"+y+"px;width:160px;height:225px;z-index:100;border-radius:12px;background-color:#eee'>";
-		$("body").append("</div>"+str);											// Add palette to dialog
-		$("#colorPickerDiv").draggable();										// Make it draggable
-		str="<p style='text-shadow:1px 1px white' align='center'><b>Choose a new color</b></p>";
-		str+="<img src='colorpicker.gif' style='position:absolute;left:5px;top:28px' />";
-		str+="<input id='shivaDrawColorInput' type='text' style='position:absolute;left:22px;top:29px;width:96px;background:transparent;border:none;'>";
-		$("#colorPickerDiv").html(str);											// Fill div
-		$("#colorPickerDiv").on("click",onColorPicker);							// Mouseup listener
-	
-		function onColorPicker(e) {
-			
-			var col;
-			var cols=["000000","444444","666666","999999","CCCCCC","EEEEEE","E7E7E7","FFFFFF",
-					  "FF0000","FF9900","FFFF00","00FF00","00FFFF","0000FF","9900FF","FF00FF",	
-					  "F4CCCC","FCE5CD","FFF2CC","D9EAD3","D0E0E3","CFE2F3","D9D2E9","EDD1DC",
-					  "EA9999","F9CB9C","FFE599","BED7A8","A2C4C9","9FC5E8","B4A7D6","D5A6BD",
-					  "E06666","F6B26B","FFD966","9C347D","76A5AF","6FA8DC","8E7CC3","C27BA0",
-					  "CC0000","E69138","F1C232","6AA84F","45818E","3D85C6","674EA7","A64D79",
-					  "990000","B45F06","BF9000","38761D","134F5C","0B5394","351C75","741B47",
-					  "660000","783F04","7F6000","274E13","0C343D","073763","20124D","4C1130"
-					 ];
-			var x=e.pageX-this.offsetLeft;										// Offset X from page
-			var y=e.pageY-this.offsetTop;										// Y
-			if ((x < 102) && (y < 45))											// In text area
-				return;															// Quit
-			$("#colorPickerDiv").off("click",this.onColorPicker);				// Remove mouseup listener
-			if ((x > 102) && (x < 133) && (y < 48))	{							// In OK area
-				if ($("#shivaDrawColorInput").val())							// If something there
-					col="#"+$("#shivaDrawColorInput").val();					// Get value
-				else															// Blank
-					x=135;														// Force a quit
-				}
-			$("#colorPickerDiv").remove();										// Remove
-			if ((x > 133) && (y < 48)) 											// In quit area
-				return;															// Return
-			if (y > 193) 														// In trans area
-				col=transCol;													// Set trans
-			else if (y > 48) {													// In color grid
-				x=Math.floor((x-14)/17);										// Column
-				y=Math.floor((y-51)/17);										// Row
-				col="#"+cols[x+(y*8)];											// Get color
-				}
-			if (col == transCol)												// No color 
-				$("#"+name).css({ "border":"1px dashed #000","background-color":"#fff" }); 	// Set dot
-			else				
-				$("#"+name).css({ "border":"1px solid #000","background-color":col }); 		// Set dot
-			$("#"+name).data(name,col);											// Set color
-		}
-
-	}
-	
-	function AlertBox(title, content, callback)								// ALERT BOX
-	{
-		$("#alertBoxDiv").remove();												// Remove any old ones
-		Sound("delete");														// Delete sound
-		$("body").append("<div class='unselectable' id='alertBoxDiv'></div>");														
-		var str="<img src='img/logo64.gif' style='vertical-align:-10px;width:32px'/>&nbsp;&nbsp;";								
-		str+="<span style='font-size:18px;text-shadow:1px 1px #ccc;color:#990000'><b>"+title+"</b></span></p>";
-		str+="<div style='font-size:14px;margin:16px'>"+content+"</div>";
-		$("#alertBoxDiv").append(str);	
-		$("#alertBoxDiv").dialog({ width:400, buttons:{"OK": function() { $(this).remove(); if (callback) callback(); }}});	
-		if (qmf.version == 1)	
-			$("#alertBoxDiv").dialog("option","position",{ my:"center", at:"right center", of:window });
-		$(".ui-dialog-titlebar").hide();
-		$(".ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix").css("border","none");
-		$(".ui-dialog").css({"border-radius":"14px", "box-shadow":"4px 4px 8px #ccc"});
-  		$(".ui-button").css({"border-radius":"30px","outline":"none"});
-	}
-
-	function ConfirmBox(content, callback)									// COMFIRM BOX
-	{
-		Sound("delete");														// Delete sound
-		$("#alertBoxDiv").remove();												// Remove any old ones
-		$("body").append("<div class='unselectable' id='alertBoxDiv'></div>");														
-		var str="<img src='img/logo64.gif' style='vertical-align:-10px;width:32px'/>&nbsp;&nbsp;";								
-		str+="<span style='font-size:18px;text-shadow:1px 1px #ccc;color:#990000'><b>Are you sure?</b></span><p>";
-		str+="<div style='font-size:14px;margin:14px'>"+content+"</div>";
-		$("#alertBoxDiv").append(str);	
-		$("#alertBoxDiv").dialog({ width:400, buttons: {
-					            	"Yes": function() { $(this).remove(); callback() },
-					            	"No":  function() { $(this).remove(); }
-									}});	
-		if (qmf.version == 1)	
-			$("#alertBoxDiv").dialog("option","position",{ my:"center", at:"right center", of:window });
-		$(".ui-dialog-titlebar").hide();
-		$(".ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix").css("border","none");
-		$(".ui-dialog").css({"border-radius":"14px", "box-shadow":"4px 4px 8px #ccc"});
- 		$(".ui-button").css({"border-radius":"30px","outline":"none"});
- 	}
-
-	function GetTextBox(title, content, def, callback)					// GET TEXT LINE BOX
-	{
-		Sound("click");														// Ding sound
-		$("#alertBoxDiv").remove();											// Remove any old ones
-		$("body").append("<div class='unselectable' id='alertBoxDiv'></div>");														
-		var str="<img src='img/logo64.gif' style='vertical-align:-10px;width:32px'/>&nbsp;&nbsp;";								
-		str+="<span id='gtBoxTi'style='font-size:18px;text-shadow:1px 1px #ccc;color:#990000'><b>"+title+"</b></span><p>";
-		str+="<div style='font-size:14px;margin:14px'>"+content;
-		str+="<p><input class='is' type='text' id='gtBoxTt' value='"+def+"'></p></div>";
-		$("#alertBoxDiv").append(str);	
-		$("#alertBoxDiv").dialog({ width:400, buttons: {
-					            	"OK": 		function() { callback($("#gtBoxTt").val()); $(this).remove(); },
-					            	"Cancel":  	function() { $(this).remove(); }
-									}});	
-		if (qmf.version == 1)	
-			$("#alertBoxDiv").dialog("option","position",{ my:"center", at:"right center", of:window });
-		$(".ui-dialog-titlebar").hide();
-		$(".ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix").css("border","none");
-		$(".ui-dialog").css({"border-radius":"14px", "box-shadow":"4px 4px 8px #ccc"});
- 		$(".ui-button").css({"border-radius":"30px","outline":"none"});
- 	}
-
-	function GetSelectBox(title, content, def, options, callback)		// GET OPTION FROM SELECT MENU
-	{
-		Sound("click");														// Ding sound
-		$("#alertBoxDiv").remove();											// Remove any old ones
-		$("body").append("<div class='unselectable' id='alertBoxDiv'></div>");														
-		var str="<img src='img/logo64.gif' style='vertical-align:-10px;width:32px'/>&nbsp;&nbsp;";								
-		str+="<span id='gtBoxTi'style='font-size:18px;text-shadow:1px 1px #ccc;color:#990000'><b>"+title+"</b></span><p>";
-		str+="<div style='font-size:14px;margin:14px'>"+content;
-		str+="<p>"+MakeSelect('gtBoxTt',false,options,def)+"</p></div>";
-		$("#alertBoxDiv").append(str);	
-		$("#alertBoxDiv").dialog({ width:300, buttons: {
-					            	"OK": 		function() { callback($("#gtBoxTt").val()); $(this).remove(); },
-					            	"Cancel":  	function() { $(this).remove(); }
-									}});	
-		$(".ui-dialog-titlebar").hide();
-		$(".ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix").css("border","none");
-		$(".ui-dialog").css({"border-radius":"14px", "box-shadow":"4px 4px 8px #ccc"});
- 		$(".ui-button").css({"border-radius":"30px","outline":"none"});
- 	}
-
-	function GetHTMLEditor(val, callback)									// CALL HTML EDITOR
-	{
-		$("#alertBoxDiv").remove();												// Remove any old ones
-		$("body").append("<div class='unselectable' id='alertBoxDiv'></div>");														
-		var str="<img src='img/logo64.gif' style='vertical-align:-10px;width:32px'/>&nbsp;&nbsp;";								
-		str+="<span style='font-size:18px;text-shadow:1px 1px #ccc;color:#000099'><b>HTML editor</b></span><p>";
-		str+="<div style='font-size:14px;margin:14px'>";
-		str+="<textarea id='htbx' style='width:100%'>";
-		if (val)
-			str+=val;
-		str+="</textarea>";
-		$("#alertBoxDiv").append(str+"</div>");	
-		CKEDITOR.replace("htbx");
- 		$("#alertBoxDiv").dialog({ width:550, buttons: {
-	    	"OK": 		function() { 
-	    					var s=CKEDITOR.instances.htbx.getData().replace(/[\n|\r]/g,"").replace(/"/g,"&quot;").replace(/&quot;/g,"\"");
-	    					callback(s);										// Send to callback	
-		    				$(this).remove();									// Remove dialog
-		    				},
-			"Cancel":  	function() { $(this).remove(); }
-							}
-			});	
-		$(".ui-dialog-titlebar").hide();
-		$(".ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix").css("border","none");
-		$(".ui-dialog").css({"border-radius":"14px", "box-shadow":"4px 4px 8px #ccc"});
- 		$(".ui-button").css({"border-radius":"30px","outline":"none"});
-	}
-
-	function GetFlickrImage(callback)										// GET FLICKR IMAGE
-	{
-		$("#alertBoxDiv").remove();												// Remove any old ones
-		$("body").append("<div class='unselectable' id='alertBoxDiv'></div>");														
-		var str="<img src='img/logo64.gif' style='vertical-align:-10px;width:32px'/>&nbsp;&nbsp;";								
-		str+="<span style='font-size:18px;text-shadow:1px 1px #ccc;color:#000099'><b>Get Flickr Image</b></span><p>";
-		str+="<div style='font-size:14px;margin:14px'>";
-		str+="<br><br><div style='display:inline-block;width:300px;max-height:200px;overflow-y:auto;background-color:#f8f8f8;padding:8px;border:1px solid #999;border-radius:8px'>";		// Scrollable container
-		str+="<table id='collectTable' style='font-size:13px;width:100%;padding:0px;border-collapse:collapse;'>";	// Add table
-		str+="<tr><td><b>Collection</b></td><td width='20'></td></tr>";			// Add header
-		str+="<tr><td colspan='2'><hr></td></tr>";								// Add rule
-		str+="</table></div>&nbsp;&nbsp;&nbsp;"									// End table
-	
-		str+="<div style='vertical-align:top;display:inline-block;width:300px;max-height:200px;overflow-y:auto;background-color:#f8f8f8;padding:8px;border:1px solid #999;border-radius:8px'>";		// Scrollable container
-		str+="<dl id='setTable' style='font-size:13px;margin-top:2px;margin-bottom:2px'>";		// Add table
-		str+="<dt><b>Set</b></dt>";												// Add header
-		str+="<dt><hr></dt>";													// Add rule
-		str+="</dl></div><div style='font-size:12px'<br><p><hr></p>";			// End table
-	
-		$("#alertBoxDiv").append(str+"</div>");	
-		$("#alertBoxDiv").dialog({ width:800, buttons: {
-					            	"Done":  function() { $(this).remove(); }
-									}});	
-		if (qmf.version == 1)	
-			$("#alertBoxDiv").dialog("option","position",{ my:"center", at:"right center", of:window });
-		$(".ui-dialog-titlebar").hide();
-		$(".ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix").css("border","none");
-		$(".ui-dialog").css({"border-radius":"14px", "box-shadow":"4px 4px 8px #ccc"});
- 		$(".ui-button").css({"border-radius":"30px","outline":"none"});
- 	}
-
-	function AddEscapes(str)												// ESCAPE TEXT STRING
-	{
-		if (str) {																// If a string
-			str=""+str;															// Force as string
-			str=str.replace(/"/g,"\\\"");										// " to \"
-			str=str.replace(/'/g,"\\\'");										// ' to \'
-			}
-		return str;																// Return escaped string
 	}
 	
