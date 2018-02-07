@@ -220,7 +220,7 @@
 	var qmf=null;															// QFile system
 	var isMobile=false;														// Is a mobile platform
 	var isFullScreen=0;														// Is it full screen?
-	var noSplash=(window.location == "localhost") ? true : false;			// Splash screen inhibitor
+	var noSplash=(window.location.host == "localhost") ? true : false;		// Splash screen inhibitor
 	var playAspect=.6667;													// Image aspect ratio
 
 	$(document).ready(function() {								        // ON PAGE LOADED
@@ -287,7 +287,7 @@
 				player.ScalePic(100,66,"#endImg",script.pics[player.curPic].pos[1]);   // Set end
 				}
 			else if ((e.which == 84) && e.altKey && e.ctrlKey)				// TEST KEY
-				gTest();
+				myTest();
 			});
 		});									
 
@@ -814,6 +814,7 @@
 	function CScript()													// SCRIPT CONSTRUCTOR
 	{
 		this.pics=[];														// Alloc array									
+		this.dotMap=[];														// Positions of periods in text
 		var _this=this;														// Save context
 
 		$("#scriptDiv").droppable({											// HANDLE DROPS TO BIN
@@ -929,7 +930,46 @@
 		this.pics[id].start=Math.round(pos);								// Set start
 	}
 
-	CScript.prototype.GetPosFromPic=function(pos) 
+	CScript.prototype.MakeDotMap=function() 							// GET MAP OF Y POSITIONS AT PERIODS & CRs
+	{
+		var c=0,xmy,txt,str;
+		var _this=this;														// Save context
+		var offx=$("#scriptTextDiv").offset().left+24;						// Offset X
+		var offy=$("#scriptTextDiv").offset().top+24;						// Offset Y
+		var span=$("#scriptTextDiv").width()-32;							// Width of text area								
+		this.dotMap=[{ c:0, x: 0, y: offy }];								// Top dot
+		txt=$("#scriptTextDiv").html();										// Make copy of script
+		txt=txt.replace(/<span.+">|<\/span>/g,"");							// Remove spans fron highlighting
+		$("#scriptTextDiv").html(txt);										// Set script			
+		while ((c=txt.indexOf(".",c)) != -1) {								// Look for each period
+			c++; 															// Skip dot
+			str=txt.substr(0,c)+"<span id='mapSpan'/>"+txt.substr(c);		// Add dummy span
+			setDot();														// Add it and set pos	
+			}
+		c=0;																// Start fresh
+		while ((c=txt.indexOf("<br>",c)) != -1) {							// Look for each period or CR
+			c+=4; 															// Skip CR
+			str=txt.substr(0,c)+"<span id='mapSpan'/>"+txt.substr(c);		// Add dummy span
+			setDot();														// Add it and set pos	
+			}
+		c=txt.length;														// Last char
+		this.dotMap.sort(function(a,b) { return a.c-b.c });					// Sort by char
+		if (c != this.dotMap[this.dotMap.length-1].c)	{					// If it didn;t end on a CR or ., add last entry					
+			str=txt+"<span id='mapSpan'/>";									// Add dummy span to end
+			setDot();														// Add it and set pos	
+			}
+
+		function setDot() {													// ADD ENTRY
+			$("#scriptTextDiv").html(str);									// Set string
+			x=($("#mapSpan").position().left-offx)/span;					// Get x %			
+			x=Math.max(0,Math.min(x,1));									// Cap 0-1
+			y=Math.max(80,$("#mapSpan").position().top);					// Get y pos, capped at top			
+			$("#scriptTextDiv").html(txt);									// Set string
+			_this.dotMap.push({ c:c, x:x, y:y} );							// Add to map
+			}	
+	}
+
+	CScript.prototype.GetPosFromPic=function(pos) 						// GET CHAR POS FROM PIC HEIGHT
 	{
 		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
 		var offy=$("#scriptTextDiv").offset().top+24;						// Offset of title
@@ -1513,6 +1553,12 @@
 			snd.volume=50/100;													// Set volume
 			snd.play();															// Play it
 			}
+		}
+
+		function myTest()
+		{
+			script.MakeDotMap();
+		
 		}
 
 </script>
