@@ -151,70 +151,8 @@
 			$("#lightBoxDiv").remove();											// Close
 			});
 	}
-	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// UNDO / REDO
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	function Do(name)														// SAVE SHOW IN SESSION STORAGE
-	{
-		var o={};
- 		o.date=new Date().toString().substr(0,21);								// Get date
-		o.script=JSON.stringify(curJson);										// Stringify
-		o.name="Preview save";													// Normal preview save
-		if (name == "bookmark") {												// If a bookmark
-			GetTextBox("Set a bookmark", "Type the name of the bookmark you want to save the current project under. This bookmark will disappear when the browser is refreshed","",
-				function(b) {  													// On entry
-					o.name=b; 													// Save name
-					sessionStorage.setItem("do-"+sessionStorage.length,JSON.stringify(o));	// Add new do												
-					});									
-			}
-		else
-			sessionStorage.setItem("do-"+sessionStorage.length,JSON.stringify(o));	// Add new do												
-	}
 	
-	function Undo()
-	{
-		var i,o;
-		var trsty="style='height:20px;cursor:pointer' onMouseOver='this.style.backgroundColor=\"#dee7f1\"'";
-		trsty+="onMouseOut='this.style.backgroundColor=\"#f8f8f8\"'";
-		$("#lightBoxDiv").remove();												// Close old one
-		str="<br>Choose an undo to load from the list below:<br>";				// Prompt
-		str+="<br><div style='width:100%;max-height:300px;overflow-y:auto'>";	// Div start
-		str+="<table style='font-size:12px;width:100%;padding:0px;border-collapse:collapse;'>";	// Table start
-		str+="<tr><td><b>Date</b></td><td><b>Name</b></tr>";					// Header
-		str+="<tr><td colspan='2'><hr></td></tr>";								// Line
-		var undos=[];
-		for (i=0;i<sessionStorage.length;++i) {									// For each undo saved
-			o=$.parseJSON(sessionStorage.getItem(sessionStorage.key(i)));		// Get undo from local storage
-			o.id=i;																// Add id
-			undos.push(o);														// dd to array
-			}	
-		undos.sort(function(a,b) { return b.date > a.date });					// Sort by time, latest first
-		for (i=0;i<undos.length;++i) 											// For each undo
-			str+="<tr id='und"+undos[i].id+"' "+trsty+"><td>"+undos[i].date+"</td><td>"+undos[i].name+"</td></tr>";
-		str+="</table></div><div style='font-size:12px;text-align:right'><br>";	// End table
-		str+=" <div class='pa-is' id='cancelBut'>Cancel</div></div>";			// Add button
-		qmf.ShowLightBox("Load an undo",str);									// Show lightbox
-	
-		for (i=0;i<sessionStorage.length;++i) 									// For each undo
-			$("#und"+i).click(function() {										// CANCEL BUTTON
-				var key=sessionStorage.key(this.id.substr(3));					// Get key for undo
-				var o=$.parseJSON(sessionStorage.getItem(key));					// Get undo from local storage
-				curJson=$.parseJSON(o.script);									// Set curJson
-				Draw(curPane);													// Show page
-				Sound("ding");													// Ding
-				$("#lightBoxDiv").remove();										// Close
-				});
-	
-		$("#cancelBut").on("click", function() {								// CANCEL BUTTON
-			Sound("delete");													// Delete sound
-			$("#lightBoxDiv").remove();											// Close
-			});
-						
-	}
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  HELPERS
 ///////////////////////////////////////////////////////////////////////////////////////////////

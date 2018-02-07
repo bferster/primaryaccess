@@ -266,12 +266,16 @@
 				if (id && id.match(/add/))		return;						// If in add pic dialog
 				$("#playBut").trigger("click");								// Toggle play
 				}
-			if ((e.which == 27) && (isFullScreen == 1))						// Escape from full screen
+			else if ((e.which == 27) && (isFullScreen == 1))				// Escape from full screen
 				player.SetFullScreen(0);									// Regular screen
-			if ((e.which == 84) && e.altKey && e.ctrlKey)					// TEST KEY
-				gTest();
-	
-			if (player.inMove) {											// In motion editor
+			else if ((e.which == 90) && e.ctrlKey) {						// CTRL=Z
+				var id=document.activeElement.id;							// Target id
+				if (id  == "scriptTextDiv")		return;						// If in script
+				if (id == "titleDiv")			return;						// If in title
+				if (id && id.match(/add/))		return;						// If in add pic dialog
+				doc.Undo();													// Undo
+				}			
+			else if (player.inMove) {										// In motion editor
 				var pix=1/$("#screenDiv").width();							// Nudge amount
 				var o=script.pics[player.curPic].pos[player.inMove-1];		// Point at position based on side
 				if (e.which == 37)			o[0]-=pix;						// Nudge camera left
@@ -282,6 +286,8 @@
 				player.ScalePic(100,66,"#startImg",script.pics[player.curPic].pos[0]); // Set start
 				player.ScalePic(100,66,"#endImg",script.pics[player.curPic].pos[1]);   // Set end
 				}
+			else if ((e.which == 84) && e.altKey && e.ctrlKey)				// TEST KEY
+				gTest();
 			});
 		});									
 
@@ -324,6 +330,8 @@
 			}		
 		$("#binDiv").css({ top:$("#playerDiv").height()+"px",width:$("#mainDiv").width()+"px" });	// Position bin below player
 		Draw();																// Redraw screen
+		if (isFullScreen) 													// If full screen
+			player.SetFullScreen(isFullScreen);								// Exit mode
 	}
 
 
@@ -387,7 +395,7 @@
 				var se=script.pics[_this.curPic].end*_this.speechRate;		// End
 				_this.Play(s,se);											// Play or pause this clip
 				}
-			else															// Normal plat
+			else															// Normal play
 				_this.Play(0,_this.maxTime);								// Play or pause
 			});
 
@@ -482,29 +490,39 @@
 	{
 		isFullScreen=mode;													// Set flag
 		if (mode) {															// If full screen
-			$("body").css({ "background-color":"#000" });					// Black background
+			$("body").css({ "background-color":"#ddd", overflow:"hidden" });// Grey background, hide overflow
+			$("#mainDiv").css({ "min-width":"0px" });						// Remove min-wid 
 			$("#picOptions").fadeOut(0);	$("#soundOptions").fadeOut(0);	// Hide options
 			$("#scriptDiv").fadeOut();										// Fade out script
 			$("#binDiv").fadeOut();											// Bin
-			$("#screenDiv").height($(window).height()-168);					// Size screen height
-			var h=$("#screenDiv").height();									// Save height
-			$("#screenDiv").width(h/playAspect);							// Width	
-			var w=$("#screenDiv").width();									// Save width
-			$("#playerDiv").width(w+32);									// Player width
-			$("#playerDiv").height(h+168-32);								// Player height
+			var ww=$(window).width();                                       // Get window width
+            var wh=$(window).height();                                      // Get window height
+            var h=wh-130;                                                   // Use screen height as dominant
+            var w=h/playAspect;                                             // Screen width to aspect
+ 		    if (w > ww-32) {                                               	// Too narrow
+                w=ww-32;                                                    // Size by width
+                h=w*playAspect;                                             // Height follows width
+                }
+            $("#screenDiv").height(h);                                      // Size screen height
+            $("#screenDiv").width(w);                                       // Width    
+            $("#playerDiv").width(w+32);                                    // Player width
+            $("#playerDiv").height(wh);                                     // Player height
 			var x=($(window).width()-$("#playerDiv").width())/2;			// Center
-			$("#playerDiv").offset({ left:Math.max(0,x), top:16 });			// Top left
+			$("#playerDiv").offset({ left:Math.max(0,x), top:0 });			// Top left
 			$("#screenTitleDiv").text($("#titleDiv").text());				// Set title
 			$("#screenTitleDiv").css({ "font-size":h/10+"px",padding:(w/8)+"px","padding-top":(h/2.5)+"px", width:(w-w/4+32)+"px" });			
-			$("#screenTitleDiv").fadeOut(0).fadeIn(500);					// Fade title in
+			$("#screenTitleDiv").fadeOut(0).fadeIn(0);						// Fade title in
 			this.Draw();													// Redraw
 			}
 		else{																// If regular screen
 			$("#screenTitleDiv").text("");									// No title
-			$("body").css({ "background-color":"#fff" });					// White back
+			$("body").css({ "background-color":"#fff", overflow:"auto" });	// White back, overflow
+			$("#mainDiv").css({ "min-width":"800px" });						// Restore min-wid
 			$("#binDiv").fadeIn();											// Fade bin in
 			$("#scriptDiv").fadeIn();										// Script
 			$("#picOptions").fadeIn(0);	$("#soundOptions").fadeIn(0);		// Show options
+			this.inPlay=false;												// Force stop playing
+			this.Play(0,0);													// Stop
 			ResizePanes();
 			}
 	}
@@ -1063,12 +1081,18 @@
 		$("#pixList").sortable({ 											// Make it sortable
 			sort: function(event, ui) {										// On pic drag
 				$("#metaDiv").remove();										// Kill meta popup, if any on sort
-				if (ui.offset.left < 120) {									// In script pic area
+                if ((ui.offset.left < -40) && (ui.offset.top > $(window).height()-100)) {   // In corner
+                    doc.Do();                                               // Save a do
+                    _this.pics.splice(ui.helper[0].id.substr(7),1);         // Delete it
+   					Sound("delete");                                        // Sound                           
+	               _this.Draw();                                          	// Redraw
+                	}
+				else if (ui.offset.left < 120) {							// In script pic area
 					var pos=ui.offset.top+$("#scriptDiv").scrollTop();		// Get unscrolled pos
 					pos=script.GetPosFromPic(pos);							// Calc char pos
 					script.Highlight("#0000ff",pos,-1,true);				// Highlight position in text & inhibit scrolling						
 					}
-				}
+ 				}
 			});
 		$("#pixList").disableSelection();									// Imnhibit selection
 	
@@ -1206,19 +1230,50 @@
 		this.changed=false;														// Changed flag
 		this.undos=[];															// Holds undos
 		this.lastScriptLength=0;												// Script length
+		this.maxUndos=20;														// Max undos stored
 	}
 
 	CDoc.prototype.Do=function() 											//	SAVE UNDO
 	{
 		this.changed=true;														// Set changed flag
-		this.curUndo++;															// Inc undo count
+		this.undos[this.curUndo]=this.Serialize();								// Save JSON in undo array
+		this.curUndo=(this.curUndo+1)%this.maxUndos;							// Inc undo count
 	}
-	
+
+	CDoc.prototype.Undo=function() 											//	LOAD UNDO
+	{
+		if (!this.curUndo) {													// If nothing to undo
+			Sound("delete");													// Delete sound
+			return;																// Quit
+			}
+		this.curUndo=Math.abs((this.curUndo-1)%this.maxUndos);					// Dec undo count
+		this.LoadJSON(this.undos[this.curUndo]);								// Load undo
+		Sound("ding");															// Ding
+		PopUp("Undid last action",1000);										// Popup
+		Draw();																	// Redraw project							
+		trace(this.undos,this.curUndo)
+	}
+
+	CDoc.prototype.Serialize=function() 									//	SERIALIZE PROJECT INTO JSON OBJECT
+	{
+		var o={};
+		o.script=$("#scriptTextDiv").text();									// Get script text 
+		o.title=$("#titleDiv").text();											// Get title text 
+		o.voice=player.voice;													// Get audio mode
+		o.audioRate=player.audioRate;											// Get rate multiplier
+		o.pitch=player.pitch;													// Get TTS pitch
+		o.mp3=player.mp3;														// Get audio file
+		o.binPics=$.parseJSON(JSON.stringify(bin.pics));						// Clone bin pics
+		o.scriptPics=$.parseJSON(JSON.stringify(script.pics));					// Clone script pics
+		return o;																// Return object
+		}
+
 	CDoc.prototype.LoadJSON=function(json) 									//	LOAD JSON AND SET
 	{
 		var o=json;																// Point at data
 		if (json == "civil") 
-			o=$.parseJSON('{"script":"In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.","title":"Civil Rights","audioRate":100,"pitch":100,"voice":0,"mp3":"https://drive.google.com/open?id=1wJx4FrSMA9g45XvuQ_3PkX4E1e3qluD7","binPics":[{"src":"//stagetools.com/primaryaccess/Test.jpg","title":"Martin Luther King at Civil rights march","date":"1963","desc":"Martin Luther King delivers his &quot;I have a dream&quot; speech at the Lincoln Memorial","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"},{"src":"//stagetools.com/primaryaccess/Test2.jpg","title":"Rosa Parks sitting on bus","date":"1955","desc":"Rosa Parks prompted outcry when she sat in the front of the bus.","link":"//teacher.scholastic.com/rosa"},{"src":"//stagetools.com/primaryaccess/Test10.jpg","title":"Brown vs. Board of Education","date":"1954","desc":"George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"},{"src":"//stagetools.com/primaryaccess/Test3.jpg","title":"The Little Rock Nine","date":"1957","desc":"After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test4.jpg","title":"The Little Rock Nine letter - Page 1","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test5.jpg","title":"The Little Rock Nine letter - Page 2","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test6.jpg","title":"Greensboro Lunch Counter Sit-in","date":"1960","desc":"Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"},{"src":"//stagetools.com/primaryaccess/Test7.jpg","title":"Roger Wilkins, head of NAACP","date":"1957","desc":"Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test8.jpg","title":"Civil rights march on Washington","date":"1963","desc":"The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"}],"scriptPics":[]}');
+			o=$.parseJSON('{"script":"In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.","title":"Civil Rights","audioRate":100,"pitch":100,"voice":0,"mp3":"http://www.stagetools.com/primaryaccess/narration.mp3","binPics":[{"src":"//stagetools.com/primaryaccess/Test.jpg","title":"Martin Luther King at Civil rights march","date":"1963","desc":"Martin Luther King delivers his &quot;I have a dream&quot; speech at the Lincoln Memorial","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"},{"src":"//stagetools.com/primaryaccess/Test2.jpg","title":"Rosa Parks sitting on bus","date":"1955","desc":"Rosa Parks prompted outcry when she sat in the front of the bus.","link":"//teacher.scholastic.com/rosa"},{"src":"//stagetools.com/primaryaccess/Test10.jpg","title":"Brown vs. Board of Education","date":"1954","desc":"George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"},{"src":"//stagetools.com/primaryaccess/Test3.jpg","title":"The Little Rock Nine","date":"1957","desc":"After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test4.jpg","title":"The Little Rock Nine letter - Page 1","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test5.jpg","title":"The Little Rock Nine letter - Page 2","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test6.jpg","title":"Greensboro Lunch Counter Sit-in","date":"1960","desc":"Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"},{"src":"//stagetools.com/primaryaccess/Test7.jpg","title":"Roger Wilkins, head of NAACP","date":"1957","desc":"Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test8.jpg","title":"Civil rights march on Washington","date":"1963","desc":"The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"}],"scriptPics":[]}');
+		this.changed=false;														// No unsaved changes
 		$("#scriptTextDiv").text(o.script);										// Get script text 
 		$("#titleDiv").text(o.title);											// Get title text 
 		player.voice=o.voice;													// Get audio mode
@@ -1237,7 +1292,7 @@
 			PopUp("You need to load a show<br>to get a link to it",2000,"screenDiv");	// Error
 			return;																// Quit
 			}
-		var str="<b>Link to your show</b><br><p>";								// Title
+		var str="<b>Link to your project</b><br><p>";							// Title
 		str+="</p><p>www.viseyes.org/pa?"+qmf.curFile+"</p>";					// Get it
 		PopUp(str,-1);															// Show with close but
 	}
@@ -1290,37 +1345,33 @@
 
 	CDoc.prototype.Save=function(csv) 										// SAVE SHOW
 	{
-		curJson={};
-		curJson.script=$("#scriptTextDiv").text();								// Get script text 
-		curJson.title=$("#titleDiv").text();									// Get title text 
-		curJson.voice=player.voice;												// Get audio mode
-		curJson.audioRate=player.audioRate;										// Get rate multiplier
-		curJson.pitch=player.pitch;												// Get TTS pitch
-		curJson.mp3=player.mp3;													// Get audio file
-		curJson.binPics=$.parseJSON(JSON.stringify(bin.pics));					// Clone bin pics
-		curJson.scriptPics=$.parseJSON(JSON.stringify(script.pics));			// Clone script pics
+		curJson=this.Serialize();												// Serialize show into JSON object
+		this.changed=false;														// No unsaved changes
 		qmf.Save(1);															// Save data
 	}
 
 	CDoc.prototype.Load=function(csv) 										// SAVE SHOW
 	{
+		this.changed=false;														// No unsaved changes
 		qmf.Load();																// Get data
 	}
 	
 	CDoc.prototype.GDriveLoad=function(id) 									// LOAD FROM GOOGLE DRIVE
 	{
+		var _this=this;															// Save context
 		var str="https://docs.google.com/spreadsheets/d/"+id+"/export?format=tsv";	// Access tto
 		var xhr=new XMLHttpRequest();											// Ajax
 		xhr.open("GET",str);													// Set open url
 		xhr.onload=function() { 												// On successful load
 			doc.AddCSV(xhr.responseText);										// Parse CSV  
+			this.changed=false;														// No unsaved changes
 			};			
 		xhr.onreadystatechange=function(e)  { 									// On readystate change
 			if ((xhr.readyState === 4) && (xhr.status !== 200)) {  				// Ready, but no load
 				Sound("delete");												// Delete sound
 				PopUp("<p style='color:#990000'><b>Couldn't load Google Doc!</b></p>Make sure that <i>anyone</i><br>can view it in Google",5000); // Popup warning
 				}
-				};		
+			};		
 		xhr.send();																// Do it
 	}
 
