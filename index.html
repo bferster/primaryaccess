@@ -458,7 +458,7 @@
 		var x=$("#sliderBarDiv").offset().left-8;							// Set left
 		var y=Math.round($("#sliderBarDiv").offset().top+10);				// Set top
 		if (this.maxTime) 													// If some time in script
-			x+=this.curTime/this.maxTime*($("#sliderBarDiv").width()-6);	// Move slider into position
+			x+=Math.min(this.curTime/this.maxTime,1)*($("#sliderBarDiv").width()-20);	// Move slider into position
 		$("#sliderDiv").offset({ left:x, top:y });							// Set slider						
 		var num=script.GetPicFromTime(this.curTime);						// Get current pic
 		if (num != -1) {													// If on a picture
@@ -814,7 +814,7 @@
 	function CScript()													// SCRIPT CONSTRUCTOR
 	{
 		this.pics=[];														// Alloc array									
-		this.dotMap=[];														// Positions of periods in text
+		this.charMap=[];														// Positions of periods in text
 		var _this=this;														// Save context
 
 		$("#scriptDiv").droppable({											// HANDLE DROPS TO BIN
@@ -930,45 +930,6 @@
 		this.pics[id].start=Math.round(pos);								// Set start
 	}
 
-	CScript.prototype.MakeDotMap=function() 							// GET MAP OF Y POSITIONS AT PERIODS & CRs
-	{
-		var c=0,xmy,txt,str;
-		var _this=this;														// Save context
-		var offx=$("#scriptTextDiv").offset().left+24;						// Offset X
-		var offy=$("#scriptTextDiv").offset().top+24;						// Offset Y
-		var span=$("#scriptTextDiv").width()-32;							// Width of text area								
-		this.dotMap=[{ c:0, x: 0, y: offy }];								// Top dot
-		txt=$("#scriptTextDiv").html();										// Make copy of script
-		txt=txt.replace(/<span.+">|<\/span>/g,"");							// Remove spans fron highlighting
-		$("#scriptTextDiv").html(txt);										// Set script			
-		while ((c=txt.indexOf(".",c)) != -1) {								// Look for each period
-			c++; 															// Skip dot
-			str=txt.substr(0,c)+"<span id='mapSpan'/>"+txt.substr(c);		// Add dummy span
-			setDot();														// Add it and set pos	
-			}
-		c=0;																// Start fresh
-		while ((c=txt.indexOf("<br>",c)) != -1) {							// Look for each period or CR
-			c+=4; 															// Skip CR
-			str=txt.substr(0,c)+"<span id='mapSpan'/>"+txt.substr(c);		// Add dummy span
-			setDot();														// Add it and set pos	
-			}
-		c=txt.length;														// Last char
-		this.dotMap.sort(function(a,b) { return a.c-b.c });					// Sort by char
-		if (c != this.dotMap[this.dotMap.length-1].c)	{					// If it didn;t end on a CR or ., add last entry					
-			str=txt+"<span id='mapSpan'/>";									// Add dummy span to end
-			setDot();														// Add it and set pos	
-			}
-
-		function setDot() {													// ADD ENTRY
-			$("#scriptTextDiv").html(str);									// Set string
-			x=($("#mapSpan").position().left-offx)/span;					// Get x %			
-			x=Math.max(0,Math.min(x,1));									// Cap 0-1
-			y=Math.max(80,$("#mapSpan").position().top);					// Get y pos, capped at top			
-			$("#scriptTextDiv").html(txt);									// Set string
-			_this.dotMap.push({ c:c, x:x, y:y} );							// Add to map
-			}	
-	}
-
 	CScript.prototype.GetPosFromPic=function(pos) 						// GET CHAR POS FROM PIC HEIGHT
 	{
 		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
@@ -994,7 +955,7 @@
 		var o=this.pics;													// Point at pics
 		o.sort(function(a,b) { return a.start-b.start });					// Sort by start
 		var last=o.length-1;												// Point at last pic
-		var e=Math.round(player.maxTime/player.speechRate);					// End of script in chars
+		var e=$("#scriptTextDiv").text().length+100;						// End of script in chars, padded
 		if (last < 0)														// No pics yet
 			return;															// Quit
 		o[0].start=0;														// First pic always starts at 0
@@ -1024,9 +985,10 @@
 	{
 		var underBar=false;
 		var cpl=$("#scriptTextDiv").width()/15;								// Characters/line
-		var txt=$("#scriptTextDiv").text();									// Get raw text
-//		txt=txt.replace(/<span.+">|<\/span>/g,"");							// Remove
-//		txt=txt.replace(/<br>/g,"~");										// Remove CRs
+		var txt=$("#scriptTextDiv").html();									// Get raw text
+		txt=txt.replace(/<span.+">|<\/span>/g,"");							// Remove
+		txt=txt.replace(/<br>/g,"~");										// Remove CRs
+		txt=txt.replace(/\&nbsp\;/g," ");									// Remove with real spaces
 		var n=txt.length;													// Length of text
 		if (width < 0) {													// Tracking pos, no pic
 			underBar=true;													// Use underbar
@@ -1048,7 +1010,7 @@
 		str+=col+";'>"														// Finish span
 		str+=txt.substr(pos,width);											// Add highlight portion
 		str+="</span>"+txt.substr(pos+width)								// Close span and add rest of text
-//		str=str.replace(/~/g,"<br>");										// Restore CRs
+		str=str.replace(/~/g,"<br>");										// Restore CRs
 		$("#scriptTextDiv").html(str);										// Set colored text in
 		if (noScroll)														// If dragging pic
 			return;															// Don't scroll
@@ -1296,8 +1258,13 @@
 
 	CDoc.prototype.Serialize=function() 									//	SERIALIZE PROJECT INTO JSON OBJECT
 	{
-		var o={};
-		o.script=$("#scriptTextDiv").text();									// Get script text 
+		var o={}
+		var txt=$("#scriptTextDiv").html();										// Get script 
+		o.script=txt.replace(/<br>/g,"~");										// Remove CRs
+		o.script=o.script.replace(/\&nbsp\;/g,"");								// Remove NBs
+		$("#scriptTextDiv").html(o.script);										// Set script with html		
+		o.script=$("#scriptTextDiv").text();									// Get text only script 
+		$("#scriptTextDiv").html(txt);											// Restore orginal script		
 		o.title=$("#titleDiv").text();											// Get title text 
 		o.voice=player.voice;													// Get audio mode
 		o.audioRate=player.audioRate;											// Get rate multiplier
@@ -1315,6 +1282,7 @@
 			o=$.parseJSON('{"script":"In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.","title":"Civil Rights","audioRate":100,"pitch":100,"voice":0,"mp3":"http://www.stagetools.com/primaryaccess/narration.mp3","binPics":[{"src":"//stagetools.com/primaryaccess/Test.jpg","title":"Martin Luther King at Civil rights march","date":"1963","desc":"Martin Luther King delivers his &quot;I have a dream&quot; speech at the Lincoln Memorial","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"},{"src":"//stagetools.com/primaryaccess/Test2.jpg","title":"Rosa Parks sitting on bus","date":"1955","desc":"Rosa Parks prompted outcry when she sat in the front of the bus.","link":"//teacher.scholastic.com/rosa"},{"src":"//stagetools.com/primaryaccess/Test10.jpg","title":"Brown vs. Board of Education","date":"1954","desc":"George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"},{"src":"//stagetools.com/primaryaccess/Test3.jpg","title":"The Little Rock Nine","date":"1957","desc":"After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test4.jpg","title":"The Little Rock Nine letter - Page 1","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test5.jpg","title":"The Little Rock Nine letter - Page 2","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test6.jpg","title":"Greensboro Lunch Counter Sit-in","date":"1960","desc":"Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"},{"src":"//stagetools.com/primaryaccess/Test7.jpg","title":"Roger Wilkins, head of NAACP","date":"1957","desc":"Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test8.jpg","title":"Civil rights march on Washington","date":"1963","desc":"The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"}],"scriptPics":[]}');
 		this.changed=false;														// No unsaved changes
 		$("#scriptTextDiv").text(o.script);										// Get script text 
+		o.script=o.script.replace(/~/g,"<br>");									// Replace CRs
 		$("#titleDiv").text(o.title);											// Get title text 
 		player.voice=o.voice;													// Get audio mode
 		player.audioRate=o.audioRate;											// Get rate multiplier
@@ -1557,8 +1525,7 @@
 
 		function myTest()
 		{
-			script.MakeDotMap();
-		
+			trace($("#scriptTextDiv").text().length);											// Restore orginal script		
 		}
 
 </script>
