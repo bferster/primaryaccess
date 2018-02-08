@@ -33,8 +33,27 @@
 			});
 	}	
 
-	QmediaFile.prototype.Save=function() 									//	SAVE FILE TO DB
+	QmediaFile.prototype.SaveDirector=function() 							//	SAVE FILE DIRECTOR
 	{	
+		var _this=this;															// Save context
+		var str="<br>This will create a new project in PrimaryAccess. If you have already made one and want to update it, load the existing one.<br><br>";
+		str+="<div style='text-align:center'>";								// Center
+		str+="<p><div class='pa-bs' id='loadOldBut' style='width:170px'>Load existing project</div></p>";		// Load but
+		str+="<p><div class='pa-bs' id='saveNewBut' style='width:170px'>Save as new project</div></p></div>";	// Save but
+		this.ShowLightBox("Make a new project?",str);							// Show dialog
+		
+		$("#loadOldBut").on("click",function() {								// LOAD BUTTON
+			$("#lightBoxDiv").remove();											// Close
+			_this.Load();														// Load dialog
+			});
+		$("#saveNewBut").on("click",function() {								// SAVE BUTTON
+			$("#lightBoxDiv").remove();											// Close
+			_this.Save();														// Save dialog
+			});
+		}
+
+	QmediaFile.prototype.Save=function() 									//	SAVE FILE TO DB
+		{	
 		if ((this.password == "undefined" | this.password == undefined))		// No password
 			this.password="";													// Null it out
 		var str="<br/>To save your project, type your email address in the box below. If you were given an ID to use, use that instead. Type in a password if you want to protect it."

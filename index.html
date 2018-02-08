@@ -79,7 +79,7 @@
 		.pa-bin {			position: absolute; width: 100%; left:0; top: calc(100% - 150px); height:149px;
 							background-color:#eee; 	border-top: 1px solid #ccc;
 							}
-		.pa-binMenu {		display: inline-block; vertical-align: top; text-align:center; width: 142px; padding-left: 8px;
+		.pa-binMenu {		display: inline-block; vertical-align: top; text-align:center; width: 134px; padding-left: 12px;
 							}							
 		.pa-pix {			display: inline-block; overflow-x: scroll;  white-space: nowrap; width: calc(100% - 160px); 
 							}
@@ -122,7 +122,7 @@
 		<div id="scriptDiv" class="pa-script">
 			<div id="titleDiv" contenteditable="true" class="pa-titleEdit"></div>
 			<div id="scriptPixDiv" class="pa-scriptPix"></div>	
-			<div id="scriptDivider" style="position:absolute;background-color:#ccc;width:6px;height:calc(100% - 200px);top:20px;left:160px;border-radius:4px;"></div>	
+			<div id="scriptDivider" style="position:absolute;background-color:#99cc99;;width:6px;height:calc(100% - 200px);top:20px;left:160px;border-radius:4px;"></div>	
 			<div id="scriptTextDiv" contenteditable="true" class="pa-scriptText"></div>		
 		</div>	
 		<div id="binDiv" class="pa-bin">
@@ -845,7 +845,7 @@
 	CScript.prototype.ResizeImageArea=function() 						//	MATCH IMAGE AREA TO TEXT AREA
 	{
 		$("#scriptPixDiv").height($("#scriptTextDiv").height())				// Make the same
-		$("#scriptDivider").height($("#scriptTextDiv").height()+16);		// Set divider
+		$("#scriptDivider").height($("#scriptTextDiv").height()+8);			// Set divider
 	}
 
 	CScript.prototype.Draw=function() 									//	DRAW SCRIPT
@@ -864,6 +864,7 @@
 			str+="></div>"													// End div
 			}
 		$("#scriptPixDiv").html(str);										// Show pix
+		this.ResizeImageArea();												// Equilibrate fields
 		
 		for (i=0;i<this.pics.length;++i) {									// For each pic
 			player.ScalePic(128,85,"#scriptImg-"+i,script.pics[i].pos[0]); 	// Scale to start pos
@@ -1355,7 +1356,10 @@
 	{
 		curJson=this.Serialize();												// Serialize show into JSON object
 		this.changed=false;														// No unsaved changes
-		qmf.Save(1);															// Save data
+		if (!qmf.curFile && window.location.search.substring(1)) 				// If nothing loaded and an assigned task
+			qmf.SaveDirector();													// Ask if sure
+		else																	// Normal save
+			qmf.Save();															// Save data
 	}
 
 	CDoc.prototype.Load=function(csv) 										// SAVE SHOW
