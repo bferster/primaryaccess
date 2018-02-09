@@ -34,7 +34,7 @@
 							border: 2px solid #999;
 							}
 		.pa-scriptText {	display: inline-block; width: calc(100% - 240px); vertical-align: top;
-							padding: 16px; font-size: 24px; line-height: 175%;
+							padding: 16px; font-size: 24px; line-height: 175%; height:100%
 							}
 		.pa-scriptText:focus{ outline:none;	
 							}
@@ -845,7 +845,7 @@
 	CScript.prototype.ResizeImageArea=function() 						//	MATCH IMAGE AREA TO TEXT AREA
 	{
 		$("#scriptPixDiv").height($("#scriptTextDiv").height())				// Make the same
-		$("#scriptDivider").height($("#scriptTextDiv").height()+8);			// Set divider
+		$("#scriptDivider").height($("#scriptTextDiv")[0].scrollHeight-24);	// Set divider
 	}
 
 	CScript.prototype.Draw=function() 									//	DRAW SCRIPT
@@ -1131,7 +1131,7 @@
 		x=Math.min(x,$(window).width()-360);								// Cap to window
 		off-=x;																// Offset from end
 		$("#metaArrow").css("left",Math.min(160+off,320)+"px");				// Position arrow
-		var y=$("#binDiv").offset().top-$("#metaDiv").height()-16;			//	 Align by bottom
+		var y=$("#binDiv").offset().top-$("#metaDiv").height()-32;			// Align by bottom
 		$("#metaDiv").offset({left:x,top:y});								// Position popup
 	
 		$("#scriptDiv").on("mouseenter", function() {						// Add over handler
