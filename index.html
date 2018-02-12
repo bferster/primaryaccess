@@ -9,8 +9,6 @@
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 	<script src="lib/jquery.ui.touch-punch.min.js"></script>
-	<!--script type="text/javascript" src="https://apis.google.com/js/client.js"></script-->
-	<!--script src="gdrive.js"></script-->
 	<script src="qfile.js"></script>
 	<style type="text/css">
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
@@ -169,7 +167,7 @@
 			</div>
 		</div>
 	</div>
-	<div id="splashDiv" class="pa-splash" style="text-align:center;color:#ccc"><img src="img/palogo.gif"><br>v2.05</div>
+	<div id="splashDiv" class="pa-splash" style="text-align:center;color:#ccc"><img src="img/palogo.gif"><br>v2.06</div>
   <script>
 	  
 	function PlayTTS()
@@ -665,7 +663,7 @@
 			this.playerTimer=setInterval(function() {						// Set timer
 				_this.curTime=start+(new Date().getTime()-_this.playerStart)/1000; // Get elapsed time from start
 				_this.Draw();												// Show screen
-				if (_this.curTime >= end-_this.drift*_this.speechRate) {	// If past end + TTS drift
+				if (_this.curTime >= end+1) {								// If past end post roll
 					_this.curTime=resetTime;								// Set to reset point
 					_this.inPlay=false;										// Toggle state
 					_this.Play(0,0);										// Stop player
@@ -753,7 +751,7 @@
 				this.audio.playbackRate=ar;									// Set speed from .5 to 1.5
 				if (this.audio.duration) {									// If a some duration
 					if (this.audio.duration != Infinity)					// Not infinity
-						this.speechRate=(this.audio.duration-.5)/ar/$("#scriptTextDiv").text().length;	// Set speechRate to match mp3 file
+						this.speechRate=this.audio.duration/ar/$("#scriptTextDiv").text().length;	// Set speechRate to match mp3 file
 					this.maxTime=$("#scriptTextDiv").text().length*this.speechRate;		// Set max time
 					$("#endTime").text(SecondsToTimecode(Math.round(this.maxTime)));	// End display
 					this.audio.play();										// Start playing
@@ -865,6 +863,7 @@
 			}
 		$("#scriptPixDiv").html(str);										// Show pix
 		this.ResizeImageArea();												// Equilibrate fields
+		this.ResolvePicTimes();												// Make times a solid stream
 		
 		for (i=0;i<this.pics.length;++i) {									// For each pic
 			player.ScalePic(128,85,"#scriptImg-"+i,script.pics[i].pos[0]); 	// Scale to start pos
@@ -906,7 +905,7 @@
 						var id=ui.helper[0].id.substr(10);					// Get id
 						var pos=_this.GetPosFromPic(ui.position.top);		// Calc char pos
 						_this.SetPicStartTime(id,pos);						// Set pic start time
-						_this.ResolvePicTimes();							// Make pic times a solid stream
+						_this.Draw;											// Redraw
 						$("#scriptPic-"+id).trigger("click");				// Set as current
 						}
 	
@@ -947,7 +946,7 @@
 		o.pos=[[.5,.4,.75,1],[.5,.5,.5,1]];									// Positions
 		this.pics.push(o);													// Add to pics array
 		this.SetPicStartTime(n,when);										// Set pic start time
-		this.ResolvePicTimes();												// Make times a solid stream
+		this.Draw();														// Redraw
 	}
 
 	CScript.prototype.ResolvePicTimes=function() 						// RESOLVE PIC TIMES
@@ -956,7 +955,7 @@
 		var o=this.pics;													// Point at pics
 		o.sort(function(a,b) { return a.start-b.start });					// Sort by start
 		var last=o.length-1;												// Point at last pic
-		var e=$("#scriptTextDiv").text().length+100;						// End of script in chars, padded
+		var e=$("#scriptTextDiv").text().length+5000;						// End of script in chars, padded
 		if (last < 0)														// No pics yet
 			return;															// Quit
 		o[0].start=0;														// First pic always starts at 0
@@ -967,7 +966,6 @@
 			}
 		o[last].dur=Math.max(0,e-o[last].start);							// Fill last pix to script end	
 		o[last].end=e;														// Set end
-		this.Draw();														// Redraw	
 	}
 
 	CScript.prototype.GetPicFromTime=function(now) 						//	GET CURRENT SCRIPT PICTURE
