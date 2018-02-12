@@ -465,6 +465,7 @@
 			var o=script.pics[num];											// Point at pic
 			$("#screenPic").prop("src",bin.pics[o.num].src);				// Set src
 			var pct=(this.curTime-(o.start*this.speechRate))/(o.dur*this.speechRate);	// Point in move
+			pct=Math.min(pct,1);											// Cap to 1
 			if (o.pos[0][3] && o.pos[0][3])									// Both
 				pct=1.0-((Math.cos(3.1414*pct)+1)/2.0);						// Full cosine curve
 			else if (o.pos[0][3])											// Slow in
