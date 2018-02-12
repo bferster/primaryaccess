@@ -955,7 +955,7 @@
 		var o=this.pics;													// Point at pics
 		o.sort(function(a,b) { return a.start-b.start });					// Sort by start
 		var last=o.length-1;												// Point at last pic
-		var e=$("#scriptTextDiv").text().length+5000;						// End of script in chars, padded
+		var e=$("#scriptTextDiv").text().length+2;							// End of script in chars
 		if (last < 0)														// No pics yet
 			return;															// Quit
 		o[0].start=0;														// First pic always starts at 0
@@ -977,7 +977,7 @@
 		for (i=0;i<o.length;++i) 											// For each pic
 			if ((now >= o[i].start) && (now < o[i].end))					// In this one
 				return i;													// Return index
-		return -1;															// No pic
+		return i-1;															// Last pic
 	}
 
 	CScript.prototype.Highlight=function(col, pos, width, noScroll) 	//	HIGHLIGHT SCRIPT TEXT
