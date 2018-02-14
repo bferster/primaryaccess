@@ -159,6 +159,7 @@
 					<b>Start</b><br><div id="startPic" class="pa-movePic"></div>
 					<br><input id="slowInBut" type="checkbox" checked>Slow in
 				</div>
+				<div id="matchBut" class="pa-bs" style="vertical-align:-20px;padding:0;margin-left:-86px;margin-right:30px;display:none;">Match</div>
 				<div id="moveDoneBut" class="pa-bs" style="vertical-align:48px;padding:0;margin-right:5px;">Done</div>
 				<div id="endDiv" style="display:inline-block">
 					<b>End</b><br><div id="endPic" class="pa-movePic"></div>
@@ -167,7 +168,7 @@
 			</div>
 		</div>
 	</div>
-	<div id="splashDiv" class="pa-splash" style="text-align:center;color:#ccc"><img src="img/palogo.gif"><br>v2.06</div>
+	<div id="splashDiv" class="pa-splash" style="text-align:center;color:#ccc"><img src="img/palogo.gif"><br>v2.07</div>
   <script>
 	  
 	function PlayTTS()
@@ -186,7 +187,7 @@
 			var se=script.pics[player.curPic].end*player.speechRate;		// End
 			player.Play(s,se);												// Play or pause this clip
 			}
-		else																// Normal plat
+		else																// Normal play
 			player.Play(0,-1);												// Play or pause
 		if (!player.audio || (player.voice < 2))							// No TTS audio
 			return;															// Quit
@@ -446,6 +447,15 @@
 			_this.InitMotionEditor(2);										// Draw motion editor
 			});
 		
+		$("#matchBut").on("click", function() {								// ON MATCH CLICK
+			script.pics[_this.curPic].pos[0][0]=script.pics[_this.curPic-1].pos[1][0];		// Match x from last
+			script.pics[_this.curPic].pos[0][1]=script.pics[_this.curPic-1].pos[1][1];		// y
+			script.pics[_this.curPic].pos[0][2]=script.pics[_this.curPic-1].pos[1][2];		//z
+			_this.DrawCamera(0);											// Camera position
+			Sound("ding");													// Ding					
+			_this.ScalePic(100,66,"#startImg",script.pics[_this.curPic].pos[0]);	 // Set start
+			});
+
 		$("#playerDiv").disableSelection();									// Inhibit selection
 	}
 
@@ -538,7 +548,10 @@
 		$("#screenPic").css({ height:"100%",left:0,top:0,width:w+"px"});	// Top left, full height
 		this.picWid=$("#screenPic").width();								// Save width
 		this.picHgt=$("#screenDiv").height();								// Save height
-	
+		if ((this.curPic > 0) && (script.pics[this.curPic].num == script.pics[this.curPic-1].num))  // Same pic as last
+			$("#matchBut").css("display","inline-block");					// Show match button
+		else																// Different
+			$("#matchBut").css("display","none");							// Hide match button
 		$("#playerDiv").height($("#scriptDiv").height()+150);				// Extend full screen
 		$("#startDiv").css("color",offCol);									// Mute start text
 		$("#endPic").css("border","3px solid "+offCol);						// And border
