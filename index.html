@@ -187,7 +187,7 @@
 			player.Play(s,se);												// Play or pause this clip
 			}
 		else																// Normal plat
-			player.Play(0,player.maxTime);									// Play or pause
+			player.Play(0,-1);												// Play or pause
 		if (!player.audio || (player.voice < 2))							// No TTS audio
 			return;															// Quit
 		speechSynthesis.cancel();											// Kill TTS queue
@@ -393,8 +393,8 @@
 				var se=script.pics[_this.curPic].end*_this.speechRate;		// End
 				_this.Play(s,se);											// Play or pause this clip
 				}
-			else															// Normal play
-				_this.Play(0,_this.maxTime);								// Play or pause
+			else
+				_this.Play(0,-1);											// Play to end or pause
 			});
 
 		$("#picOptions").on("change", function() {							// ON PIC OPTIONS CHANGE
@@ -658,6 +658,7 @@
 		if (this.inPlay) {													// If playing
 			$("#screenTitleDiv").fadeOut(750);								// Fadeout title, if any
 			this.StartAudio(this.curTime);									// Start	
+			if (end == -1)	end=this.maxTime;								// Get real end *AFTER* audio start
 			var resetTime=start;											// Time to restart
 			start=this.curTime;												// Set to start
 			this.playerStart=new Date().getTime()							// Set start to now
