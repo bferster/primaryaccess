@@ -408,7 +408,6 @@
 				bin.AddPic();												// Run pic dialog
 			else if ($(this).val() == "Full screen") {						// Full screen
 				_this.SetFullScreen(1);										// Show full
-				PopUp("Click here to go back",500);							// Tell how to return
 				}
 			else if ($(this).val() == "Load project") {						// Load show
 				doc.Do();													// Save a do
@@ -919,7 +918,8 @@
 					else{													// Normal move
 						var id=ui.helper[0].id.substr(10);					// Get id
 						var pos=_this.GetPosFromPic(ui.position.top);		// Calc char pos
-						_this.SetPicStartTime(id,pos);						// Set pic start time
+						if (pos > 0)										// In range										
+							_this.SetPicStartTime(id,pos);					// Set pic start time
 						_this.Draw;											// Redraw
 						$("#scriptPic-"+id).trigger("click");				// Set as current
 						}
