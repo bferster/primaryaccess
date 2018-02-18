@@ -147,7 +147,7 @@
 				<option>Set motion</option>
 				<option>Full screen</option>
 				<option value="addNewPic">Add new picture</option>
-				<option>Load project</option>
+				<option value="loadShow">Load project</option>
 				<option>Save project</option>
 				<option>Get project link</option>
 				</select>
@@ -236,10 +236,12 @@
 		qmf=new QmediaFile("//viseyes.org/pa/",0);							// Alloc file system
 		if (url) { 															// A doc set
 			if (url.length == 8) {											// An assignemnt		
+				doc.assigned=url;											// Save assigned id
 				url=doc.DecodeKey(url);										// Make id
 				if (!url) {													// No id extracted
+					doc.assigned="";										// Null assigned id
 					Sound("delete");										// Delete sound
-					PopUp("<p style='color:#990000'><b>Sorry, wrong key!</b></p> Make sure you are using the key your teacher assigned you.",5000); // Popup warning
+					PopUp("<p style='color:#990000'><b>Sorry, wrong key!</b></p>Please make sure you are using the key<br>your teacher assigned you.",5000); // Popup warning
 					}
 				else
 					qmf.LoadFile("123"+url,false);							// Load and set id, padded
@@ -299,8 +301,11 @@
 		if (script) script.Draw();											// Redraw script
 		if (bin)	bin.Draw();												// Redraw bin
 		if (player)	{														// If player ready
-			if (bin.noPicLoad)												// If adding new pix is inhibited		
-				$("#picOptions option[value='addNewPic']").remove();		// Remove option from menu
+			if (doc.assigned) {
+				$("#picOptions option[value='loadShow']").remove();			// Remove option from menu
+				if (bin.noPicLoad)											// If adding new pix is inhibited		
+					$("#picOptions option[value='addNewPic']").remove();	// Remove option from menu
+				}
 			player.InitAudio();												// Init audio
 			player.Draw();													// Redraw player
 			}
@@ -415,7 +420,7 @@
 			else if ($(this).val() == "Full screen") {						// Full screen
 				_this.SetFullScreen(1);										// Show full
 				}
-			else if ($(this).val() == "Load project") {						// Load show
+			else if ($(this).val() == "loadShow") {							// Load show (use value!)
 				doc.Do();													// Save a do
 				doc.Load();													// Load file 
 				}	
@@ -1254,6 +1259,7 @@
 		this.undos=[];															// Holds undos
 		this.lastScriptLength=0;												// Script length
 		this.maxUndos=20;														// Max undos stored
+		this.assigned="";														// Not assigned
 	}
 
 	CDoc.prototype.DecodeKey=function(key)									// DECODE KEY INTO ID & SET PIC ADD MODE
@@ -1338,7 +1344,7 @@
 			PopUp("You need to load a show<br>to get a link to it",2000,"screenDiv");	// Error
 			return;																// Quit
 			}
-		var str="<b>Link to your project</b><br><p>";							// Title
+		var str="<b>Link to your project&nbsp;&nbsp; </b><br><p>";				// Title
 		str+="</p><p>www.viseyes.org/pa?"+qmf.curFile+"</p>";					// Get it
 		PopUp(str,-1);															// Show with close but
 	}
@@ -1393,7 +1399,9 @@
 	{
 		curJson=this.Serialize();												// Serialize show into JSON object
 		this.changed=false;														// No unsaved changes
-		if (!qmf.curFile && window.location.search.substring(1)) 				// If nothing loaded and an assigned task
+		if (this.assigned)														// If assigned
+			qmf.SaveFile(this.assigned,this.assigned);							// Save data
+		else if (!qmf.curFile && window.location.search.substring(1)) 			// If nothing loaded and an assigned task
 			qmf.SaveDirector();													// Ask if sure
 		else																	// Normal save
 			qmf.Save();															// Save data
@@ -1568,7 +1576,7 @@
 		{
 	
 
-		var iid=7;
+		var iid=48;
 		var key=EncodeKey(iid,3);
 		trace(iid,key)
 		trace(133,doc.DecodeKey(key))

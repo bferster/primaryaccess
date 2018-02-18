@@ -73,7 +73,6 @@
 		var _this=this;															// Save context
 		
 		$("#saveBut").on("click",function() {									// SAVE BUTTON
-			var dat={};
 			_this.password=$("#password").val();								// Get current password
 			if (_this.password)													// If a password
 				_this.password=_this.password.replace(/#/g,"@");				// #'s are a no-no, replace with @'s	
@@ -82,50 +81,58 @@
 				 return _this.LightBoxAlert("Need email");						// Quit with alert
 			_this.SetCookie("password",_this.password,7);						// Save cookie
 			_this.SetCookie("email",_this.email,7);								// Save cookie
-			var url=_this.host+"saveshow.php";									// Base file
-			if ($("#saveNew").prop("checked"))									// Save as
-				_this.curFile="";												// Force saving to a new file
-			dat["id"]=_this.curFile;											// Add id
-			dat["email"]=_this.email;											// Add email
-			dat["password"]=_this.password;										// Add password
-			dat["ver"]=_this.version;											// Add version
-			dat["title"]=AddEscapes(curJson.title);								// Add title
-			dat["private"]=0;													// Add private
-			dat["script"]="LoadShow("+JSON.stringify(curJson,null,'\t')+")";	// Add jsonp-wrapped script
-			$("#lightBoxDiv").remove();											// Close
-			$.ajax({ url:url,dataType:'text',type:"POST",crossDomain:true,data:dat,  // Post data
-				success:function(d) { 			
-					if (d == -1) 												// Error
-				 		AlertBox("Error","Sorry, there was an error saving that project (1)");		
-					else if (d == -2) 											// Error
-				 		AlertBox("Error","Sorry, there was an error saving that project (2)");		
-					else if (d == -3) 											// Error
-				 		AlertBox("Wrong password","Sorry, the password for this project<br>does not match the one you supplied");	
-				 	else if (d == -4) 											// Error
-				 		AlertBox("Error","Sorry, there was an error updating that project (4)");		
-				 	else if (!isNaN(d)){										// Success if a number
-				 		this.curFile=d;											// Set current file
-						Sound("ding");											// Ding
-						PopUp("<span style='color:#009900'<b>Saved!</b></span>",100);	// Saved!
-						Draw();													// Redraw menu
-						}
-					},
-				error:function(xhr,status,error) { trace(error) },				// Show error
-				});		
-		
-				function AlertBox(title, content) {								// ALERT BOX
-					Sound("delete");
-					var str="<span style='color:#990000'><b>"+title+"</b></span><br><br>";
-					str+=content+"<br>";
-					PopUp(str,4000); 
-					}
-				});
+			_this.SaveFile(_this.email,_this.password);							// Save to server
+			});
 	
 		$("#cancelBut").on("click", function() {								// CANCEL BUTTON
 			$("#lightBoxDiv").remove();											// Close
 			});
-		}
+	}
 	
+	QmediaFile.prototype.SaveFile=function(email, password) 				//	SAVE A FILE FROM DB
+	{
+		var dat={};
+		
+		trace(email,password)
+		var url=this.host+"saveshow.php";										// Base file
+		if ($("#saveNew").prop("checked"))										// Save as
+			this.curFile="";													// Force saving to a new file
+		dat["id"]=this.curFile;													// Add id
+		dat["email"]=email;														// Add email
+		dat["password"]=password;												// Add password
+		dat["ver"]=this.version;												// Add version
+		dat["title"]=AddEscapes(curJson.title);									// Add title
+		dat["private"]=0;														// Add private
+		dat["script"]="LoadShow("+JSON.stringify(curJson,null,'\t')+")";		// Add jsonp-wrapped script
+		$("#lightBoxDiv").remove();												// Close
+		$.ajax({ url:url,dataType:'text',type:"POST",crossDomain:true,data:dat,  // Post data
+			success:function(d) { 			
+				if (d == -1) 													// Error
+					 AlertBox("Error","Sorry, there was an error saving that project (1)");		
+				else if (d == -2) 												// Error
+					 AlertBox("Error","Sorry, there was an error saving that project (2)");		
+				else if (d == -3) 												// Error
+					 AlertBox("Wrong password","Sorry, the password for this project<br>does not match the one you supplied");	
+				 else if (d == -4) 												// Error
+					 AlertBox("Error","Sorry, there was an error updating that project (4)");		
+				 else if (!isNaN(d)){											// Success if a number
+					 this.curFile=d;											// Set current file
+					Sound("ding");												// Ding
+					PopUp("<span style='color:#009900'<b>Saved!</b></span>",100);	// Saved!
+					Draw();														// Redraw menu
+					}
+				},
+			error:function(xhr,status,error) { trace(error) },					// Show error
+			});		
+	
+			function AlertBox(title, content) {									// ALERT BOX
+				Sound("delete");
+				var str="<span style='color:#990000'><b>"+title+"</b></span><br><br>";
+				str+=content+"<br>";
+				PopUp(str,4000); 
+				}
+	}
+
 	QmediaFile.prototype.LoadFile=function(id, dontSetId) 					//	LOAD A FILE FROM DB
 	{
 		id=id.substr(3);														// Strip off prefix
