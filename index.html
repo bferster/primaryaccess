@@ -146,7 +146,7 @@
 				<option>Picture options</option>
 				<option>Set motion</option>
 				<option>Full screen</option>
-				<option>Add new picture</option>
+				<option value="addNewPic">Add new picture</option>
 				<option>Load project</option>
 				<option>Save project</option>
 				<option>Get project link</option>
@@ -235,10 +235,14 @@
 		player=new CPlayer();												// Alloc CPlayer module
 		qmf=new QmediaFile("//viseyes.org/pa/",0);							// Alloc file system
 		if (url) { 															// A doc set
-			if (url.length > 12) {											// A google doc			
-				doc.GDriveLoad(url.split("&")[0]);							// Load Google doc defined	
-				if (url.match(/&fs/i)) 										// Full screen flag
-					isFullScreen=2;											// Starting full										
+			if (url.length == 8) {											// An assignemnt		
+				url=doc.DecodeKey(url);										// Make id
+				if (!url) {													// No id extracted
+					Sound("delete");										// Delete sound
+					PopUp("<p style='color:#990000'><b>Sorry, wrong key!</b></p> Make sure you are using the key your teacher assigned you.",5000); // Popup warning
+					}
+				else
+					qmf.LoadFile("123"+url,false);							// Load and set id, padded
 				}
 			else{
 				if (!url.match(/\*/)) 										// Full screen flag
@@ -295,6 +299,8 @@
 		if (script) script.Draw();											// Redraw script
 		if (bin)	bin.Draw();												// Redraw bin
 		if (player)	{														// If player ready
+			if (bin.noPicLoad)												// If adding new pix is inhibited		
+				$("#picOptions option[value='addNewPic']").remove();		// Remove option from menu
 			player.InitAudio();												// Init audio
 			player.Draw();													// Redraw player
 			}
@@ -404,7 +410,7 @@
 				_this.InitMotionEditor(1);									// Draw motion editor
 				$("#moveDiv").fadeIn();										// Show move controls
 				}
-			else if ($(this).val() == "Add new picture")					// Add pic
+			else if ($(this).val() == "addNewPic")							// Add pic (use value!)
 				bin.AddPic();												// Run pic dialog
 			else if ($(this).val() == "Full screen") {						// Full screen
 				_this.SetFullScreen(1);										// Show full
@@ -1060,6 +1066,7 @@
 		$("#binDiv").disableSelection();									// Inhibit selection
 		this.pics=[];														// Alloc pics array
 		this.Draw();														// Show bin
+		this.noPicLoad=false;												// Don't inhibit pic loading
 
 		$("#binLeftBut").on("click", function() {							// Mobile scroll left
 			$("#metaDiv").remove();											// Kill popup
@@ -1249,6 +1256,19 @@
 		this.maxUndos=20;														// Max undos stored
 	}
 
+	CDoc.prototype.DecodeKey=function(key)									// DECODE KEY INTO ID & SET PIC ADD MODE
+	{
+		if (!key)								return null;					// No key
+		if (!key.match(/\d\d\d\d\d\d\d[3|4]/))	return null;					// No signature match (8 chars, last is '3' or '4')
+		var id=""+key;															// Copy key as string
+		bin.noPicLoad=(id.charAt(7) == '3') ? true : false;						// Set picture loading restruction (3 is inhibit)
+		var nn=id.charAt(0);													// Get shift order
+		id=id.substr(1,id.length-2);											// Trim mode and order
+		while (nn-- > 0) 														// For each shift
+			id=id.substr(1,5)+id.charAt(0);										// Shift-left
+		return(id-0);															// Return id as an int
+		}
+
 	CDoc.prototype.Do=function() 											//	SAVE UNDO
 	{
 		this.changed=true;														// Set changed flag
@@ -1292,9 +1312,13 @@
 	CDoc.prototype.LoadJSON=function(json) 									//	LOAD JSON AND SET
 	{
 		var o=json;																// Point at data
+		if (o && o.qmfmsg && o.qmfmsg == "error") {								// Error loading
+			PopUp("<p style='color:#990000'><b>Couldn't load project!</b></p>",3000); // Popup warning
+			return;																// Quit
+			}
 		if (json == "civil") 
 			o=$.parseJSON('{"script":"In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.","title":"Civil Rights","audioRate":100,"pitch":100,"voice":0,"mp3":"http://www.stagetools.com/primaryaccess/narration.mp3","binPics":[{"src":"//stagetools.com/primaryaccess/Test.jpg","title":"Martin Luther King at Civil rights march","date":"1963","desc":"Martin Luther King delivers his &quot;I have a dream&quot; speech at the Lincoln Memorial","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"},{"src":"//stagetools.com/primaryaccess/Test2.jpg","title":"Rosa Parks sitting on bus","date":"1955","desc":"Rosa Parks prompted outcry when she sat in the front of the bus.","link":"//teacher.scholastic.com/rosa"},{"src":"//stagetools.com/primaryaccess/Test10.jpg","title":"Brown vs. Board of Education","date":"1954","desc":"George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"},{"src":"//stagetools.com/primaryaccess/Test3.jpg","title":"The Little Rock Nine","date":"1957","desc":"After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test4.jpg","title":"The Little Rock Nine letter - Page 1","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test5.jpg","title":"The Little Rock Nine letter - Page 2","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test6.jpg","title":"Greensboro Lunch Counter Sit-in","date":"1960","desc":"Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"},{"src":"//stagetools.com/primaryaccess/Test7.jpg","title":"Roger Wilkins, head of NAACP","date":"1957","desc":"Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test8.jpg","title":"Civil rights march on Washington","date":"1963","desc":"The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"}],"scriptPics":[]}');
-		this.changed=false;														// No unsaved changes
+				this.changed=false;														// No unsaved changes
 		$("#scriptTextDiv").text(o.script);										// Get script text 
 		o.script=o.script.replace(/~/g,"<br>");									// Replace CRs
 		$("#titleDiv").text(o.title);											// Get title text 
@@ -1542,8 +1566,26 @@
 
 		function myTest()
 		{
-			trace($("#scriptTextDiv").text().length);											// Restore orginal script		
+	
+
+		var iid=7;
+		var key=EncodeKey(iid,3);
+		trace(iid,key)
+		trace(133,doc.DecodeKey(key))
+
+		function EncodeKey(id, mode)										// ENCODE ID INTO KEY
+		{
+			var nn;
+			var key=""+id;														// Copy id as string
+			while (key.length < 6) key="0"+key;									// At least 6 digits
+			var ord=nn=Math.floor(Math.random()*5)+1;							// Get order strategy 1-5
+			while (nn-- > 0) 													// For each shift
+				key=key.charAt(5)+key.substr(0,5);								// Shift-right
+			key=ord+key+mode;													// Add order and mode
+			return key;															// Return key
 		}
+
+	}
 
 </script>
 
