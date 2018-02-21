@@ -4,6 +4,76 @@
 // GOOGLE DRIVE ACCESS 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+/*
+	CDoc.prototype.GDriveLoad=function(id) 									// LOAD FROM GOOGLE DRIVE
+	{
+		var _this=this;															// Save context
+		var str="https://docs.google.com/spreadsheets/d/"+id+"/export?format=tsv";	// Access tto
+		var xhr=new XMLHttpRequest();											// Ajax
+		xhr.open("GET",str);													// Set open url
+		xhr.onload=function() { 												// On successful load
+			doc.AddCSV(xhr.responseText);										// Parse CSV  
+			this.changed=false;														// No unsaved changes
+			};			
+		xhr.onreadystatechange=function(e)  { 									// On readystate change
+			if ((xhr.readyState === 4) && (xhr.status !== 200)) {  				// Ready, but no load
+				Sound("delete");												// Delete sound
+				PopUp("<p style='color:#990000'><b>Couldn't load Google Doc!</b></p>Make sure that <i>anyone</i><br>can view it in Google",5000); // Popup warning
+				}
+			};		
+		xhr.send();																// Do it
+	}
+	CDoc.prototype.AddCSV=function(csv) 									//	ADD CSV TO SHOW
+	{
+		var i,j,v,o;
+		if (csv) csv.replace(/\\r/,"");											// Remove CRs
+		csv=csv.split("\n");													// Split into line
+		bin.pics=[];															// Clear pics
+		if (csv[0] && !csv[0].match(/type\ttitle\turl\t\link\tdesc/i)) {		// Check for PA header
+			PopUp("<p style='color:#990000'><b>Not a PrimaryAccess doc!</b></p>",5000); // Popup warning
+			Sound("delete");													// Delete sound
+			return;																// Quit
+			}
+		for (i=0;i<csv.length;++i) {											// For each line
+			v=csv[i].split("\t");												// Split into fields
+			if (v[0] == "pic") {												// A pic
+				o={	title:v[1],src:v[2],link:v[3],desc:v[4] }					// Add
+				bin.pics.push(o);												// Add to bin
+				}
+			if (v[0] == "script") 												// A title
+				$("#scriptTextDiv").text(v[1]);									// Add to script
+			if (v[0] == "title") 												// A title
+				$("#titleDiv").text(v[1]);										// Add to title
+			if (v[0] == "data") {												// Data
+				o=$.parseJSON(v[2]).binPics;									// Point at pics
+				for (j=0;j<o.length;++j)										// For each bin pic
+					if (newPic(o[j].src))										// If not in bin already
+						bin.pics.push(o[j]);									// Add it
+				o=$.parseJSON(v[2]);											// Point at obj
+				if (o.pitch)		player.pitch=o.pitch;						// Set pitch
+				if (o.audioRate)	player.audioRate=o.audioRate;				// Set rate
+				if (o.voice)		player.voice=o.voice;						// Set voice
+				if (o.mp3)			player.mp3=o.mp3;							// Set voice
+				script.pics=$.parseJSON(JSON.stringify(o.scriptPics));			// Clone script pics
+				player.InitAudio();												// Init audio
+				}
+			}
+		ResizePanes();															// Redraw
+
+		function newPic(src) {													// SEE IF PIC IS ALREADY IN BIN
+			var k;
+			for (k=0;k<bin.pics.length;++k)										// For each bin pic
+				if (bin.pics[k].src == src)										// It matches
+					return false;												// Already in
+			return true;														// Didn't find one
+			}
+	}
+*/
+
+
+
+
 	function gTest()
 	{
 //		gdrive.LoadFile("12mLmXY0LILmspBDOd2DuEcti7kqe5pwWIGh4jdKSQF8",true);
