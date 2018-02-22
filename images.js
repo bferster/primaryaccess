@@ -24,38 +24,35 @@ CImageFind.prototype.ImportDialog=function(maxDocs, callback, mode)				// IMPORT
 	var i;
 	var _this=this;																	// Save context
 	this.maxDocs=maxDocs;															// Maximum docs to load
-	var collections=["Google","Bing","PA"];											// Supported collections
+	var collections=["Web","PrimaryAccess","Library of Congress","Wikimedia"];		// Supported collections
 	$("#dialogDiv").remove();														// Remove any old ones
 	$("#bodyDiv").append("<div class='unselectable pa-dialog' id='dialogDiv'</div>");	// Add to body													
 	var str="<p><img src='img/logo64.gif' style='width:32px;vertical-align:-10px'>&nbsp;&nbsp;"; // Logo
 	str+="<span class='pa-dialogLabel'>Find pictures</span>";						// Dialog label
-	str+="<p style='text-align:right'>Search for: <input class='pa-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:200px;height:17px;vertical-align:0px'>";
-	str+="&nbsp;&nbsp;From: "+this.MakeSelect("mdType",false,collections,this.type);
+	str+="<p style='text-align:right'>";
+	str+="<span style='float:left'>&nbsp;<i><span id='numItemsFound'>No</span> items found</i></span>";		// Number of items
+	str+="Search for: <input class='pa-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:150px;height:17px;vertical-align:0px'>";
+	str+="&nbsp;&nbsp;From: "+MakeSelect("mdType",false,collections,this.type);
 	str+="<div id='mdAssets' class='pa-dialogResults'></div>";						// Scrollable container
-	str+="<br>View as: "+this.MakeSelect("mdView",false,["Grid","List"],this.view);
-	str+="&nbsp;&nbsp;&nbsp;NCSS standard: "+this.MakeSelect("mdView",false,["Grid","List"],this.view);
-	str+="&nbsp;&nbsp;&nbsp;Era: "+this.MakeSelect("mdView",false,["Grid","List"],this.view);
-	str+="&nbsp;&nbsp;&nbsp;<i><span id='numItemsFound'>No</span> items found</i>";		// Number of items
-	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='pa-greenbs'>Add item</div>&nbsp;&nbsp;";
+	str+="<br>View as: "+MakeSelect("mdView",false,["Grid","List"],this.view);
+	str+="&nbsp;&nbsp;&nbsp;NCSS standard: "+MakeSelect("mdView",false,["Grid","List"],this.view);
+	str+="&nbsp;&nbsp;&nbsp;Era: "+MakeSelect("mdView",false,["Grid","List"],this.view);
+	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='pa-greenbs'>Add</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='pa-bs'>Cancel</div></div>";
 	$("#dialogDiv").append(str+"</div>");	
+	$("#dialogDiv").draggable({ start: function(){ $("#previewDiv").remove(); } });	// Hide preview
+	
 	$("#dialogOK").on("click", function() {											// ON OK BUT
 					$("#previewDiv").remove();										// Remove preview
-					$("#kmTreeDiv").remove();										// Remove tree
 					if (callback)	callback(_this.rawData.response.docs[_this.curItem]); // If callback defined, run it and return raw data
 					_this.previewMode="";											// No mode
-					for (i=0;i<_this.data.length;++i)								// For each result
-						$("#mdres-"+i).css({ "color":"#000", "font-weight":"normal" });	// Make default
-					$("#dialogOK").css("display","none");							// Hide add button
+					$("#dialogDiv").remove();										// Close
 					});
 
 	$("#dialogCancel").on("click", function() {										// ON CANCEL BUT
 					$("#previewDiv").remove();										// Remove preview
-					$("#kmTreeDiv").remove();										// Remove tree
 					_this.previewMode="";											// No mode
-					for (i=0;i<_this.data.length;++i)								// For each result
-						$("#mdres-"+i).css({ "color":"#000", "font-weight":"normal" });	// Make default
-					$("#dialogOK").css("display","none");							// Hide add button
+					$("#dialogDiv").remove();										// Close
 				});
 
 	LoadCollection();															// Load 1st collection
@@ -81,18 +78,6 @@ CImageFind.prototype.ImportDialog=function(maxDocs, callback, mode)				// IMPORT
 			_this.view=$(this).val();												// Save for later											
 		 	LoadCollection();														// Load it
 			});
-	$("#mdFilterPlace").on("change", function() {									// ON CHANGE PLACE FILTER
-			_this.placeFilter=$(this).val();										// Save for later											
-			 LoadCollection();														// Load it
-			});
-	$("#mdFilterPlace").on("click", function() {									// ON CLICK PLACE FILTER
-		var x=$("#mdFilterPlace").offset().left;
-		var y=$("#mdFilterPlace").offset().top+26;
-		_this.MakeTree(x, y, function (r) { 
-			$("#mdFilterPlace").val(r.split(":")[0])								// Save for later											
-			LoadCollection();														// Load it
-		 	});																		// Make tree
-		});
 			
  	function LoadCollection() {													// LOAD COLLECTION FROM DB
 		var str;
@@ -118,7 +103,6 @@ CImageFind.prototype.ImportDialog=function(maxDocs, callback, mode)				// IMPORT
 			   		_this.FormatItems(data);
 			   		});
 		}
-
 }																					// End closure
 
 CImageFind.prototype.FormatItems=function(data, sortBy)							// SHOW ITEMS
@@ -257,7 +241,7 @@ CImageFind.prototype.Preview=function(num)												// PREVIEW RESULT
 	var maxHgt=window.innerHeight-100;													// Max height
 	var maxWid=window.innerWidth-200;													// Max width
 	var y=$("#mdAssets").offset().top;													// Top
-	var x=$("#mdAssets").offset().left+900-w;											// Left
+	var x=$("#mdAssets").offset().left+685-w;											// Left
 	
 	var str="<div class='unselectable pa-prevDiv' id='previewDiv' style='";				// Div head
 	str+="height:"+h+"px;width:"+w+"px;";												// Size
@@ -281,30 +265,9 @@ CImageFind.prototype.Preview=function(num)												// PREVIEW RESULT
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CImageFind.prototype.MakeSelect=function(id, multi, items, sel, extra, values)		// CREATE HTML SELECT
-{
-		var	str="<select class='pa-is' id='"+id+"'";								// Header
-		str+="style='width:auto'";
-		if (multi)																	// Multi select
-			str+="multiple='multiple' size='"+multi+"'";							// Add flag
-		if (extra)																	// If extra param
-			str+=extra;																// Add them
-		str+=">";																	// End header
-		for (i=0;i<items.length;++i) {												// For each option
-			str+="<option";															// Add tag
-			if (sel == items[i])													// If selected
-				str+=" selected='selected'"											// Add tag
-			if (values && values[i])												// If has a value
-				str+=" value='"+values[i]+"'";										// Add it
-			str+=">"+items[i]+"</option>";											// End option
-			}	
-		return str+"</select>";														// Return element				
-}
-
-
 CImageFind.prototype.LoadingIcon=function(mode, size, container)					// SHOW/HIDE LOADING ICON		
 {
-	container=container ? "#"+containern: "body";									// If no container spec'd, use body
+	container=container ? "#"+container: "#dialogDiv";								// If no container spec'd, use dialog
 	if (!mode) {																	// If hiding
 		$("#sf-loadingIcon").remove();												// Remove it
 		return;																		// Quit

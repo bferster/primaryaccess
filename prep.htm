@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>ad>
+<html>
 	<meta charset="UTF-8" />
 	<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
 	<title>PrimaryAccess Prep</title>
@@ -16,21 +16,21 @@
 		.pa-main {		 	height: 100vh; width: 100vw; min-width: 500px; min-height: 500px; overflow: auto;  
 							background-color:#fff; opacity: 0;
 							}
-		.pa-tabs { 			background-color:#fff;  font-size: 14px; margin: 16px 0 0 16px; cursor: pointer;
+		.pa-tabs { 			background-color:#fff;  font-size: 14px; margin: 24px 0 0 16px; cursor: pointer;
 							}
 		.pa-tab { 			display: inline-block; width: auto; border-top-left-radius: 8px;  border-top-right-radius: 8px;
-							padding: 6px 12px 8px 12px; background-color:#eee;   border: 1px solid #999;
+							padding: 4px 12px 2px 8px; background-color:#eee; border: 1px solid #999;
 							}
 		.pa-body { 			width: calc(100% - 56px); height: calc(100vh - 88px); padding: 12px 12px; margin-left: 16px; margin-top:-1px;
 							border-bottom-left-radius: 8px;  border-bottom-right-radius: 8px;  border-top-right-radius: 8px;
 							background-color:#fff;  border: 1px solid #999;
 							}
-
-		.pa-greenbs {		border-radius: 16px; padding-left: 8px; padding-right: 8px; padding-top: 4px; display: inline-block;
-							font-size: 12px; background-color: #27ae60; cursor: pointer; text-align: center; color:#fff; height: 20px;
+		.pa-greenbs {		border-radius: 16px; padding-left: 8px; padding-right: 8px; display: inline-block; height: 17px; padding-top: 1px;
+							font-size: 12px; background-color: #27ae60; cursor: pointer; text-align: center; color:#fff; 
 							}
-		.pa-dialog {	 	user-select: none; width: 900px; border-radius:14px; background-color:#eee; box-shadow:4px 4px 8px #ccc;
-							margin-top: 0%; margin-left: auto; margin-right: auto; padding: 12px; font-size: 12px;
+		.pa-dialog {	 	position: absolute; left: 28px; top: 60px;
+							user-select: none; width: 685px; border-radius:14px; background-color:#eee; box-shadow:4px 4px 8px #ccc;
+							margin-top: 0%; padding: 12px; font-size: 12px; 
 							}
 		.pa-dialogLabel {	font-size: 18px; text-shadow: 1px 1px #ccc; color:#27ae60; font-weight: bold;
 							}
@@ -67,7 +67,7 @@
 							border: 1px solid #999; background-color:#eee; font-size: 11px; box-shadow: 4px 4px 12px 2px #aaa;
 							}
 		.pa-is {			border-radius:10px; padding-left: 8px; padding-right: 8px; padding-top: 1px;
-							border: 1px solid #999; font-size: 12px; height: 20px; width: 200px;
+							border: 1px solid #999; font-size: 12px; height: 20px; width: 300px;
 							}
 		.pa-bs {			display: inline-block; border-radius: 10px; padding-left: 8px; padding-right: 8px; background-color:#ccc; color: #333;
 							border: 1px solid #999; font-size: 12px; height: 16px; cursor: pointer; width: 50px; text-align:center;
@@ -92,10 +92,11 @@
 </head>
 <body>
 	<div id="mainDiv" class="pa-main">
+		<img style="margin-right:12px;margin-top:8px;height:40px;float:right" src="img/palogo2.png">
 		<div id="tabsDiv" class="pa-tabs">
-			<div id="rosTabDiv" class="pa-tab">Roster - Social Studies 1</div>
-			<div id="proTabDiv" class="pa-tab">Project - Civil Rights</div>
-			<div id="picTabDiv" class="pa-tab">Pictures</div>
+			<div id="rosTabDiv" class="pa-tab unselectable">Roster</div>
+			<div id="proTabDiv" class="pa-tab unselectable">Project</div>
+			<div id="hlpTabDiv" class="pa-tab unselectable">Help</div>
 		</div>
 	<div id="bodyDiv" class="pa-body"></div>
 	</div>
@@ -118,7 +119,6 @@
 		var url=window.location.search.substring(1);					 	// Get query string
 		roster=new CRoster();												// Alloc CRoster module
 		projects=new CProject();											// Alloc CProject module
-		pictures=new CPicture();											// Alloc CPicture module
 		picFind=new CImageFind();											// Alloc CImageFind module
 		$(window).resize(ResizePanes);                                     	// On window resizing
 		ResizePanes();														// Start up sizing
@@ -145,21 +145,21 @@
 			Sound("click");													// Click
 			Draw("pro");													// Draw
 			});
-		$("#picTabDiv").on("click", function() {							// Picture tab click
+		$("#hlpTabDiv").on("click", function() {							// Help tab click
 			Sound("click");													// Click
-			Draw("pic");													// Draw
-		});
-	
+			Draw("hlp");													// Draw
+			});
 	});
+	
 
 	function Draw(tab)
 	{
-		$("[id$=TabDiv]").css({ "border-bottom":"1px solid #999","background-color":"#eee","color":"#000","font-weight":"normal" });
-		$("#"+tab+"TabDiv").css({ "border-bottom":"1px solid #fff","background-color":"#fff","color":"#339933","font-weight":"normal" });
+		$("[id$=TabDiv]").css({ "border-bottom":"1px solid #999","background-color":"#eee","color":"#666" });
+		$("#"+tab+"TabDiv").css({ "border-bottom":"1px solid #fff","background-color":"#fff","color":"#339933" });
 		if (tab == "ros")		roster.Draw();									// Draw roster
 		else if (tab == "pro")	projects.Draw();								// Draw projects
-		else if (tab == "pic")	pictures.Draw();								// Draw pictures
-	}
+		else if (tab == "hlp")	ShowHelp();										// Show help
+		}
 
 	function ResizePanes()													//  REACT TO SCREEN SIZE
 	{
@@ -169,6 +169,16 @@
 	{
 		trace(123)
 	}
+
+	function ShowHelp()														//  SHOW HELP
+	{
+		var h=$("#bodyDiv").height();										// Max height
+		var w=h*.772;															// Letter spect
+		str="<iframe src='https://docs.google.com/document/d/e/2PACX-1vQQlE8nxS33bkI5CY--daR1ibM-7q6B-GFrztW6cq9lN6FNztpA_b0nrQiV33krohd5O6dvyU1ibiGU/pub?embedded=true' "; 
+		str+="style='width:"+w+"px;height:"+h+"px;overflow-y:scroll;border:none;margin-left:-8px;'></iframe>";
+		$("#bodyDiv").html(str)
+	}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ROSTER
@@ -189,32 +199,100 @@
 
 	function CProject()														// PROJECT CONSTRUCTOR
 	{
+		this.pics=[];
 	}
 
-	CProject.prototype.Draw=function() 										// UPDATE
+	CProject.prototype.Draw=function() 									// UPDATE
 	{
-		$("#bodyDiv").html("Project")
-	}
+		var _this=this;														// Context
+		var str="<br><table style='min-width:400px;width:600px'>";
+		str+="<tr><td>Current project</td><td>"+MakeSelect("proSet",false,["Civil Rights","Create new project"])+"</td></tr>";
+		str+="<tr><td>Title of project</td><td><input id='proTitle' class='pa-is'></input></td></tr>";
+		str+="<tr><td>Script/prompt</td><td><textarea id='proScript' class='pa-is' style='height:60px'></textarea></td></tr>";
+		str+="<tr><td>Allow new pics?</td><td><input type='checkbox' id='proAdd' checked></input></td></tr>";
+		str+="</table><br>Pictures:<hr><div id='picsBin'>None</div><br>"
+		str+="<div id='addPics' class='pa-greenbs'>Add new picture</div>";
+		
+		$("#bodyDiv").html(str)
+		
+		$("#addPics").on("click", function() {								// ON ADD CLICK
+			_this.AddPic();
+			});
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// PICTURE
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+}
 
-	function CPicture()														// PICTURE CONSTRUCTOR
+	CProject.prototype.AddPic=function() 								// ADD NEW PICTURE
 	{
+		var _this=this;														// Save context
+		$("#dialogDiv").remove();											// Remove any old ones
+		$("#bodyDiv").append("<div class='unselectable pa-dialog' style='width:500px' id='dialogDiv'</div>");	// Add to body													
+		var str="<div style='display:inline-block'><table style='width:300px'>";	// Info div/table
+		str+="<tr><td>Title</td><td><input id='addTitle' type='text' class='pa-is' style='width:100%'</td></tr>";
+		str+="<tr><td>URL</td><td><input id='addUrl' type='text' class='pa-is' style='width:100%'></td></tr>";
+		str+="<tr><td>Desc&nbsp;&nbsp;</td><td><textarea id='addDesc' type='text' class='pa-is' style='width:100%;height:50px'></textarea></td></tr>";
+		str+="<tr><td>Link</td><td><input id='addLink' type='text' class='pa-is' style='width:100%'>";
+		str+="</table></div>";														// End div
+		str+="<div style='display:inline-block;overflow:hidden;width:160px;margin-left:32px;vertical-align:top'>";
+		str+="<img id='addImg' src='img/newbinpic.png' style='width:100%;margin-bottom:8px'></div>";
+		str+="<div id='findBut' class='pa-greenbs'>Find</div>";
+		str+="<div style='float:right;margin-right:8px'>";
+		str+="<div id='addBut' class='pa-bs'>Add</div>&nbsp;&nbsp";
+		str+="<div id='cancelBut' class='pa-bs'>Cancel</div></div>";
+		$("#dialogDiv").append(str);	
+		$("#dialogDiv").draggable({ start: function(){ $("#previewDiv").remove(); } });	// Hide preview
+			
+		$("#findBut").on("click", function() {								// ON FIND
+			picFind.ImportDialog(100, function(s) { trace(s) });
+			});
+		
+		$("#addBut").on("click", function() {								// ON ADD
+			var o={}
+			o.src=$("#addUrl").val() ? $("#addUrl").val() : "";				// Add src
+			o.title=$("#addTitle").val() ? $("#addTitle").val() : "";		// Add title
+			o.desc=$("#addDesc").val() ? $("#addDesc").val() : "";			// Add desc
+			o.link=$("#addLink").val() ? $("#addLink").val() : "";			// Add link
+			if (!o.title && !o.src) { PopUp("Needs a title and a url",2000,"dialogDiv"); return; }	// Needs title and url
+			if (!o.title) { PopUp("Needs a title",2000,"dialogDiv"); return; }	// Needs title 
+			if (!o.src) { PopUp("Needs a url",2000,"dialogDiv"); return; }	//  Needs url
+			_this.pics.push(o);												// Add to bin
+			Sound("ding");													// Ding
+			$("#dialogDiv").remove();										// Remove 
+			});
+		
+		$("#cancelBut").on("click", function() {							// ON CANCEL
+			$("#dialogDiv").remove();										// Remove 
+			});
+
+		$("#addUrl").on("change", function() {								// ON IMAGE URL SET
+			$("#addImg").prop("src",$(this).val());							// Show it
+			});
 	}
 
-	CPicture.prototype.Draw=function() 										// UPDATE
-	{
-		$("#bodyDiv").html("Picture")
-		picFind.ImportDialog(100);
-	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+	function MakeSelect(id, multi, items, sel, extra, values)				// CREATE HTML SELECT
+	{
+		var	str="<select class='pa-is' id='"+id+"'";							// Header
+		str+="style='width:auto'";
+		if (multi)																// Multi select
+			str+="multiple='multiple' size='"+multi+"'";						// Add flag
+		if (extra)																// If extra param
+			str+=extra;															// Add them
+		str+=">";																// End header
+		for (i=0;i<items.length;++i) {											// For each option
+			str+="<option";														// Add tag
+			if (sel == items[i])												// If selected
+				str+=" selected='selected'"										// Add tag
+			if (values && values[i])											// If has a value
+				str+=" value='"+values[i]+"'";									// Add it
+			str+=">"+items[i]+"</option>";										// End option
+			}	
+		return str+"</select>";													// Return element				
+}
 
 	function PopUp(msg, time, div)											// TIMED POPUP
 	{
