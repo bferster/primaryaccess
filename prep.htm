@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html>
-<head>
+<html>ad>
 	<meta charset="UTF-8" />
 	<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
 	<title>PrimaryAccess Prep</title>
@@ -9,6 +8,7 @@
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 	<script src="lib/jquery.ui.touch-punch.min.js"></script>
+	<script src="images.js"></script>
 	<style type="text/css">
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
 							padding: 0; margin: 0px;
@@ -26,6 +26,37 @@
 							background-color:#fff;  border: 1px solid #999;
 							}
 
+		.pa-greenbs {		border-radius: 16px; padding-left: 8px; padding-right: 8px; padding-top: 4px; display: inline-block;
+							font-size: 12px; background-color: #27ae60; cursor: pointer; text-align: center; color:#fff; height: 20px;
+							}
+		.pa-dialog {	 	user-select: none; width: 900px; border-radius:14px; background-color:#eee; box-shadow:4px 4px 8px #ccc;
+							margin-top: 0%; margin-left: auto; margin-right: auto; padding: 12px; font-size: 12px;
+							}
+		.pa-dialogLabel {	font-size: 18px; text-shadow: 1px 1px #ccc; color:#27ae60; font-weight: bold;
+							}
+		.pa-dialogTitle {	font-weight: bold; color: #000; padding-left: 8px; padding-right: 8px;
+							}
+		.pa-dialogDoneBut {	cursor: pointer; float: right;
+							} 
+		.pa-dialogResults { width: 100%px; height: 350px; overflow-y: auto; border-radius: 6px;
+							background-color :#f8f8f8; padding: 8px; border: 1px solid #999;
+							}
+		.pa-prevDiv {		position: absolute; background-color:#eee; padding: 0px; padding-top: 0px;  overflow-x: hidden; 
+							overflow-y: auto; z-index: 10000; border-left: 1px solid #999; text-align: right;
+							}
+		.pa-prevId {		font-size: 14px; color: #27ae60; font-weight: bold; padding-left: 8px; padding-right: 8px;
+							}
+		.pa-listItem {		height: 20px; cursor: pointer; background-color: #f8f8f8; color:#000;
+							}
+		.pa-listItem:hover{ background-color: #dee7f1;
+							}
+		.pa-gridItem {		color: #666; padding: 8px;  border: 1px solid #47ae80; margin-right: 8px; margin-bottom: 8px; display: inline-block;
+							width: 190px; height: 154px; cursor: pointer; border-radius: 4px; overflow: hidden;
+							}
+		.pa-gridItem:hover{ background-color: #dee7f1;
+							}
+		.pa-gridPic {		width: 100%; height: 100px; overflow: hidden; margin-bottom: 6px;
+							}
 
 		/* MISC --------------------------------------------------------------------------------------------------*/
 	
@@ -49,6 +80,14 @@
 							font-size: 14px; text-align:center; display: none;
 							}
 	
+		/* GLOBAL --------------------------------------------------------------------------------------------------*/
+					
+		.unselectable { 	-moz-user-select: none; -khtml-user-select: none; -webkit-user-select: none; -ms-user-select: none;  user-select: none;	
+							}
+		 table {			border-spacing: 0px;  }
+		 input {		    vertical-align: -2px; }
+
+							
 	</style>
 </head>
 <body>
@@ -70,6 +109,7 @@
 	var roster=null;														// Holds roster module
 	var projects=null;														// Holds projects module
 	var pictures=null;														// Holds pictures module
+	var picFind=null;														// Hold pic search module
 
 	$(document).ready(function() {								        // ON PAGE LOADED
 		isMobile=navigator.platform.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag id ios
@@ -79,6 +119,7 @@
 		roster=new CRoster();												// Alloc CRoster module
 		projects=new CProject();											// Alloc CProject module
 		pictures=new CPicture();											// Alloc CPicture module
+		picFind=new CImageFind();											// Alloc CImageFind module
 		$(window).resize(ResizePanes);                                     	// On window resizing
 		ResizePanes();														// Start up sizing
 		Draw(curTab);														// Draw body
@@ -114,7 +155,7 @@
 	function Draw(tab)
 	{
 		$("[id$=TabDiv]").css({ "border-bottom":"1px solid #999","background-color":"#eee","color":"#000","font-weight":"normal" });
-		$("#"+tab+"TabDiv").css({ "border-bottom":"1px solid #fff","background-color":"#fff","color":"#339933","font-weight":"bold" });
+		$("#"+tab+"TabDiv").css({ "border-bottom":"1px solid #fff","background-color":"#fff","color":"#339933","font-weight":"normal" });
 		if (tab == "ros")		roster.Draw();									// Draw roster
 		else if (tab == "pro")	projects.Draw();								// Draw projects
 		else if (tab == "pic")	pictures.Draw();								// Draw pictures
@@ -166,6 +207,7 @@
 	CPicture.prototype.Draw=function() 										// UPDATE
 	{
 		$("#bodyDiv").html("Picture")
+		picFind.ImportDialog(100);
 	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
