@@ -24,36 +24,30 @@ CImageFind.prototype.ImportDialog=function(maxDocs, callback, mode)				// IMPORT
 	var i;
 	var _this=this;																	// Save context
 	this.maxDocs=maxDocs;															// Maximum docs to load
-	var collections=["Web","PrimaryAccess","Library of Congress","Wikimedia"];		// Supported collections
-	$("#dialogDiv").remove();														// Remove any old ones
-	$("#bodyDiv").append("<div class='unselectable pa-dialog' id='dialogDiv'</div>");	// Add to body													
-	var str="<p><img src='img/logo64.gif' style='width:32px;vertical-align:-10px'>&nbsp;&nbsp;"; // Logo
-	str+="<span class='pa-dialogLabel'>Find pictures</span>";						// Dialog label
-	str+="<p style='text-align:right'>";
+	$("#dialogDiv").remove();														// Remove any dialogs
+	var collections=["Web","PrimaryAccess","Library of Congress","Wikimedia","Images"];		// Supported collections
+	var str="<hr style='margin-top:12px'><p style='text-align:right'>";
 	str+="<span style='float:left'>&nbsp;<i><span id='numItemsFound'>No</span> items found</i></span>";		// Number of items
 	str+="Search for: <input class='pa-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:150px;height:17px;vertical-align:0px'>";
 	str+="&nbsp;&nbsp;From: "+MakeSelect("mdType",false,collections,this.type);
-	str+="<div id='mdAssets' class='pa-dialogResults'></div>";						// Scrollable container
+	str+="</p><div id='mdAssets' class='pa-dialogResults'></div>";						// Scrollable container
 	str+="<br>View as: "+MakeSelect("mdView",false,["Grid","List"],this.view);
 	str+="&nbsp;&nbsp;&nbsp;NCSS standard: "+MakeSelect("mdView",false,["Grid","List"],this.view);
 	str+="&nbsp;&nbsp;&nbsp;Era: "+MakeSelect("mdView",false,["Grid","List"],this.view);
-	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='pa-greenbs'>Add</div>&nbsp;&nbsp;";
+	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='pa-greenbs'>Get picture</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='pa-bs'>Cancel</div></div>";
-	$("#dialogDiv").append(str+"</div>");	
-	$("#dialogDiv").draggable({ start: function(){ $("#previewDiv").remove(); } });	// Hide preview
+	$("#bodyDiv").append(str+"</div>");	
 	
 	$("#dialogOK").on("click", function() {											// ON OK BUT
 					$("#previewDiv").remove();										// Remove preview
-					if (callback)	callback(_this.rawData.response.docs[_this.curItem]); // If callback defined, run it and return raw data
 					_this.previewMode="";											// No mode
-					$("#dialogDiv").remove();										// Close
+					if (callback)	callback(_this.data[_this.curItem]); 			// If callback defined, run it and return  data
 					});
 
 	$("#dialogCancel").on("click", function() {										// ON CANCEL BUT
 					$("#previewDiv").remove();										// Remove preview
 					_this.previewMode="";											// No mode
-					$("#dialogDiv").remove();										// Close
-				});
+					});
 
 	LoadCollection();															// Load 1st collection
  	
@@ -220,7 +214,7 @@ CImageFind.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//PREVIEW
+// PREVIEW
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -241,7 +235,7 @@ CImageFind.prototype.Preview=function(num)												// PREVIEW RESULT
 	var maxHgt=window.innerHeight-100;													// Max height
 	var maxWid=window.innerWidth-200;													// Max width
 	var y=$("#mdAssets").offset().top;													// Top
-	var x=$("#mdAssets").offset().left+685-w;											// Left
+	var x=$("#mdAssets").offset().left+901-w;											// Left
 	
 	var str="<div class='unselectable pa-prevDiv' id='previewDiv' style='";				// Div head
 	str+="height:"+h+"px;width:"+w+"px;";												// Size
@@ -267,7 +261,7 @@ CImageFind.prototype.Preview=function(num)												// PREVIEW RESULT
 
 CImageFind.prototype.LoadingIcon=function(mode, size, container)					// SHOW/HIDE LOADING ICON		
 {
-	container=container ? "#"+container: "#dialogDiv";								// If no container spec'd, use dialog
+	container=container ? "#"+container: "#bodyDiv";								// If no container spec'd, use dialog
 	if (!mode) {																	// If hiding
 		$("#sf-loadingIcon").remove();												// Remove it
 		return;																		// Quit
