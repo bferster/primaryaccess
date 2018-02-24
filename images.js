@@ -29,8 +29,7 @@ function CImageFind()																// CONSTRUCTOR
 		"9.	Postwar US (1945 to early 1970s)",
 		"10. Contemporary US (1968 to the present)",
 		"11. The World" 
-];
-
+		];
 }
 
 CImageFind.prototype.ImportDialog=function(maxDocs, callback, mode)				// IMPORTER DIALOG
@@ -43,25 +42,12 @@ CImageFind.prototype.ImportDialog=function(maxDocs, callback, mode)				// IMPORT
 	var str="<hr style='margin-top:12px'><p><span class='pa-bodyTitle'>Find pictures</span>";	// Title
 	str+="<span style='float:right'>";															// Hold controls
 	str+="Search for: <input class='pa-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:200px;height:17px;vertical-align:0px'>";
-	str+="&nbsp;&nbsp;From: "+MakeSelect("mdType",false,collections,this.type);
-	str+="</span></p><div id='mdAssets' class='pa-dialogResults'></div>";					// Scrollable container
-	str+="<br>Limit by NCSS era: "+MakeSelect("mdView",false,this.ncssEras,this.era);		// Add eras
-	str+="&nbsp;&nbsp;&nbsp;&nbsp;<i><span id='numItemsFound'>No</span> items found</i>";	// Number of items
-	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='pa-greenbs'>Get picture</div>&nbsp;&nbsp;";
-	str+="<div id='dialogCancel' class='pa-bs'>Cancel</div></div>";
+	str+="&nbsp;&nbsp;From: "+MakeSelect("mdType",false,collections,this.type);					// From where
+	str+="</span></p><div id='mdAssets' class='pa-dialogResults'></div>";						// Scrollable container
+	str+="<br>Limit by NCSS era: "+MakeSelect("mdEra",false,this.ncssEras,this.era); 			// Add eras
+	str+="<i><span style='float:right'><span id='numItemsFound'>No</span> items found</i></span>"; // Number of items
 	$("#bodyDiv").append(str+"</div>");	
 	
-	$("#dialogOK").on("click", function() {											// ON OK BUT
-					$("#previewDiv").remove();										// Remove preview
-					_this.previewMode="";											// No mode
-					if (callback)	callback(_this.data[_this.curItem]); 			// If callback defined, run it and return  data
-					});
-
-	$("#dialogCancel").on("click", function() {										// ON CANCEL BUT
-					$("#previewDiv").remove();										// Remove preview
-					_this.previewMode="";											// No mode
-					});
-
 	LoadCollection();															// Load 1st collection
  	
  	$("#mdType").on("change", function() {											// ON CHANGE COLLECTION
@@ -77,13 +63,8 @@ CImageFind.prototype.ImportDialog=function(maxDocs, callback, mode)				// IMPORT
 			_this.filterCollect=$(this).val();										// Save for later											
 			 LoadCollection();														// Load it
 			});
-		$("#mdUser").on("change", function() {										// ON CHANGE USER
-			_this.user=$(this).val();												// Save for later											
-		 	LoadCollection();														// Load it
-			});
-   	$("#mdView").on("change", function() {											// ON CHANGE VIEW
-			_this.view=$(this).val();												// Save for later											
-		 	LoadCollection();														// Load it
+	$("#mdEra").on("change", function() {											// ON CHANGE ERA
+			_this.era=$(this).val();												// Save era										
 			});
 			
  	function LoadCollection() {													// LOAD COLLECTION FROM DB
@@ -170,36 +151,6 @@ CImageFind.prototype.FormatItems=function(data, sortBy)							// SHOW ITEMS
 // SHOW RESULTS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CImageFind.prototype.DrawAsList=function()											// SHOW RESULTS AS LIST
-{
-	var i;
-	var _this=this;																	// Save context
-	var trsty=" class='pa-listItem'  onclick='CImageFindObj.Preview(this.id.substr(6))'";	// Row style
-	var str="<table style='width:100%;text-align:left'>";							// Header row
-	str+="<tr style='font-weight:bold;cursor:url(img/sortcur.gif),ns-resize'><td style=width:100%' id='mdh-title'>Title</td><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td  id='mdh-user'>&nbsp;User</td></tr>";
-	str+="<tr><td colspan='4'><hr></td></tr>";
-	
-	for (i=0;i<this.data.length;++i) {												// For each doc returned
-		o=this.data[i];																// Point at doc
-		str+="<tr id='mdres-"+i+"'"+trsty+"><td>"+this.ShortenString(o.title,80)+"</td>";	// Add title
-		str+="<td>"+o.date;															// Add date
-		str+="</td><td>&nbsp;"+o.id+"<td>"											// Add id
-		if (o.user)																	// If a user spec'd
-			str+=this.ShortenString(o.user,12);										// Add user		
-		str+="</td></tr>";															// Close line	
-		}
-	str+="</table>";																// Close table
-	
-	$("#mdAssets").html(str);														// Add results
-	
-	$('[id^="mdh-"]').off();														// Remove old handlers
-
-	$('[id^="mdh-"]').on("click",function(e) {										// ON CLICK ON HEADER
-		var field=$(this).prop("id").substr(4);										// Isolate field
-		_this.FormatItems(null,field);											// Sort by field
-		});
-}
-
 CImageFind.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 {	
 	var i,str="";
@@ -222,47 +173,16 @@ CImageFind.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 		});
 }
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// PREVIEW
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 CImageFind.prototype.Preview=function(num)												// PREVIEW RESULT
 {
-	var _this=this;																		// Save context
 	var o=this.data[num];																// Point at item
-	this.curItem=num;																	// Current item
-	this.previewMode="Preview";															// Preview mode
-	$("#previewDiv").remove();															// Remove any old ones
-	$("#dialogOK").css("display","inline-block");										// Show add button
-
-	for (i=0;i<this.data.length;++i)													// For each result
-		$("#mdres-"+i).css({ "color":"#000", "font-weight":"normal" });					// Make default
-	$("#mdres-"+num).css({ "color":"#009900", "font-weight":"bold" });					// Highlight
-
-	var h=368, w=244;																	// Get size												
-	var maxHgt=window.innerHeight-100;													// Max height
-	var maxWid=window.innerWidth-200;													// Max width
-	var y=$("#mdAssets").offset().top;													// Top
-	var x=$("#mdAssets").offset().left+901-w;											// Left
-	
-	var str="<div class='unselectable pa-prevDiv' id='previewDiv' style='";				// Div head
-	str+="height:"+h+"px;width:"+w+"px;";												// Size
-	str+="left:"+x+"px;top:"+y+"px'>";													// Position
-	str+="<div class='pa-prevId'>Mandala item "+o.id+"</div>";							// Show id
-	if (o.title)																		// If a title
-		str+="<p class='pa-dialogTitle'>"+o.title+"</p>";								// Show title 
-	if (o.ajax && o.ajax.match(/\.png|.gif|\.jpg|.jpeg/i)) 								// An image
-		str+="<div id='previewImg' style='width:"+(w-8)+"px;overflow-y:auto;padding:12px;padding-top:0'><img id='myImg' style='width:100%' src='"+o.ajax+"'></div>";
-	else
-		str+="<iframe frameborder='0'style='width:100%;padding:12px;padding-top:0;height:210px' src='"+o.ajax+"'/>";
-	str+="<div>";
-	if (o.summary)	str+="<p>"+o.summary+"</p>";										// Add summary
-	if (o.date)		str+="<br>"+o.date;													// Add date
-	if (o.user)		str+=" by "+o.user;													// Add user
-	if (o.html)		str+="<p><a target='_blank' href='"+o.html+"'><b>View webpage</b></a></p>"	// Add link to page
-	$("body").append(str+"</div></div>");												// Add content
+	if (o.ajax)																			// If a pic
+		$("#addImg").prop("src",o.ajax);												// Show it
+	$("#addUrl").val(o.ajax);															// Src
+	$("#addTitle").val(o.title);														// Title
+	$("#addDesc").val(o.desc);															// Desc
+	$("#addLink").val(o.html);															// Link
+	$("#addEra").val(this.era == "Any"? "" : this.era );								// Era
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

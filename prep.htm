@@ -43,15 +43,6 @@
 		.pa-dialogResults { width: 100%px; height: 350px; overflow-y: auto; border-radius: 6px;
 							background-color :#f8f8f8; padding: 8px; border: 1px solid #999;
 							}
-		.pa-prevDiv {		position: absolute; background-color:#f8f8f8; padding: 0px; padding-top: 0px;  overflow-x: hidden; 
-							overflow-y: auto; z-index: 10000; border-left: 1px solid #999; text-align: right;
-							}
-		.pa-prevId {		font-size: 14px; color: #27ae60; font-weight: bold; padding-left: 8px; padding-right: 8px;
-							}
-		.pa-listItem {		height: 20px; cursor: pointer; background-color: #f8f8f8; color:#000;
-							}
-		.pa-listItem:hover{ background-color: #dee7f1;
-							}
 		.pa-gridItem {		color: #666; padding: 8px;  border: 1px solid #47ae80; margin-right: 8px; margin-bottom: 8px; display: inline-block;
 							width: 190px; height: 154px; cursor: pointer; border-radius: 4px; overflow: hidden;
 							}
@@ -64,6 +55,10 @@
 							width: 112px; height: 75px; cursor: pointer; border-radius: 4px; overflow: hidden;
 							}
 		.pa-binPic {		width: 100%; height: 75px; overflow: hidden;
+							}
+
+		.pa-meta {			position: absolute;  width: 320px; padding: 16px; border-radius: 8px; font-size: 14px;
+							background-color: #e8e8e8; border: 1px solid #999; box-shadow: -4px -4px 12px 2px #aaa;
 							}
 
 		/* MISC --------------------------------------------------------------------------------------------------*/
@@ -86,6 +81,9 @@
 		.pa-popup {			position: absolute;  width: auto; padding: 8px; left: calc(50% - 100px); top: calc(50% - 50px);
 							border-radius: 8px; background-color: #eee; border: 1px solid #999; box-shadow: 4px 2px 12px 2px #aaa; 
 							font-size: 14px; text-align:center; display: none;
+							}
+		.pa-arrow-down {  	position: absolute; left: calc(50% - 14px); top: 100%; width: 0; height: 0; 
+							border-left: 10px solid transparent; border-right: 10px solid transparent;  border-top: 10px solid #bbb;
 							}
 	
 		/* GLOBAL --------------------------------------------------------------------------------------------------*/
@@ -159,6 +157,8 @@
 		$("[id$=TabDiv]").css({ "border-bottom":"1px solid #999","background-color":"#fff","color":"#666" });
 		$("#"+tab+"TabDiv").css({ "border-bottom":"1px solid #f8f8f8","background-color":"#f8f8f8","color":"#339933" });
 		curTab=tab;															// Set current tab
+		$("#pa-webpage").remove();											// Kill image
+		$("#metaDiv").remove();												// Kill metadata
 		if (tab == "ros")		roster.Draw();								// Draw roster
 		else if (tab == "pro")	projects.Draw();							// Draw projects
 		}
@@ -246,6 +246,10 @@
 			str+="</div">+ShortenString(o.title,70);						// Add title
 			str+="</div>";													// Close div	
 			$("#picsBin").append(str);										// Add
+			$("#binPic-"+i).on("click", function(e) {						// Add over handler
+				var id=e.currentTarget.id.substr(7);						// Get id
+				_this.ShowMetaData(id);										// Show metadata popup
+				});
 			}
 
 		$("#addPics").on("click", function() {								// ON ADD CLICK
@@ -255,7 +259,7 @@
 		$("#proEra").on("change", function() {								// ON ERA CHANGE
 			_this.era=$(this).val();										// Set new era
 			});
-	}
+		}
 
 	CProject.prototype.AddPic=function() 								// ADD NEW PICTURE
 	{
@@ -310,6 +314,74 @@
 			});
 	}
 
+	CProject.prototype.FillPicData=function(pic) 						// SET PIC DATA
+	{
+		$("#addImg").prop(pic.src ? pic.src : "");							// Set fields
+		$("#addUrl").val(pic.src ? pic.src : "");	
+		$("#addTitle").val(pic.title ? pic.title : "");
+		$("#addDesc").val(pic.desc ? pic.desc : "");
+		$("#addLink").val(pic.link ? pic.link : "");
+		$("#addEra").val(pic.era ? pic.era : "");									
+	}
+
+	CProject.prototype.ShowPic=function(num) 							//	SHOW PIC
+	{
+		$("#pa-webpage").remove();											// Remove old image, if any
+		$("#metaDiv").remove();												// Kill metadata
+		var o=this.pics[num];												// Point at pic
+		var str="<div id='pa-webpage' class='pa-webpage' style='";			// Add div
+		var x=$("#bodyDiv").offset().left+22;								// Left edge
+		str+="width:"+($("#bodyDiv").width()-4);							// Width
+		str+="px;height:"+($("#bodyDiv").height()-22);						// Height
+		str+="px;top:60px;left:"+x+"px'>";									// Finish div
+		trace(str)
+		str+="<b>"+o.title+"</b><img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer'><br><br>"	// Add close button
+		str+="<div style='overflow-y:auto;height:calc(100% - 30px)'><img src='"+o.src+"' width='100%'>";	
+		if (o.desc)	{														// If a description
+			str+="<br><br>"+o.desc;											// Add it
+			if (o.link)														// If a link
+				str+=" Click <a href=\""+o.link+"\" target=\"_blank\">here</a> for more information.";  // Add it
+			}
+		$("#bodyDiv").append("</div>"+str+"</div>");						// Add popup
+		$("#pa-webpage").fadeIn(1000);										// Fade in
+		$("#pa-close").click(function() { $("#pa-webpage").remove(); });	// Remove on click of close but
+	}
+
+	CProject.prototype.ShowMetaData=function(num) 						//	SHOW METADATA POPUP
+	{
+		$("#pa-webpage").remove();											// Remove old image, if any
+		$("#metaDiv").remove();												// Kill old one
+		var o=this.pics[num];												// Point at pic
+		if (!o.title && !o.desc) 											// If nothing to show
+			return;															// Quit
+		var _this=this;														// Save context
+		var str="<div id='metaDiv' class='pa-meta'>";						// Add div
+		str+="<img id='zoomBut' src='img/zoomer.png' style='width:14px;cursor:pointer'>&nbsp;";	// Zoomer button
+		str+="<img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer'>";
+		if (o.title)														// If a title
+			str+="<b>"+o.title+"</b><br><br>";								// Add it
+		if (o.desc)															// If a description
+			str+=o.desc;													// Add it
+		if (o.link)															// If a link
+			str+=" Click <a href=\""+o.link+"\" target=\"_blank\">here</a> for more information.";  // Add it
+		str+="<div id='metaArrow' class='pa-arrow-down'></div>";			// Add div
+		$("body").append(str+"</div>");										// Add popup
+		var x=$("#binPic-"+num).offset().left-160+$("#binPic-"+num).width()/2;	// Center
+		var y=$("#binPic-"+num).offset().top-10;								// Top
+		y=y-$("#metaDiv").height()-32;										// Align by bottom
+		var off=x;															// Save pos
+		x=Math.min(x,$(window).width()-360);								// Cap to window
+		off-=x;																// Offset from end
+		$("#metaArrow").css("left",Math.min(160+off,320)+"px");				// Position arrow
+			$("#metaDiv").offset({left:x,top:y});							// Position popup
+		$("#zoomBut").on("click", function() {								// Show image popup
+			_this.ShowPic(num);												// Show popup		
+			});
+		$("#pa-close").click(function() {									// Click of close but
+			 $("#metaDiv").remove(); 										// Remove  
+			 });	
+
+	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
