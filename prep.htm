@@ -70,7 +70,7 @@
 							border: 1px solid #999; background-color:#eee; font-size: 11px; box-shadow: 4px 4px 12px 2px #aaa;
 							}
 		.pa-is {			border-radius:16px; padding-left: 8px; padding-right: 8px; padding-top: 1px;
-							border: 1px solid #999; font-size: 12px; height: 18px; width: 300px;
+							border: 1px solid #999; font-size: 12px; height: 18px; width: 270px;
 							}
 		.pa-bs {			display: inline-block; border-radius: 10px; padding-left: 8px; padding-right: 8px; background-color:#ccc; color: #333;
 							border: 1px solid #999; font-size: 12px; height: 16px; cursor: pointer; width: 50px; text-align:center;
@@ -221,23 +221,23 @@
 	{
 		var i,o;
 		var _this=this;														// Context
+		var x=$("#bodyDiv").offset().left+560;
 		var str="<p class='pa-bodyTitle'>Edit assignment";					// Title
 		str+="<img src='img/helpicon.gif'style='float:right;cursor:pointer' onclick='ShowHelp(\"draw\")'><hr></p>"; 
 		str+="<table style='display:inline-block;padding-bottom:8px'>";	
-		str+="<tr><td>Current assignment&nbsp;&nbsp;</td><td>"+MakeSelect("proSet",false,["Civil Rights","--------------------", "Create new", "Make a copy", "Delete"])+"</td></tr>";
+		str+="<tr><td>Current&nbspassignment&nbsp;&nbsp;</td><td>"+MakeSelect("proSet",false,["Civil Rights","--------------------", "Create new", "Make a copy", "Delete"])+"</td></tr>";
 		str+="<tr><td>Title</td><td><input id='proTitle' class='pa-is'></input></td></tr>";
-		str+="<tr><td>Script/prompt</td><td><textarea id='proScript' class='pa-is' style='height:60px'></textarea></td></tr>";
-		str+="<tr><td>Allow new pics?&nbsp;&nbsp;</td><td><input type='checkbox' id='proAdd' checked></input></td></tr>";
+		str+="<tr><td>Script</td><td><textarea id='proScript' class='pa-is' style='height:60px'></textarea></td></tr>";
+		str+="<tr><td>Allow&nbsp;new&nbsp;pics?&nbsp;&nbsp;</td><td><input type='checkbox' id='proAdd' checked></input></td></tr>";
 		str+="<tr><td>NCSS era:</td><td>"+MakeSelect("proEra",false,this.ncssEras,this.era)+"</td></tr>";
-		str+="<tr><td colspan='2' style='border-bottom:1px solid #ccc;padding-bottom:8px;'><br>Pictures</td></tr></table>";
-		str+="<img src='img/palogo.gif' style='width:250px;vertical-align:top;margin:40px 80px'>";
-		str+="<div id='picsBin'></div>";
-		str+="<div id='addPics' class='pa-greenbs' style='margin-top:6px'>Add new picture</div>&nbsp;&nbsp;&nbsp;";
-		str+="<div id='findAss' class='pa-greenbs' style='margin-top:6px'>Find assignment</div><br><br><hr>";
+		str+="<tr><td>Pictures</td><td><br><div style='display:inline-block' id='picsBin'></div></td></tr></table>";
+		str+="<img src='img/palogo.gif' style='position:fixed; width:250px;left:"+x+"px;top:150px'>";
+		str+="<br><hr>Search for&nbsp;&nbsp;<input id='proSearch' class='pa-is' style='width:200px'></input>&nbsp;&nbsp;in NCSS era&nbsp;&nbsp;";
+		str+=MakeSelect("proEra",false,this.ncssEras,this.era);
+		str+="&nbsp;&nbsp;<div id='findAss' class='pa-greenbs' style='margin-top:6px'>Find assignment</div>";
+		str+="<div id='assDiv'></div>";
 		$("#bodyDiv").html(str);
 
-		if (!this.pics.length)												// Nothing there
-			$("#picsBin").html("<br><i>&nbsp;&nbsp;None</i><br><br>");		// None
 		for (i=0;i<this.pics.length;++i) {									// For each pic
 			o=this.pics[i];													// Point at pic
 			str="<div class='pa-binItem' id='binPic-"+i+"'>";				// Div start
@@ -251,6 +251,7 @@
 				_this.ShowMetaData(id);										// Show metadata popup
 				});
 			}
+		$("#picsBin").append("&nbsp;<div id='addPics' class='pa-greenbs' style='vertical-align:42px'>Add</div>");
 
 		$("#addPics").on("click", function() {								// ON ADD CLICK
 			_this.AddPic();
@@ -272,8 +273,6 @@
 		str+="<tr><td>Description&nbsp;&nbsp;</td><td><textarea id='addDesc' type='text' class='pa-is' style='height:60px'></textarea></td></tr>";
 		str+="<tr><td>Link to website&nbsp;&nbsp;</td><td><input id='addLink' type='text' class='pa-is'>";
 		str+="<tr><td>NCSS era:</td><td>"+MakeSelect("addEra",false,this.ncssEras,this.era)+"</td></tr>";
-		str+="<tr><td colspan='2'><br><div id='addBut' class='pa-greenbs'>Add</div>&nbsp;&nbsp";
-		str+="<div id='cancelBut' class='pa-bs'>Done</div></td><tr>";
 		str+="</table></div>";												// End div
 		str+="<div style='display:inline-block;overflow:hidden;width:300px;max-height:180px;margin-left:32px;vertical-align:top'>";
 		str+="<img id='addImg' src='img/newpreppic.png' style='margin-bottom:8px;width:300px'></div>";
@@ -284,6 +283,10 @@
 			$("#addTitle").val(s.title);		$("#addDesc").val(s.desc);
 			$("#addLink").val(s.html);
 			});
+
+		str="<br><br><div id='addBut' class='pa-greenbs'>Add</div>&nbsp;&nbsp";
+		str+="<div id='cancelBut' class='pa-bs'>Done</div>";
+		$("#bodyDiv").append(str);											// Add to body
 		
 		$("#addBut").on("click", function() {								// ON ADD
 			var o={}
