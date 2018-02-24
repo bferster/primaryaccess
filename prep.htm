@@ -74,8 +74,8 @@
 		.pa-webpage	{ 		position: absolute; padding: 12px; border-radius: 6px; display: none; padding: 12px; height:auto; font-size: 14px; 
 							border: 1px solid #999; background-color:#eee; font-size: 11px; box-shadow: 4px 4px 12px 2px #aaa;
 							}
-		.pa-is {			border-radius:10px; padding-left: 8px; padding-right: 8px; padding-top: 1px;
-							border: 1px solid #999; font-size: 12px; height: 20px; width: 300px;
+		.pa-is {			border-radius:16px; padding-left: 8px; padding-right: 8px; padding-top: 1px;
+							border: 1px solid #999; font-size: 12px; height: 18px; width: 300px;
 							}
 		.pa-bs {			display: inline-block; border-radius: 10px; padding-left: 8px; padding-right: 8px; background-color:#ccc; color: #333;
 							border: 1px solid #999; font-size: 12px; height: 16px; cursor: pointer; width: 50px; text-align:center;
@@ -199,9 +199,22 @@
 // PROJECT
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	function CProject()														// PROJECT CONSTRUCTOR
+	function CProject()													// PROJECT CONSTRUCTOR
 	{
-		this.pics=[];
+		this.pics=[];														// Project pictures
+		this.ncssEras=[ "",													// NCSS eras
+			"1. Three Worlds Meet (Beginnings - 1620)",
+			"2. Colonization & Settlement (1585-1763)",
+			"3.	Revolution & the New Nation (1754-1820s)",
+			"4. Expansion and Reform (1801-1861)",
+			"5. Civil War & Reconstruction (1850-1877)",
+			"6. Development of Industrial US (1870-1900)",
+			"7. Emergence of Modern America (1890-1930)",
+			"8. The Great Depression & WW-II (1929-1945)",
+			"9.	Postwar US (1945 to early 1970s)",
+			"10. Contemporary US (1968 to the present)",
+			"11. The World" 
+			];
 	}
 
 	CProject.prototype.Draw=function() 									// UPDATE
@@ -215,6 +228,7 @@
 		str+="<tr><td>Title</td><td><input id='proTitle' class='pa-is'></input></td></tr>";
 		str+="<tr><td>Script/prompt</td><td><textarea id='proScript' class='pa-is' style='height:60px'></textarea></td></tr>";
 		str+="<tr><td>Allow new pics?&nbsp;&nbsp;</td><td><input type='checkbox' id='proAdd' checked></input></td></tr>";
+		str+="<tr><td>NCSS era:</td><td>"+MakeSelect("proEra",false,this.ncssEras,this.era)+"</td></tr>";
 		str+="<tr><td colspan='2' style='border-bottom:1px solid #ccc;padding-bottom:8px;'><br>Pictures</td></tr></table>";
 		str+="<img src='img/palogo.gif' style='width:250px;vertical-align:top;margin:40px 80px'>";
 		str+="<div id='picsBin'></div>";
@@ -237,6 +251,10 @@
 		$("#addPics").on("click", function() {								// ON ADD CLICK
 			_this.AddPic();
 			});
+
+		$("#proEra").on("change", function() {								// ON ERA CHANGE
+			_this.era=$(this).val();										// Set new era
+			});
 	}
 
 	CProject.prototype.AddPic=function() 								// ADD NEW PICTURE
@@ -249,19 +267,19 @@
 		str+="<tr><td>Picture url</td><td><input id='addUrl' type='text' class='pa-is'></td></tr>";
 		str+="<tr><td>Description&nbsp;&nbsp;</td><td><textarea id='addDesc' type='text' class='pa-is' style='height:60px'></textarea></td></tr>";
 		str+="<tr><td>Link to website&nbsp;&nbsp;</td><td><input id='addLink' type='text' class='pa-is'>";
+		str+="<tr><td>NCSS era:</td><td>"+MakeSelect("addEra",false,this.ncssEras,this.era)+"</td></tr>";
 		str+="<tr><td colspan='2'><br><div id='addBut' class='pa-greenbs'>Add</div>&nbsp;&nbsp";
 		str+="<div id='cancelBut' class='pa-bs'>Done</div></td><tr>";
 		str+="</table></div>";												// End div
-		str+="<div style='display:inline-block;overflow:hidden;width:200px;max-height:180px;margin-left:32px;vertical-align:top'>";
-		str+="<img id='addImg' src='img/newbinpic.png' style='margin-bottom:8px;width:200px'></div>";
-		$("#bodyDiv").html(str);	
-		picFind.ImportDialog(100, function(s) { 
-				$("#addImg").prop("src",s.ajax);					
-				$("#addUrl").val(s.ajax);	
-				$("#addTitle").val(s.title);
-				$("#addDesc").val(s.desc);
-				$("#addLink").val(s.html);
-				});
+		str+="<div style='display:inline-block;overflow:hidden;width:300px;max-height:180px;margin-left:32px;vertical-align:top'>";
+		str+="<img id='addImg' src='img/newpreppic.png' style='margin-bottom:8px;width:300px'></div>";
+		$("#bodyDiv").html(str);											// Add to body
+
+		picFind.ImportDialog(100, function(s) { 							// Add pix
+			$("#addImg").prop("src",s.ajax);	$("#addUrl").val(s.ajax);	
+			$("#addTitle").val(s.title);		$("#addDesc").val(s.desc);
+			$("#addLink").val(s.html);
+			});
 		
 		$("#addBut").on("click", function() {								// ON ADD
 			var o={}
@@ -269,13 +287,14 @@
 			o.title=$("#addTitle").val() ? $("#addTitle").val() : "";		// Add title
 			o.desc=$("#addDesc").val() ? $("#addDesc").val() : "";			// Add desc
 			o.link=$("#addLink").val() ? $("#addLink").val() : "";			// Add link
+			o.era=$("#addEra").val();										// Add NCSS era
 			if (!o.title && !o.src) { PopUp("Needs a title and a url",2000,"bodyDiv"); return; }	// Needs title and url
 			if (!o.title) { PopUp("Needs a title",2000,"bodyDiv"); return; }// Needs title 
 			if (!o.src) { PopUp("Needs a url",2000,"bodyDiv"); return; }	//  Needs url
 			_this.pics.push(o);												// Add to bin
 			PopUp("Picture added to assignment",2000,"bodyDiv"); 			// Added!
 			Sound("ding");													// Ding
-			$("#addImg").prop("src","img/newbinpic.png");					// Reset fields
+			$("#addImg").prop("src","img/newpreppic.png");					// Reset fields
 			$("#addUrl").val("");	
 			$("#addTitle").val("");
 			$("#addDesc").val("");
@@ -299,12 +318,12 @@
 
 	function MakeSelect(id, multi, items, sel, extra, values)				// CREATE HTML SELECT
 	{
-		var	str="<select class='pa-is' id='"+id+"'";							// Header
-		str+="style='width:auto'";
-		if (multi)																// Multi select
-			str+="multiple='multiple' size='"+multi+"'";						// Add flag
+		var	str="<select class='pa-is' id='"+id+"' ";							// Header
+		str+="style='width:auto;height:22px'";									// Size
 		if (extra)																// If extra param
 			str+=extra;															// Add them
+		if (multi)																// Multi select
+			str+="multiple='multiple' size='"+multi+"'";						// Add flag
 		str+=">";																// End header
 		for (i=0;i<items.length;++i) {											// For each option
 			str+="<option";														// Add tag

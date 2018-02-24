@@ -14,9 +14,23 @@ function CImageFind()																// CONSTRUCTOR
 	this.filterPlace="";															// No place filter
 	this.user="";																	// No user
 	this.type="Images";																// Start with Images
-	this.view="Grid";																// Start with grid
 	this.previewMode="";															// Mode of preview ( 'Preview', '')
 	this.curItem=-1;																// Currently selected item
+	this.era="";																	// Era
+	this.ncssEras=[ "Any",																// NCSS eras
+		"1. Three Worlds Meet (Beginnings - 1620)",
+		"2. Colonization & Settlement (1585-1763)",
+		"3.	Revolution & the New Nation (1754-1820s)",
+		"4. Expansion and Reform (1801-1861)",
+		"5. Civil War & Reconstruction (1850-1877)",
+		"6. Development of Industrial US (1870-1900)",
+		"7. Emergence of Modern America (1890-1930)",
+		"8. The Great Depression & WW-II (1929-1945)",
+		"9.	Postwar US (1945 to early 1970s)",
+		"10. Contemporary US (1968 to the present)",
+		"11. The World" 
+];
+
 }
 
 CImageFind.prototype.ImportDialog=function(maxDocs, callback, mode)				// IMPORTER DIALOG
@@ -25,15 +39,14 @@ CImageFind.prototype.ImportDialog=function(maxDocs, callback, mode)				// IMPORT
 	var _this=this;																	// Save context
 	this.maxDocs=maxDocs;															// Maximum docs to load
 	$("#dialogDiv").remove();														// Remove any dialogs
-	var collections=["Web","PrimaryAccess","Library of Congress","Wikimedia","Images"];		// Supported collections
-	var str="<hr style='margin-top:12px'><p style='text-align:right'>";
-	str+="<span style='float:left'>&nbsp;<i><span id='numItemsFound'>No</span> items found</i></span>";		// Number of items
-	str+="Search for: <input class='pa-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:150px;height:17px;vertical-align:0px'>";
+	var collections=["Web","PrimaryAccess","Library of Congress","Wikimedia","Images"];			// Supported collections
+	var str="<hr style='margin-top:12px'><p><span class='pa-bodyTitle'>Find pictures</span>";	// Title
+	str+="<span style='float:right'>";															// Hold controls
+	str+="Search for: <input class='pa-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:200px;height:17px;vertical-align:0px'>";
 	str+="&nbsp;&nbsp;From: "+MakeSelect("mdType",false,collections,this.type);
-	str+="</p><div id='mdAssets' class='pa-dialogResults'></div>";						// Scrollable container
-	str+="<br>View as: "+MakeSelect("mdView",false,["Grid","List"],this.view);
-	str+="&nbsp;&nbsp;&nbsp;NCSS standard: "+MakeSelect("mdView",false,["Grid","List"],this.view);
-	str+="&nbsp;&nbsp;&nbsp;Era: "+MakeSelect("mdView",false,["Grid","List"],this.view);
+	str+="</span></p><div id='mdAssets' class='pa-dialogResults'></div>";					// Scrollable container
+	str+="<br>Limit by NCSS era: "+MakeSelect("mdView",false,this.ncssEras,this.era);		// Add eras
+	str+="&nbsp;&nbsp;&nbsp;&nbsp;<i><span id='numItemsFound'>No</span> items found</i>";	// Number of items
 	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='pa-greenbs'>Get picture</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='pa-bs'>Cancel</div></div>";
 	$("#bodyDiv").append(str+"</div>");	
@@ -150,10 +163,7 @@ CImageFind.prototype.FormatItems=function(data, sortBy)							// SHOW ITEMS
 				});					
 		}
 	$("#numItemsFound").text(this.data.length);										// Show number of results
-	if (this.view == "List")														// If showing List
-		this.DrawAsList();															// Draw row view
-	else																			// Grid view
-		this.DrawAsGrid();															// Draw
+	this.DrawAsGrid();																// Draw
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
