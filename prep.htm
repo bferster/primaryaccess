@@ -246,9 +246,22 @@
 			str+="</div">+ShortenString(o.title,70);						// Add title
 			str+="</div>";													// Close div	
 			$("#picsBin").append(str);										// Add
+	
 			$("#binPic-"+i).on("click", function(e) {						// Add over handler
 				var id=e.currentTarget.id.substr(7);						// Get id
 				_this.ShowMetaData(id);										// Show metadata popup
+				});
+	
+			$("#binPic-"+i).draggable({										// Make it draggable, so to delete 
+				revert:true,												// Bounce back
+				stop: function(e,ui) {										// On stop
+					var id=e.target.id.substr(7);							// Get id
+					if (ui.position.left < -200) {							// Off the side
+						_this.pics.splice(id,1);							// Delete it
+						Sound("delete");									// Sound
+						Draw(curTab);										// Redraw
+						}
+					}	
 				});
 			}
 		$("#picsBin").append("&nbsp;<div id='addPics' class='pa-greenbs' style='vertical-align:42px'>Add</div>");
@@ -279,7 +292,7 @@
 		$("#bodyDiv").html(str);											// Add to body
 
 		picFind.ImportDialog(100, function(s) { 							// Add pix
-			$("#addImg").prop("src",s.ajax);	$("#addUrl").val(s.ajax);	
+			$("#addImg").prop("src",s.src);		$("#addUrl").val(s.scr);	
 			$("#addTitle").val(s.title);		$("#addDesc").val(s.desc);
 			$("#addLink").val(s.html);
 			});
@@ -359,7 +372,7 @@
 			return;															// Quit
 		var _this=this;														// Save context
 		var str="<div id='metaDiv' class='pa-meta'>";						// Add div
-		str+="<img id='zoomBut' src='img/zoomer.png' style='width:14px;cursor:pointer'>&nbsp;";	// Zoomer button
+		str+="<img id='zoomBut' src='img/zoomer.png' style='vertical-align:-3px;cursor:pointer'>&nbsp;&nbsp;";	// Zoomer button
 		str+="<img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer'>";
 		if (o.title)														// If a title
 			str+="<b>"+o.title+"</b><br><br>";								// Add it
