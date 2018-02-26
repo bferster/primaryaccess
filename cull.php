@@ -4,10 +4,13 @@ header('Expires: Sun, 01 Jul 2005 00:00:00 GMT');
 header('Pragma: no-cache'); 
 require_once('config.php');
 	
+	$num=300;
 	$id=$_GET['id'];												// Get ID
 	$i=$id=addEscapes($id);											// ID
-	$end=$id+1000;
-	for ($id=$i;$id<$end;$id++) {
+	if ($_GET['num'])												// If num				
+		$num=addEscapes($_GET['num']);								// Get num
+	$end=$id+$num;													// Set end
+	for ($id=$i;$id<$end;$id++) {									// For each record
 		$query="SELECT * FROM resource WHERE id = '$id'";			// Make query
 		$result=mysql_query($query);								// Run query
 		if (($result == false) || (!mysql_numrows($result)))		// Error

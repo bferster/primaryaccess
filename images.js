@@ -13,11 +13,11 @@ function CImageFind()																// CONSTRUCTOR
 	this.filterCollect="";															// No collection filter
 	this.filterPlace="";															// No place filter
 	this.user="";																	// No user
-	this.type="Images";																// Start with Images
+	this.type="PrimaryAccess";														// Start with PA
 	this.previewMode="";															// Mode of preview ( 'Preview', '')
 	this.curItem=-1;																// Currently selected item
-	this.era="";																	// Era
-	this.ncssEras=[ "Any",																// NCSS eras
+	this.era=0;																		// Era
+	this.ncssEras=[ "Any",															// NCSS eras
 		"1. Three Worlds Meet (Beginnings - 1620)",
 		"2. Colonization & Settlement (1585-1763)",
 		"3.	Revolution & the New Nation (1754-1820s)",
@@ -32,21 +32,21 @@ function CImageFind()																// CONSTRUCTOR
 		];
 }
 
-CImageFind.prototype.ImportDialog=function(maxDocs, callback, mode)				// IMPORTER DIALOG
+CImageFind.prototype.ImportDialog=function()				// IMPORTER DIALOG
 {
 	var i;
 	var _this=this;																	// Save context
-	this.maxDocs=maxDocs;															// Maximum docs to load
 	$("#dialogDiv").remove();														// Remove any dialogs
-	var collections=["Web","PrimaryAccess","Library of Congress","Wikimedia","Images"];			// Supported collections
+	var collections=["PrimaryAccess","Library of Congress","Wikimedia","Web"];// Supported collections
 	var str="<hr style='margin-top:12px'><p><span class='pa-bodyTitle'>Find pictures</span>";	// Title
-	str+="<span style='float:right'>";															// Hold controls
+	str+="&nbsp;&nbsp;&nbsp;&nbsp;<i>(<span id='numItemsFound'>No</span> items found)</i>"; 	// Number of items
+	str+="<span style='float:right'>";												// Hold controls
 	str+="Search for: <input class='pa-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:200px;height:17px;vertical-align:0px'>";
-	str+="&nbsp;&nbsp;From: "+MakeSelect("mdType",false,collections,this.type);					// From where
-	str+="</span></p><div id='mdAssets' class='pa-dialogResults'></div>";						// Scrollable container
-	str+="<br>Limit by NCSS era: "+MakeSelect("mdEra",false,this.ncssEras,this.era); 			// Add eras
-	str+="<i><span style='float:right'><span id='numItemsFound'>No</span> items found</i></span>"; // Number of items
-	$("#bodyDiv").append(str+"</div>");	
+	str+="&nbsp;&nbsp;From: "+MakeSelect("mdType",false,collections,this.type);		// From where
+	str+="</span></p><div id='mdAssets' class='pa-dialogResults'></div>";			// Scrollable container
+	str+="<br>Limit by NCSS era: "+MakeSelect("mdEra",false,this.ncssEras); 		// Add eras
+	$("#bodyDiv").append(str+"</div>");												// Add to body
+	if (this.era)	$("#mdEra")[0].selectedIndex=this.era;							// Set era
 	
 	LoadCollection();															// Load 1st collection
  	
@@ -64,17 +64,17 @@ CImageFind.prototype.ImportDialog=function(maxDocs, callback, mode)				// IMPORT
 			 LoadCollection();														// Load it
 			});
 	$("#mdEra").on("change", function() {											// ON CHANGE ERA
-			_this.era=$(this).val();												// Save era										
+			_this.era=$(this)[0].selectedIndex;										// Save era										
 			LoadCollection();														// Load it
 		});
 			
  	function LoadCollection() {													// LOAD COLLECTION FROM DB
-		var era=5
+		var era=CImageFindObj.era;													// Index of era
+		CImageFindObj.LoadingIcon(true,32,"mdAssets");								// Show loading icon
 		var url="//viseyes.org/pa/getresources.php";
-		if (CImageFindObj.filter && CImageFindObj.era) url="?q="+CImageFindObj.filter+"&era="+era;				// Q and era
+		if (CImageFindObj.filter && CImageFindObj.era) url+="?q="+CImageFindObj.filter+"&era="+era;	// Q and era
 		else if (CImageFindObj.filter) url+="?q="+CImageFindObj.filter;				// Q
 		else if (CImageFindObj.era) url+="?era="+era;								// Era
-
 		$.ajax( { url: url,  dataType: 'jsonp' });
 		}
 	}																					// End closure
@@ -104,7 +104,7 @@ CImageFind.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 		str+="<div class='pa-gridPic'>";											// Pic div start
 		if (o.src)																	// If a thumbnail defined
 			str+="<img src='"+o.src+"' width='100%'>";								// Add it
-		str+="</div><span style='color:#27ae60'>"+(i+1)+". </span>";				// Add pic num
+		str+="</div><span style='color:#27ae60'>"+(o.id)+". </span>";				// Add pic num
 		str+=this.ShortenString(o.title,70);										// Add title
 		str+="</div>";																// Close div	
 		}
@@ -119,13 +119,15 @@ CImageFind.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 CImageFind.prototype.Preview=function(num)												// PREVIEW RESULT
 {
 	var o=this.data[num];																// Point at item
-	if (o.src)																			// If a pic
+	if (o.src) {																		// If a pic
 		$("#addImg").prop("src",o.src);													// Show it
+		$("#zoomaddBut").css("display","inline-block");									// Show zoom button
+		}
 	$("#addUrl").val(o.src);															// Src
 	$("#addTitle").val(o.title);														// Title
 	$("#addDesc").val(o.desc);															// Desc
 	$("#addLink").val(o.html);															// Link
-	$("#addEra").val(this.era == "Any"? "" : this.era );								// Era
+	if (o.era)	$("#addEra")[0].selectedIndex=o.era;									// Set it
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -27,6 +27,8 @@
 							}
 		.pa-bodyTitle { 	color:#27ae60; font-weight: bold; font-size: 16px;
 							}
+		.pa-proTitle { 		color:#999; font-size: 13px;
+							}
 		.pa-greenbs {		border-radius: 16px; padding-left: 8px; padding-right: 8px; display: inline-block; height: 17px; padding-top: 1px;
 							font-size: 12px; background-color: #27ae5fb2; cursor: pointer; text-align: center; color:#fff; 
 							}
@@ -40,11 +42,11 @@
 							}
 		.pa-dialogDoneBut {	cursor: pointer; float: right;
 							} 
-		.pa-dialogResults { width: 100%px; height: 350px; overflow-y: auto; border-radius: 6px;
-							background-color :#f8f8f8; padding: 8px; border: 1px solid #999;
+		.pa-dialogResults { width: 100%px; height: 354px; overflow-y: auto; border-radius: 6px;
+							background-color :#fff; padding: 8px; border: 1px solid #999;
 							}
 		.pa-gridItem {		color: #666; padding: 8px;  border: 1px solid #47ae80; margin-right: 8px; margin-bottom: 8px; display: inline-block;
-							width: 190px; height: 154px; cursor: pointer; border-radius: 4px; overflow: hidden;
+							width: 190px; height: 154px; cursor: pointer; border-radius: 4px; overflow: hidden; background-color:#f8f8f8;
 							}
 		.pa-gridItem:hover{ background-color: #dee7f1;
 							}
@@ -97,7 +99,7 @@
 	</style>
 </head>
 <body>
-	<div id="mainDiv" class="pa-main">
+	<div id="mainDiv" class="pa-main unselectable">
 		<div id="tabsDiv" class="pa-tabs">
 			<div id="rosTabDiv" class="pa-tab unselectable">Classes</div>
 			<div id="proTabDiv" class="pa-tab unselectable">Assignments</div>
@@ -172,13 +174,8 @@
 		trace(123)
 	}
 
-	function ShowHelp()														//  SHOW HELP
+	function ShowHelp(page)												//  SHOW HELP
 	{
-		var h=$("#bodyDiv").height();										// Max height
-		var w=h*.772;															// Letter spect
-		str="<iframe src='https://docs.google.com/document/d/e/2PACX-1vQQlE8nxS33bkI5CY--daR1ibM-7q6B-GFrztW6cq9lN6FNztpA_b0nrQiV33krohd5O6dvyU1ibiGU/pub?embedded=true' "; 
-		str+="style='width:"+w+"px;height:"+h+"px;overflow-y:scroll;border:none;margin-left:-8px;'></iframe>";
-		$("#bodyDiv").html(str)
 	}
 
 
@@ -221,18 +218,19 @@
 	{
 		var i,o;
 		var _this=this;														// Context
-		var x=$("#bodyDiv").offset().left+560;
+		var x=$("#bodyDiv").offset().left+560;								// Left
 		var str="<p class='pa-bodyTitle'>Edit assignment";					// Title
-		str+="<img src='img/helpicon.gif'style='float:right;cursor:pointer' onclick='ShowHelp(\"draw\")'><hr></p>"; 
+		str+="<span class='pa-proTitle' id='proTitleTitle'>- New</span>";	// Add name
+		str+="<span style='float:right'>";
+		str+=MakeSelect("proOptions",false,["File options","New","Load","Save", "Save as...", "Delete"]);
+		str+="&nbsp;&nbsp;<img src='img/helpicon.gif' style='cursor:pointer;vertical-align:-5px' onclick='ShowHelp(\"ass\")'></span><hr></p>"; 
 		str+="<table style='display:inline-block;padding-bottom:8px'>";	
-		str+="<tr><td>Current&nbspassignment&nbsp;&nbsp;</td><td>"+MakeSelect("proSet",false,["Civil Rights","--------------------", "Create new", "Make a copy", "Delete"])+"</td></tr>";
-		str+="<tr><td>Title</td><td><input id='proTitle' class='pa-is'></input></td></tr>";
-		str+="<tr><td>Script</td><td><textarea id='proScript' class='pa-is' style='height:60px'></textarea></td></tr>";
-		str+="<tr><td>Allow&nbsp;new&nbsp;pics?&nbsp;&nbsp;</td><td><input type='checkbox' id='proAdd' checked></input></td></tr>";
-		str+="<tr><td>NCSS era:</td><td>"+MakeSelect("proEra",false,this.ncssEras,this.era)+"</td></tr>";
-		str+="<tr><td>Pictures</td><td><br><div style='display:inline-block' id='picsBin'></div></td></tr></table>";
-		str+="<img src='img/palogo.gif' style='position:fixed; width:250px;left:"+x+"px;top:150px'>";
-		str+="<br><hr>Search for&nbsp;&nbsp;<input id='proSearch' class='pa-is' style='width:200px'></input>&nbsp;&nbsp;in NCSS era&nbsp;&nbsp;";
+		str+="<tr><td>Title</td><td><input id='proTitle' class='pa-is'></input></td>";
+		str+="<td>&nbsp;&nbsp;&nbsp;&nbsp;NCSS era:</td><td>"+MakeSelect("proEra",false,this.ncssEras,this.era)+"</td></tr>";
+		str+="<tr><td>Script</td><td><textarea id='proScript' class='pa-is' style='height:40px'></textarea></td></td>";
+		str+="<td style='vertical-align:top'>&nbsp;&nbsp;&nbsp;&nbsp;Allow&nbsp;new&nbsp;pics?&nbsp;&nbsp;</td><td style='vertical-align:top'><input type='checkbox' id='proAdd' checked></input></td></tr>";
+		str+="<tr><td>Pictures&nbsp;&nbsp;</td><td><div style='display:inline-block;margin-top:4px' id='picsBin'></div></td></tr></table>";
+		str+="<hr style='margin-top:-8px'>Search for&nbsp;&nbsp;<input id='proSearch' class='pa-is' style='width:200px'></input>&nbsp;&nbsp;in NCSS era&nbsp;&nbsp;";
 		str+=MakeSelect("proEra",false,this.ncssEras,this.era);
 		str+="&nbsp;&nbsp;<div id='findAss' class='pa-greenbs' style='margin-top:6px'>Find assignment</div>";
 		str+="<div id='assDiv'></div>";
@@ -264,7 +262,7 @@
 					}	
 				});
 			}
-		$("#picsBin").append("&nbsp;<div id='addPics' class='pa-greenbs' style='vertical-align:42px'>Add</div>");
+		$("#picsBin").append("&nbsp;<div id='addPics' class='pa-greenbs' style='vertical-align:42px;margin-top:36px;'>Add</div>");
 
 		$("#addPics").on("click", function() {								// ON ADD CLICK
 			_this.AddPic();
@@ -287,20 +285,14 @@
 		str+="<tr><td>Link to website&nbsp;&nbsp;</td><td><input id='addLink' type='text' class='pa-is'>";
 		str+="<tr><td>NCSS era:</td><td>"+MakeSelect("addEra",false,this.ncssEras,this.era)+"</td></tr>";
 		str+="</table></div>";												// End div
-		str+="<div style='display:inline-block;overflow:hidden;width:300px;max-height:180px;margin-left:32px;vertical-align:top'>";
+		str+="<div style='display:inline-block;overflow:hidden;width:300px;max-height:165px;margin-left:32px;vertical-align:top'>";
 		str+="<img id='addImg' src='img/newpreppic.png' style='margin-bottom:8px;width:300px'></div>";
+		str+="<div style='float:right'><div id='addBut' class='pa-greenbs'>&nbsp;&nbsp;Add&nbsp;&nbsp;</div>&nbsp;&nbsp";
+		str+="<div id='cancelBut' class='pa-bs'>Done</div></div>";
+		str+="&nbsp;&nbsp;<img id='zoomaddBut' title='Show large' src='img/zoomer.png' style='vertical-align:top;cursor:pointer;display:none'>";	// Zoomer button
 		$("#bodyDiv").html(str);											// Add to body
+		picFind.ImportDialog() 												// Add pix finder
 
-		picFind.ImportDialog(100, function(s) { 							// Add pix
-			$("#addImg").prop("src",s.src);		$("#addUrl").val(s.scr);	
-			$("#addTitle").val(s.title);		$("#addDesc").val(s.desc);
-			$("#addLink").val(s.html);
-			});
-
-		str="<br><br><div id='addBut' class='pa-greenbs'>Add</div>&nbsp;&nbsp";
-		str+="<div id='cancelBut' class='pa-bs'>Done</div>";
-		$("#bodyDiv").append(str);											// Add to body
-		
 		$("#addBut").on("click", function() {								// ON ADD
 			var o={}
 			o.src=$("#addUrl").val() ? $("#addUrl").val() : "";				// Add src
@@ -314,6 +306,7 @@
 			_this.pics.push(o);												// Add to bin
 			PopUp("Picture added to assignment",2000,"bodyDiv"); 			// Added!
 			Sound("ding");													// Ding
+			$("#zoomaddBut").css("display","none");							// Hide zoom button
 			$("#addImg").prop("src","img/newpreppic.png");					// Reset fields
 			$("#addUrl").val("");	
 			$("#addTitle").val("");
@@ -327,35 +320,29 @@
 	
 		$("#addUrl").on("change", function() {								// ON IMAGE URL SET
 			$("#addImg").prop("src",$(this).val());							// Show it
+			$("#zoomaddBut").css("display","inline-block");					// Show zoom button
 			});
-	}
 
-	CProject.prototype.FillPicData=function(pic) 						// SET PIC DATA
-	{
-		$("#addImg").prop(pic.src ? pic.src : "");							// Set fields
-		$("#addUrl").val(pic.src ? pic.src : "");	
-		$("#addTitle").val(pic.title ? pic.title : "");
-		$("#addDesc").val(pic.desc ? pic.desc : "");
-		$("#addLink").val(pic.link ? pic.link : "");
-		$("#addEra").val(pic.era ? pic.era : "");									
-	}
+		$("#zoomaddBut").on("click", function() {							// ON ZOOM BUT
+			_this.ShowPic($("#addUrl").val(),$("#addTitle").val(),$("#addDesc").val());	// Show it
+		});
 
-	CProject.prototype.ShowPic=function(num) 							//	SHOW PIC
+}
+
+	CProject.prototype.ShowPic=function(src, title, desc, link) 		//	SHOW PIC
 	{
 		$("#pa-webpage").remove();											// Remove old image, if any
 		$("#metaDiv").remove();												// Kill metadata
-		var o=this.pics[num];												// Point at pic
 		var str="<div id='pa-webpage' class='pa-webpage' style='";			// Add div
 		var x=$("#bodyDiv").offset().left+22;								// Left edge
 		str+="width:"+($("#bodyDiv").width()-4);							// Width
 		str+="px;height:"+($("#bodyDiv").height()-22);						// Height
 		str+="px;top:60px;left:"+x+"px'>";									// Finish div
-		trace(str)
-		str+="<b>"+o.title+"</b><img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer'><br><br>"	// Add close button
-		str+="<div style='overflow-y:auto;height:calc(100% - 30px)'><img src='"+o.src+"' width='100%'>";	
-		if (o.desc)	{														// If a description
-			str+="<br><br>"+o.desc;											// Add it
-			if (o.link)														// If a link
+		str+="<b>"+title+"</b><img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer'><br><br>"	// Add close button
+		str+="<div style='overflow-y:auto;height:calc(100% - 30px)'><img src='"+src+"' width='100%'>";	
+		if (desc)	{														// If a description
+			str+="<br><br>"+desc;											// Add it
+			if (link)														// If a link
 				str+=" Click <a href=\""+o.link+"\" target=\"_blank\">here</a> for more information.";  // Add it
 			}
 		$("#bodyDiv").append("</div>"+str+"</div>");						// Add popup
@@ -372,7 +359,7 @@
 			return;															// Quit
 		var _this=this;														// Save context
 		var str="<div id='metaDiv' class='pa-meta'>";						// Add div
-		str+="<img id='zoomBut' src='img/zoomer.png' style='vertical-align:-3px;cursor:pointer'>&nbsp;&nbsp;";	// Zoomer button
+		str+="<img id='zoomBut' title='Show large' src='img/zoomer.png' style='vertical-align:-3px;cursor:pointer'>&nbsp;&nbsp;";	// Zoomer button
 		str+="<img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer'>";
 		if (o.title)														// If a title
 			str+="<b>"+o.title+"</b><br><br>";								// Add it
@@ -391,7 +378,7 @@
 		$("#metaArrow").css("left",Math.min(160+off,320)+"px");				// Position arrow
 			$("#metaDiv").offset({left:x,top:y});							// Position popup
 		$("#zoomBut").on("click", function() {								// Show image popup
-			_this.ShowPic(num);												// Show popup		
+			_this.ShowPic(o.src,o.title,o.desc,o.link);						// Show popup		
 			});
 		$("#pa-close").click(function() {									// Click of close but
 			 $("#metaDiv").remove(); 										// Remove  

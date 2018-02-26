@@ -7,6 +7,7 @@ require_once('config.php');
 	$q=addEscapes($_GET['q']);												
 	$era=addEscapes($_GET['era']);												
 	$query="SELECT * FROM resource WHERE ";							// Make query
+	$str="GetPaRes([";												// Function
 	if ($q) {														// If q spec'd
 		$query.="(title LIKE '%$q%' ";								
 		$query.="OR who LIKE '%$q%' OR what LIKE '%$q%')";
@@ -16,11 +17,8 @@ require_once('config.php');
 	if ($era)														// If era spec'd
 		$query.="era = '$era'";										// Match it
 	$result=mysql_query($query);									// Run query
-	if (($result == false) || (!mysql_numrows($result)))			// Error
-		print("Error");
-	else{															// Good result
+	if (($result != false) && (mysql_numrows($result)))	{			// No Error
 		$num=mysql_numrows($result);								// Get num rows
-		$str="GetPaRes([";											// Function
 		for ($i=0;$i<$num;$i++) {									// For each row
 			$str.="{id:\"".addEscapes(mysql_result($result,$i,"id"))."\",";			// Id
 			$str.="title:\"".addEscapes(mysql_result($result,$i,"title"))."\",";	// Title
@@ -34,9 +32,9 @@ require_once('config.php');
 			if ($i != $num-1)										// Not last one
 				$str.=",";											// Add comma
 			}
-		print($str."])");											// Print JSONP	
-		mysql_close();												// Close
 		}
+	print($str."])");												// Print JSONP	
+	mysql_close();													// Close
 
 	function addEscapes($str)									// ESCAPE ENTRIES
 	{
