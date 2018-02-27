@@ -81,7 +81,7 @@ CImageFind.prototype.ImportDialog=function()				// IMPORTER DIALOG
 			}
 		else if (CImageFindObj.type == "WikiMedia") {								// From  Wikimedia			
 			LoadingIcon(true,32,"mdAssets");										// Show loading icon
-			$.ajax( {   url: "//commons.wikimedia.org/w/api.php",
+			$.ajax( { url: "//commons.wikimedia.org/w/api.php",
 				jsonp: "callback", 	dataType: 'jsonp', 
 				data: { action: "query", list: "search", srsearch: "javascript",  format: "json",
 						gimlimit:300, redirects:1, generator:"images", prop:"imageinfo", iiprop:"url|mediatype",	
@@ -104,6 +104,10 @@ CImageFind.prototype.ImportDialog=function()				// IMPORTER DIALOG
 							}
 						}
 					GetPaRes(data);													// Add to viewer
+					},
+				error: function(res) {												// On error
+					trace(res)
+					LoadingIcon();													// Hide loading icon
 					}
 				});
 			}
@@ -112,16 +116,38 @@ CImageFind.prototype.ImportDialog=function()				// IMPORTER DIALOG
 				$("#mdAssets").html("Support coming soon...");						// Add results to panel
 				}
 			else if (CImageFindObj.type == "Library of Congress") {					// LOC
-				GetPaRes([]);														// Add to viewer
-				$("#mdAssets").html("Support coming soon...");						// Add results to panel
+				LoadingIcon(true,32,"mdAssets");									// Show loading icon
+				$.ajax( {   url: "https://www.loc.gov/photos?fo=json&c=300",
+					jsonp: "callback", 	dataType: 'jsonp', 
+					data: { q: CImageFindObj.filter },
+					xhrFields: { withCredentials: true },
+					success: function(res) {											// When loaded
+						var i,o,data=[];
+						for (i=0;i<res.results.length;++i) {							// For each result
+								p=res.results[i];										// Point a obj
+								if (!p.image_url)										// If no image
+									continue;											// Skip				
+								if (!p.image_url.length)								// If no image
+									continue;											// Skip				
+								o={desc:"", era:"", link:"", title:"No title",id:i};	// Shell
+								o.src=p.image_url[Math.max(0,p.image_url.length-1)];	// Get last
+								if (p.title)	o.title=p.title;						// Add title
+								if (p.url)		o.link=p.url;							// Add Link
+								data.push(o);											// Add to data
+								}
+							GetPaRes(data);												// Add to viewer
+							},
+						error: function(res) {											// On error
+							trace(res)
+							LoadingIcon();												// Hide loading icon
+							}
+					});
 				}
 			else if (CImageFindObj.type == "National Archives") {					// NARA
 				GetPaRes([]);														// Add to viewer
 				$("#mdAssets").html("Support coming soon...");						// Add results to panel
 				}
 			}			
-
-
 	}																					// End closure
 
 	function GetPaRes(data)															// HADLE JSONP AJAX LOAD
