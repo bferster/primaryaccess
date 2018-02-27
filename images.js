@@ -117,7 +117,7 @@ CImageFind.prototype.ImportDialog=function()				// IMPORTER DIALOG
 				}
 			else if (CImageFindObj.type == "Library of Congress") {					// LOC
 				LoadingIcon(true,32,"mdAssets");									// Show loading icon
-				$.ajax( {   url: "https://www.loc.gov/photos?fo=json&c=300",
+				$.ajax( { url: "https://www.loc.gov/photos?fo=json&c=300",
 					jsonp: "callback", 	dataType: 'jsonp', 
 					data: { q: CImageFindObj.filter },
 					xhrFields: { withCredentials: true },
@@ -144,8 +144,41 @@ CImageFind.prototype.ImportDialog=function()				// IMPORTER DIALOG
 					});
 				}
 			else if (CImageFindObj.type == "National Archives") {					// NARA
-				GetPaRes([]);														// Add to viewer
-				$("#mdAssets").html("Support coming soon...");						// Add results to panel
+				LoadingIcon(true,32,"mdAssets");									// Show loading icon
+				$.ajax( {   url: "//catalog.archives.gov/api/v1?resultTypes=item",
+					data: { q: CImageFindObj.filter },
+					jsonp: "callback", 	dataType: 'json', 
+					success: function(res) {										// When loaded
+						res=res.opaResponse.results.result;							// Point at results
+						var i,p,o,data=[];
+						for (i=0;i<res.length;++i) {								// For each result
+							if (!res[i].objects)									// No objects
+								continue;											// Skip				
+							p=res[i].objects.object									// Point a obj
+							if (!p)													// No object
+								continue;											// Skip				
+							if (!p.file)											// No file
+								continue;											// Skip				
+							if (!p.file["@url"])									// No pic										
+								continue;											// Skip				
+							if (!p.file["@url"].match(/jpg|jpeg|gif|png/i))			// Not right format									
+								continue;											// Skip				
+							if (p.technicalMetadata && (p.technicalMetadata.size > 1000000))	// Too big
+								continue;											// Skip				
+							o={desc:"", era:"", link:"", title:"No title",id:i};	// Shell
+							o.src=p.file["@url"];									// Get source
+							p=res[i];												// Point a obj
+							if (p.description && p.description.item && p.description.item.title) // If a title
+								o.title= p.description.item.title;					// Add title
+							data.push(o);											// Add to data
+							}
+						GetPaRes(data);												// Add to viewer
+						},
+						error: function(res) {										// Error
+							trace(res);
+							LoadingIcon();											// Hide loading icon
+							}
+						});
 				}
 			}			
 	}																					// End closure
