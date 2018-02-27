@@ -37,7 +37,7 @@ CImageFind.prototype.ImportDialog=function()				// IMPORTER DIALOG
 	var i;
 	var _this=this;																	// Save context
 	$("#dialogDiv").remove();														// Remove any dialogs
-	var collections=["PrimaryAccess","Library of Congress","Wikimedia","Web"];// Supported collections
+	var collections=["PrimaryAccess","Web","WikiMedia","Library of Congress", "National Archives"];// Supported collections
 	var str="<hr style='margin-top:12px'><p><span class='pa-bodyTitle'>Find pictures</span>";	// Title
 	str+="&nbsp;&nbsp;&nbsp;&nbsp;<i>(<span id='numItemsFound'>No</span> items found)</i>"; 	// Number of items
 	str+="<span style='float:right'>";												// Hold controls
@@ -68,21 +68,66 @@ CImageFind.prototype.ImportDialog=function()				// IMPORTER DIALOG
 			LoadCollection();														// Load it
 		});
 			
- 	function LoadCollection() {													// LOAD COLLECTION FROM DB
-		var era=CImageFindObj.era;													// Index of era
-		CImageFindObj.LoadingIcon(true,32,"mdAssets");								// Show loading icon
-		var url="//viseyes.org/pa/getresources.php";
-		if (CImageFindObj.filter && CImageFindObj.era) url+="?q="+CImageFindObj.filter+"&era="+era;	// Q and era
-		else if (CImageFindObj.filter) url+="?q="+CImageFindObj.filter;				// Q
-		else if (CImageFindObj.era) url+="?era="+era;								// Era
-		$.ajax( { url: url,  dataType: 'jsonp' });
-		}
+ 	function LoadCollection() {													// LOAD COLLECTION 
+
+		if (CImageFindObj.type == "PrimaryAccess") {								// From PA DB				
+			var era=CImageFindObj.era;												// Index of era
+			LoadingIcon(true,32,"mdAssets");										// Show loading icon
+			var url="//viseyes.org/pa/getresources.php";
+			if (CImageFindObj.filter && CImageFindObj.era) url+="?q="+CImageFindObj.filter+"&era="+era;	// Q and era
+			else if (CImageFindObj.filter) url+="?q="+CImageFindObj.filter;			// Q
+			else if (CImageFindObj.era) url+="?era="+era;							// Era
+			$.ajax( { url: url,  dataType: 'jsonp' });
+			}
+		else if (CImageFindObj.type == "WikiMedia") {								// From  Wikimedia			
+			LoadingIcon(true,32,"mdAssets");										// Show loading icon
+			$.ajax( {   url: "//commons.wikimedia.org/w/api.php",
+				jsonp: "callback", 	dataType: 'jsonp', 
+				data: { action: "query", list: "search", srsearch: "javascript",  format: "json",
+						gimlimit:300, redirects:1, generator:"images", prop:"imageinfo", iiprop:"url|mediatype",	
+						titles:CImageFindObj.filter
+						},
+				xhrFields: { withCredentials: true },
+				success: function(res) {											// When loaded
+					var i=0,o,u,data=[];
+					if (res && res.query && res.query.pages) {						// If valid
+						for (var p in res.query.pages)	{							// For each page
+							p=res.query.pages[p];									// Turn into actual pointer to obj
+							u=p.imageinfo[0];										// Point at URL section
+							if (u.mediatype != "BITMAP")							// In not a bitmap
+								continue;											// Ignore
+							o={desc:"", era:"", link:"", title:"No title",id:++i};	// Shell
+							if (p.title)											// If a title
+								o.title=p.title.match(/(?<=File:).+?(?=\.)/)[0];	// Strip
+							o.src=u.url;											// Set url
+							data.push(o);											// Add to arrat
+							}
+						}
+					GetPaRes(data);													// Add to viewer
+					}
+				});
+			}
+			else if (CImageFindObj.type == "Web") {									// Web
+				GetPaRes([]);														// Add to viewer
+				$("#mdAssets").html("Support coming soon...");						// Add results to panel
+				}
+			else if (CImageFindObj.type == "Library of Congress") {					// LOC
+				GetPaRes([]);														// Add to viewer
+				$("#mdAssets").html("Support coming soon...");						// Add results to panel
+				}
+			else if (CImageFindObj.type == "National Archives") {					// NARA
+				GetPaRes([]);														// Add to viewer
+				$("#mdAssets").html("Support coming soon...");						// Add results to panel
+				}
+			}			
+
+
 	}																					// End closure
 
 	function GetPaRes(data)															// HADLE JSONP AJAX LOAD
 	{
 		var i,o;
-		CImageFindObj.LoadingIcon(false);											// Hide loading icon
+		LoadingIcon(false);															// Hide loading icon
 		CImageFindObj.data=[];														// New results store 
 		for (i=0;i<data.length;++i) 												// For each doc returned
 			CImageFindObj.data.push(data[i]);										// Add result to array
@@ -105,7 +150,7 @@ CImageFind.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 		if (o.src)																	// If a thumbnail defined
 			str+="<img src='"+o.src+"' width='100%'>";								// Add it
 		str+="</div><span style='color:#27ae60'>"+(o.id)+". </span>";				// Add pic num
-		str+=this.ShortenString(o.title,70);										// Add title
+		str+=ShortenString(o.title,70);										// Add title
 		str+="</div>";																// Close div	
 		}
 	$("#mdAssets").html(str);														// Add results to panel
@@ -128,40 +173,4 @@ CImageFind.prototype.Preview=function(num)												// PREVIEW RESULT
 	$("#addDesc").val(o.desc);															// Desc
 	$("#addLink").val(o.html);															// Link
 	if (o.era)	$("#addEra")[0].selectedIndex=o.era;									// Set it
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// HELPERS
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-CImageFind.prototype.LoadingIcon=function(mode, size, container)					// SHOW/HIDE LOADING ICON		
-{
-	container=container ? "#"+container: "#bodyDiv";								// If no container spec'd, use dialog
-	if (!mode) {																	// If hiding
-		$("#sf-loadingIcon").remove();												// Remove it
-		return;																		// Quit
-		}
-	var str="<img src='img/loading.gif' width='"+size+"' ";							// Img
-	str+="id='sf-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
-	$(container).append(str);														// Add icon to container
-}
-
-CImageFind.prototype.Sound=function(sound, mute)									// PLAY SOUND
-{
-	var snd=new Audio();															// Init audio object
-	if (!snd.canPlayType("audio/mpeg") || (snd.canPlayType("audio/mpeg") == "maybe")) 
-		snd=new Audio("img/"+sound+".ogg");											// Use ogg
-	else	
-		snd=new Audio("img/"+sound+".mp3");											// Use mp3
-	if (!mute)	{																	// If not initing or muting	
-		snd.volume=50/100;															// Set volume
-		snd.play();																	// Play it
-		}
-	}
-
-CImageFind.prototype.ShortenString=function(str, len)								// SHORTEN A STRING TO LENGTH
-{
-	if (str && str.length > len)													// Too long
-		str=str.substr(0,(len-3)/2)+"..."+str.slice((len-3)/-2);					// Shorten	
-	return str;																		// Return string}
 }

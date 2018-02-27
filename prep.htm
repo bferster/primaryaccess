@@ -172,7 +172,32 @@
 	function gTest()
 	{
 		trace(123)
-	}
+		$.ajax( {   url: "//commons.wikimedia.org/w/api.php",
+			jsonp: "callback", 
+			dataType: 'jsonp', 
+			data: { action: "query", list: "search", srsearch: "javascript",  format: "json",
+					gimlimit:300, redirects:1, generator:"images", prop:"imageinfo", iiprop:"url|mediatype",	
+					titles:"Cat"
+					},
+			xhrFields: { withCredentials: true },
+			success: function(res) {
+				var o,u;
+				trace(res.query.pages)
+				if (res && res.query && res.query.pages) {
+					for  (var p in res.query.pages)	{
+						p=res.query.pages[p];	
+						u=p.imageinfo[0];
+						if (u.mediatype != "BITMAP")	
+							continue;
+						o={desc:"", era:"", link:"", title:"No title"};
+						if (p.title)	
+							o.title=p.title.match(/(?<=File:).+?(?=\.)/)[0];
+						o.src=u.url;
+						}
+					}
+				}
+			})
+}
 
 	function ShowHelp(page)												//  SHOW HELP
 	{
@@ -483,6 +508,39 @@
 			str=str.substr(0,(len-3)/2)+"..."+str.slice((len-3)/-2);			// Shorten	
 		return str;																// Return string
 	}
+
+	function SetCookie(cname, cvalue, exdays)								// SET COOKIE
+	{
+		var d=new Date();
+		d.setTime(d.getTime()+(exdays*24*60*60*1000));
+		var expires = "expires="+d.toGMTString();
+		document.cookie = cname + "=" + cvalue + "; " + expires;
+	}
+	
+	function GetCookie(cname) 												// GET COOKIE
+		{
+		var name=cname+"=",c;
+		var ca=document.cookie.split(';');
+		for (var i=0;i<ca.length;i++)  {
+		  c=ca[i].trim();
+		  if (c.indexOf(name) == 0) 
+		  	return c.substring(name.length,c.length);
+		  }
+		return "";
+	}
+
+function LoadingIcon(mode, size, container)										// SHOW/HIDE LOADING ICON		
+{
+	container=container ? "#"+container: "#bodyDiv";								// If no container spec'd, use dialog
+	if (!mode) {																	// If hiding
+		$("#sf-loadingIcon").remove();												// Remove it
+		return;																		// Quit
+		}
+	var str="<img src='img/loading.gif' width='"+size+"' ";							// Img
+	str+="id='sf-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
+	$(container).append(str);														// Add icon to container
+}
+
 
 </script>
 
