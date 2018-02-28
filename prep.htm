@@ -9,6 +9,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 	<script src="lib/jquery.ui.touch-punch.min.js"></script>
 	<script src="images.js"></script>
+	<script src="qfile.js"></script>
 	<style type="text/css">
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
 							padding: 0; margin: 0px;
@@ -117,12 +118,15 @@
 	var projects=null;														// Holds projects module
 	var pictures=null;														// Holds pictures module
 	var picFind=null;														// Hold pic search module
+	var qmf=null;															// QFile system
+	var curUser="";															// Current user
 
 	$(document).ready(function() {								        // ON PAGE LOADED
 		isMobile=navigator.platform.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag id ios
 		if (!isMobile)														// Check for Android
 			isMobile=navigator.userAgent.match(/android/i) ? true : false; 	// Set mobile flag
 		var url=window.location.search.substring(1);					 	// Get query string
+		qmf=new QmediaFile("//viseyes.org/pa/",1);							// Alloc file system
 		roster=new CRoster();												// Alloc CRoster module
 		projects=new CProject();											// Alloc CProject module
 		picFind=new CImageFind();											// Alloc CImageFind module
@@ -172,7 +176,6 @@
 	function gTest()
 	{
 		trace(123)
-	ConfirmBox("You sure?")
 		$.ajax( {   url: "//catalog.archives.gov/api/v1?resultTypes=item&q=army",
 				jsonp: "callback", 	dataType: 'json', 
 				success: function(res) {											// When loaded
@@ -233,7 +236,9 @@
 
 	function CProject()													// PROJECT CONSTRUCTOR
 	{
+		this.curShow=0;														// Current show
 		this.pics=[];														// Project pictures
+		this.era=0;	this.title="";	this.script=""; this.allow=0;			// Defaults
 		this.ncssEras=[ "",													// NCSS eras
 			"1. Three Worlds Meet (Beginnings - 1620)",
 			"2. Colonization & Settlement (1585-1763)",
@@ -253,17 +258,18 @@
 	{
 		var i,o;
 		var _this=this;														// Context
+		var title=this.curShow ? " - "+this.curShow : " - New";				// Show number
 		var x=$("#bodyDiv").offset().left+560;								// Left
 		var str="<p class='pa-bodyTitle'>Edit assignment";					// Title
-		str+="<span class='pa-proTitle' id='proTitleTitle'>- New</span>";	// Add name
+		str+="<span class='pa-proTitle' id='proTitleTitle'>"+title+"</span>"; // Add show name
 		str+="<span style='float:right'>";
 		str+=MakeSelect("proOptions",false,["File options","New","Load","Save"]);
 		str+="&nbsp;&nbsp;<img src='img/helpicon.gif' style='cursor:pointer;vertical-align:-5px' onclick='ShowHelp(\"assign\")'></span><hr></p>"; 
 		str+="<table style='display:inline-block;padding-bottom:8px'>";	
-		str+="<tr><td>Title</td><td><input id='proTitle' class='pa-is'></input></td>";
+		str+="<tr><td>Title</td><td><input id='proTitle' class='pa-is' value='"+this.title+"'></input></td>";
 		str+="<td>&nbsp;&nbsp;&nbsp;&nbsp;NCSS era:</td><td>"+MakeSelect("proEra",false,this.ncssEras,this.era)+"</td></tr>";
-		str+="<tr><td>Script</td><td><textarea id='proScript' class='pa-is' style='height:40px'></textarea></td></td>";
-		str+="<td style='vertical-align:top'>&nbsp;&nbsp;&nbsp;&nbsp;Allow&nbsp;new&nbsp;pics?&nbsp;&nbsp;</td><td style='vertical-align:top'><input type='checkbox' id='proAdd' checked></input></td></tr>";
+		str+="<tr><td>Script</td><td><textarea id='proScript' class='pa-is' style='height:40px'>"+this.script+"</textarea></td></td>";
+		str+="<td style='vertical-align:top'>&nbsp;&nbsp;&nbsp;&nbsp;Allow&nbsp;new&nbsp;pics?&nbsp;&nbsp;</td><td style='vertical-align:top'><input type='checkbox' id='proAllow'"+(this.allow ? 'checked' : "")+"></input></td></tr>";
 		str+="<tr><td>Pictures&nbsp;&nbsp;</td><td colspan='3'><div style='display:inline-block;margin-top:4px' id='picsBin'></div></td></tr></table>";
 		str+="<hr style='margin-top:-8px'>Search for&nbsp;&nbsp;<input id='proSearch' class='pa-is' style='width:200px'></input>&nbsp;&nbsp;in NCSS era&nbsp;&nbsp;";
 		str+=MakeSelect("proEra",false,this.ncssEras,this.era);
@@ -303,10 +309,46 @@
 			_this.AddPic();
 			});
 
-		$("#proEra").on("change", function() {								// ON ERA CHANGE
-			_this.era=$(this).val();										// Set new era
+		$("#proTitle").on("change", function() {							// ON TITLE CHANGE
+			_this.title=$(this).val();										// Set 
 			});
-		}
+		
+		$("#proScript").on("change keyup paste", function() {				// ON SCRIPT CHANGE
+			_this.script=$(this).val();										// Set 
+			});
+
+		$("#proEra").on("change", function() {								// ON ERA CHANGE
+			_this.era=$(this).val();										// Set
+			});
+
+		$("#proAllow").on("click", function() {								// ON ALLOW CLICK
+			_this.allow=$(this).prop("checked") ? 1 : 0;					// Set
+			});
+		
+		$("#proOptions").on("change", function() {							// ON OPTIONS CHANGE
+			var opt=$(this).val();											// Current option
+			if (opt == "Load")												// Load new show
+				ConfirmBox(function() {										// Confirm 
+					qmf.Load();												// Load
+					});
+			$(this).val("File options");									// Restore  pulldown
+			});
+	}
+
+	function LoadShow(data) 												// GET DATA FROM LOAD SHOW
+	{
+		var o=data;																// Point at data
+		if (o && o.qmfmsg && o.qmfmsg == "error") {								// Error loading
+			PopUp("<p style='color:#990000'><b>Couldn't load project!</b></p>",3000); // Popup warning
+			return;																// Quit
+			}
+		projects.script=data.script;											// Get script
+		projects.title=data.title;												// Title
+		projects.pics=data.binPics;												// Pics
+		projects.allow=data.allow ? 1 : 0;										// Allow
+		projects.curShow=qmf.curFile;											// Cur show
+		projects.Draw();														// Redraw
+	}
 
 	CProject.prototype.AddPic=function() 								// ADD NEW PICTURE
 	{
@@ -363,8 +405,7 @@
 		$("#zoomaddBut").on("click", function() {							// ON ZOOM BUT
 			_this.ShowPic($("#addUrl").val(),$("#addTitle").val(),$("#addDesc").val());	// Show it
 		});
-
-}
+	}
 
 	CProject.prototype.ShowPic=function(src, title, desc, link) 		//	SHOW PIC
 	{
@@ -426,7 +467,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 	function MakeSelect(id, multi, items, sel, extra, values)				// CREATE HTML SELECT
 	{
