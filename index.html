@@ -1194,7 +1194,7 @@
 		DialogBox("Add new picture",str,x,y,500, function() {				// Run dialog			
 			var o={};
 			doc.Do();														// Save a do
-			o.src=$("#addUrl").val() ? $("#addUrl").val() : "";				// Add src
+			o.src=$("#addUrl").val() ? ConvertFromGoogleDrive($("#addUrl").val()) : "";	 // Add src
 			o.title=$("#addTitle").val() ? $("#addTitle").val() : "";		// Add title
 			o.desc=$("#addDesc").val() ? $("#addDesc").val() : "";			// Add desc
 			o.link=$("#addLink").val() ? $("#addLink").val() : "";			// Add link

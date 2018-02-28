@@ -264,7 +264,7 @@
 		str+="<td>&nbsp;&nbsp;&nbsp;&nbsp;NCSS era:</td><td>"+MakeSelect("proEra",false,this.ncssEras,this.era)+"</td></tr>";
 		str+="<tr><td>Script</td><td><textarea id='proScript' class='pa-is' style='height:40px'></textarea></td></td>";
 		str+="<td style='vertical-align:top'>&nbsp;&nbsp;&nbsp;&nbsp;Allow&nbsp;new&nbsp;pics?&nbsp;&nbsp;</td><td style='vertical-align:top'><input type='checkbox' id='proAdd' checked></input></td></tr>";
-		str+="<tr><td>Pictures&nbsp;&nbsp;</td><td><div style='display:inline-block;margin-top:4px' id='picsBin'></div></td></tr></table>";
+		str+="<tr><td>Pictures&nbsp;&nbsp;</td><td colspan='3'><div style='display:inline-block;margin-top:4px' id='picsBin'></div></td></tr></table>";
 		str+="<hr style='margin-top:-8px'>Search for&nbsp;&nbsp;<input id='proSearch' class='pa-is' style='width:200px'></input>&nbsp;&nbsp;in NCSS era&nbsp;&nbsp;";
 		str+=MakeSelect("proEra",false,this.ncssEras,this.era);
 		str+="&nbsp;&nbsp;<div id='findAss' class='pa-greenbs' style='margin-top:6px'>Find assignment</div>";
@@ -331,7 +331,7 @@
 
 		$("#addBut").on("click", function() {								// ON ADD
 			var o={}
-			o.src=$("#addUrl").val() ? $("#addUrl").val() : "";				// Add src
+			o.src=$("#addUrl").val() ?  ConvertFromGoogleDrive($("#addUrl").val()) : ""; // Add src
 			o.title=$("#addTitle").val() ? $("#addTitle").val() : "";		// Add title
 			o.desc=$("#addDesc").val() ? $("#addDesc").val() : "";			// Add desc
 			o.link=$("#addLink").val() ? $("#addLink").val() : "";			// Add link
@@ -573,6 +573,18 @@
 				$("#popupDiv").remove();											// Kill div
 				Sound("delete");													// Delete sound
 			});
+	}
+
+	function ConvertFromGoogleDrive(url)									// CONVERT GOOGLE DRIVE LINK TO DIRECT LINK
+	{
+		if (url && url.match(/drive\.google/i)) {								// A google drive image
+			var id=url.match(/\?id=(.+)/i);										// Extract id
+			if (!id)															// Nothing there
+				id=url.match(/\/d\/(.*?)\//);									// Try this way
+			if (id)																// An id found
+				url="//drive.google.com/uc?export=view&id="+id[1];				// Construct 'direct' link
+			}
+		return url;																// Return link
 	}
 
 </script>
