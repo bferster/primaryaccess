@@ -92,8 +92,6 @@
 	QmediaFile.prototype.SaveFile=function(email, password) 				//	SAVE A FILE FROM DB
 	{
 		var dat={};
-		
-		trace(email,password)
 		var url=this.host+"saveshow.php";										// Base file
 		if ($("#saveNew").prop("checked"))										// Save as
 			this.curFile="";													// Force saving to a new file
@@ -209,8 +207,6 @@
 		$("body").append(str);														
 		var	width=500;
 		var x=$("#lightBoxDiv").width()/2-250;
-		if (this.version == 1) 
-			x=Math.max(x,950)
 		var y=$("#lightBoxDiv").height()/2-200;
 		if (this.xPos != undefined)
 			x=this.xPos;

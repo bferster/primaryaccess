@@ -1324,16 +1324,18 @@
 			}
 		if (json == "civil") 
 			o=$.parseJSON('{"script":"In the 1954 Brown v. Board of Education decision, segregated schools were declared unconstitutional. This landmark decision sparked the modern Civil Rights movement. Led by Martin Luther King Jr., blacks engaged in a series of nonviolent protests throughout the southern United States.","title":"Civil Rights","audioRate":100,"pitch":100,"voice":0,"mp3":"http://www.stagetools.com/primaryaccess/narration.mp3","binPics":[{"src":"//stagetools.com/primaryaccess/Test.jpg","title":"Martin Luther King at Civil rights march","date":"1963","desc":"Martin Luther King delivers his &quot;I have a dream&quot; speech at the Lincoln Memorial","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"},{"src":"//stagetools.com/primaryaccess/Test2.jpg","title":"Rosa Parks sitting on bus","date":"1955","desc":"Rosa Parks prompted outcry when she sat in the front of the bus.","link":"//teacher.scholastic.com/rosa"},{"src":"//stagetools.com/primaryaccess/Test10.jpg","title":"Brown vs. Board of Education","date":"1954","desc":"George E.C. Hayes, Thurgood Marshall, and James Nabrit, congratulating each other, following Supreme Court decision declaring segregation unconstitutional.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#09c"},{"src":"//stagetools.com/primaryaccess/Test3.jpg","title":"The Little Rock Nine","date":"1957","desc":"After the 1954 Brown school-desegregation decision, Little Rock school board officials decided to begin desegregation.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test4.jpg","title":"The Little Rock Nine letter - Page 1","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test5.jpg","title":"The Little Rock Nine letter - Page 2","date":"1957","desc":"Letter from Daisy Bates to Roy Wilkins.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test6.jpg","title":"Greensboro Lunch Counter Sit-in","date":"1960","desc":"Ronald Martin, Robert Patterson, and Mark Martin stage sit-down strike after being refused service at an F.W. Woolworth luncheon counter, Greensboro, NC.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0909"},{"src":"//stagetools.com/primaryaccess/Test7.jpg","title":"Roger Wilkins, head of NAACP","date":"1957","desc":"Wilkins was excecutive secretary of the NAACP during the Little Rock Nine timeframe.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9.html#0918"},{"src":"//stagetools.com/primaryaccess/Test8.jpg","title":"Civil rights march on Washington","date":"1963","desc":"The August 28, 1963, March on Washington riveted the nation&apos;s attention. Rather than the anticipated hundred thousand marchers, more than twice that number appeared, astonishing even its organizers.","link":"//memory.loc.gov/ammem/aaohtml/exhibit/aopart9b.html#0913-0914"}],"scriptPics":[]}');
-				this.changed=false;														// No unsaved changes
+		this.changed=false;														// No unsaved changes
 		$("#scriptTextDiv").text(o.script);										// Get script text 
 		o.script=o.script.replace(/~/g,"<br>");									// Replace CRs
-		$("#titleDiv").text(o.title);											// Get title text 
-		player.voice=o.voice;													// Get audio mode
-		player.audioRate=o.audioRate;											// Get rate multiplier
-		player.pitch=o.pitch;													// Get TTS pitch
-		player.mp3=o.mp3;														// Get audio file
+		$("#titleDiv").text(o.title ? o.title : "");							// Get title text 
+		player.voice=o.voice ? o.voice : 0;										// Get audio mode
+		player.audioRate=o.audioRate ? o.audioRate : 100;						// Get rate multiplier
+		player.pitch=o.pitch ? o.pitch : 100;									// Get TTS pitch
+		player.mp3=o.mp3 ? o.mp3 : "";											// Get audio file
 		bin.pics=$.parseJSON(JSON.stringify(o.binPics));						// Clone bin pics
+		trace(o.scriptPics)
 		script.pics=$.parseJSON(JSON.stringify(o.scriptPics));					// Clone script pics
+	trace(3)
 		ResizePanes();															// Redraw
 	}
 	

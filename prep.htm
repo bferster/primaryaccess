@@ -119,7 +119,7 @@
 	var pictures=null;														// Holds pictures module
 	var picFind=null;														// Hold pic search module
 	var qmf=null;															// QFile system
-	var curUser="";															// Current user
+	var curJson={};															// To save show
 
 	$(document).ready(function() {								        // ON PAGE LOADED
 		isMobile=navigator.platform.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag id ios
@@ -236,9 +236,8 @@
 
 	function CProject()													// PROJECT CONSTRUCTOR
 	{
-		this.curShow=0;														// Current show
 		this.pics=[];														// Project pictures
-		this.era=0;	this.title="";	this.script=""; this.allow=0;			// Defaults
+		this.era=0;	this.title="";	this.script=""; this.allow=1;			// Defaults
 		this.ncssEras=[ "",													// NCSS eras
 			"1. Three Worlds Meet (Beginnings - 1620)",
 			"2. Colonization & Settlement (1585-1763)",
@@ -258,7 +257,7 @@
 	{
 		var i,o;
 		var _this=this;														// Context
-		var title=this.curShow ? " - "+this.curShow : " - New";				// Show number
+		var title=qmf.curFile ? " - "+this.curFile : " - New";				// Show number
 		var x=$("#bodyDiv").offset().left+560;								// Left
 		var str="<p class='pa-bodyTitle'>Edit assignment";					// Title
 		str+="<span class='pa-proTitle' id='proTitleTitle'>"+title+"</span>"; // Add show name
@@ -327,10 +326,26 @@
 		
 		$("#proOptions").on("change", function() {							// ON OPTIONS CHANGE
 			var opt=$(this).val();											// Current option
-			if (opt == "Load")												// Load new show
+			if (opt == "New") 												// New show
+				ConfirmBox(function() {										// Confirm 
+					_this.pics=[];		_this.era=0;	_this.title="";		// Defaults
+					_this.script=""; 	_this.allow=1;			
+					_this.Draw();		qmf.curFile=0;
+					});
+			else if (opt == "Load")											// Load show
 				ConfirmBox(function() {										// Confirm 
 					qmf.Load();												// Load
 					});
+			else if (opt == "Save")	{										// Save show
+				curJson={};													// Clear
+				curJson.script=_this.script;								// Get  script 
+				curJson.title=_this.title;									// Get title 
+				curJson.era=_this.era;										// Get era 
+				curJson.binPics=$.parseJSON(JSON.stringify(_this.pics)); 	// Clone pics
+				curJson.scriptPics=[];										// Empty
+				curJson.allow=_this.allow;									// Allow
+				qmf.Save();													// Save
+			}
 			$(this).val("File options");									// Restore  pulldown
 			});
 	}
@@ -344,9 +359,9 @@
 			}
 		projects.script=data.script;											// Get script
 		projects.title=data.title;												// Title
+		projects.era=data.era;													// Era
 		projects.pics=data.binPics;												// Pics
 		projects.allow=data.allow ? 1 : 0;										// Allow
-		projects.curShow=qmf.curFile;											// Cur show
 		projects.Draw();														// Redraw
 	}
 
@@ -626,6 +641,16 @@
 			}
 		return url;																// Return link
 	}
+
+	function AddEscapes(str) 												// ESCAPE TEXT STRING
+	{	
+		if (str) {																// If a string
+			str=""+str;															// Force as string
+			str=str.replace(/"/g,"\\\"");										// " to \"
+			str=str.replace(/'/g,"\\\'");										// ' to \'
+			}
+		return str;																// Return escaped string
+		}
 
 </script>
 

@@ -16,6 +16,7 @@ require_once('config.php');
 		$query.=" AND ";											// Add AND
 	if ($era)														// If era spec'd
 		$query.="era = '$era'";										// Match it
+	$query.=" LIMIT 1000";											// Limit
 	$result=mysql_query($query);									// Run query
 	if (($result != false) && (mysql_numrows($result)))	{			// No Error
 		$num=mysql_numrows($result);								// Get num rows
