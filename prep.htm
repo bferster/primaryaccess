@@ -101,8 +101,8 @@
 <body>
 	<div id="mainDiv" class="pa-main unselectable">
 		<div id="tabsDiv" class="pa-tabs">
-			<div id="rosTabDiv" class="pa-tab unselectable">Classes</div>
 			<div id="proTabDiv" class="pa-tab unselectable">Assignments</div>
+			<div id="rosTabDiv" class="pa-tab unselectable">Classes</div>
 		</div>
 	<div id="bodyDiv" class="pa-body"></div>
 	</div>
@@ -112,7 +112,7 @@
 
 	var isMobile=false;														// Is a mobile platform
 	var noSplash=(window.location.host == "localhost") ? true : false;		// Splash screen inhibitor
-	var curTab="ros";														// Start on roster
+	var curTab="pro";														// Start on assignments
 	var roster=null;														// Holds roster module
 	var projects=null;														// Holds projects module
 	var pictures=null;														// Holds pictures module
@@ -172,6 +172,7 @@
 	function gTest()
 	{
 		trace(123)
+	ConfirmBox("You sure?")
 		$.ajax( {   url: "//catalog.archives.gov/api/v1?resultTypes=item&q=army",
 				jsonp: "callback", 	dataType: 'json', 
 				success: function(res) {											// When loaded
@@ -209,6 +210,7 @@
 
 	function ShowHelp(page)												//  SHOW HELP
 	{
+		window.open("https://docs.google.com/document/d/1ANNWAcTvQ6e9ZlyQUBrd_WvYSEOZCVeCDLCogQiul_E/edit?usp=sharing"+page,"_blank");
 	}
 
 
@@ -255,8 +257,8 @@
 		var str="<p class='pa-bodyTitle'>Edit assignment";					// Title
 		str+="<span class='pa-proTitle' id='proTitleTitle'>- New</span>";	// Add name
 		str+="<span style='float:right'>";
-		str+=MakeSelect("proOptions",false,["File options","New","Load","Save", "Delete"]);
-		str+="&nbsp;&nbsp;<img src='img/helpicon.gif' style='cursor:pointer;vertical-align:-5px' onclick='ShowHelp(\"ass\")'></span><hr></p>"; 
+		str+=MakeSelect("proOptions",false,["File options","New","Load","Save"]);
+		str+="&nbsp;&nbsp;<img src='img/helpicon.gif' style='cursor:pointer;vertical-align:-5px' onclick='ShowHelp(\"assign\")'></span><hr></p>"; 
 		str+="<table style='display:inline-block;padding-bottom:8px'>";	
 		str+="<tr><td>Title</td><td><input id='proTitle' class='pa-is'></input></td>";
 		str+="<td>&nbsp;&nbsp;&nbsp;&nbsp;NCSS era:</td><td>"+MakeSelect("proEra",false,this.ncssEras,this.era)+"</td></tr>";
@@ -310,6 +312,7 @@
 	{
 		var _this=this;														// Save context
 		var str="<p class='pa-bodyTitle'>Add picture to assignment";		// Title
+		str+="<span class='pa-proTitle' id='addSubTitle'> - (has "+this.pics.length+" pictures)</span>";	// Add # pics
 		str+="<img src='img/helpicon.gif'style='float:right;cursor:pointer' onclick='ShowHelp(\"addpic\")'><hr></p>"; 
 		str+="<div style='display:inline-block'><table>";					// Info div/table
 		str+="<tr><td>Picture title</td><td><input id='addTitle' type='text' class='pa-is'</td></tr>";
@@ -337,6 +340,7 @@
 			if (!o.title) { PopUp("Needs a title",2000,"bodyDiv"); return; }// Needs title 
 			if (!o.src) { PopUp("Needs a url",2000,"bodyDiv"); return; }	//  Needs url
 			_this.pics.push(o);												// Add to bin
+			$("#addSubTitle").text(" - (has "+_this.pics.length+" pictures)"); // Show num pics
 			PopUp("Picture added to assignment",2000,"bodyDiv"); 			// Added!
 			Sound("ding");													// Ding
 			$("#zoomaddBut").css("display","none");							// Hide zoom button
@@ -537,18 +541,39 @@
 		return "";
 	}
 
-function LoadingIcon(mode, size, container)										// SHOW/HIDE LOADING ICON		
-{
-	container=container ? "#"+container: "#bodyDiv";								// If no container spec'd, use dialog
-	if (!mode) {																	// If hiding
-		$("#sf-loadingIcon").remove();												// Remove it
-		return;																		// Quit
-		}
-	var str="<img src='img/loading.gif' width='"+size+"' ";							// Img
-	str+="id='sf-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
-	$(container).append(str);														// Add icon to container
-}
+	function LoadingIcon(mode, size, container)									// SHOW/HIDE LOADING ICON		
+	{
+		container=container ? "#"+container: "#bodyDiv";							// If no container spec'd, use dialog
+		if (!mode) {																// If hiding
+			$("#sf-loadingIcon").remove();											// Remove it
+			return;																	// Quit
+			}
+		var str="<img src='img/loading.gif' width='"+size+"' ";						// Img
+		str+="id='sf-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
+		$(container).append(str);														// Add icon to container
+	}
 
+	function ConfirmBox(callback)												// CONFIRMATION BOX
+	{
+		Sound("ding");																// Ding sound
+		$("#popupDiv").remove();													// Kill old one, if any
+		var str="<div id='popupDiv' class='pa-popup' style='width:250px'>"; 		// Add div
+		str+="<br><span class='pa-bodyTitle'>Are you sure?</span>"; 				// Add content
+		str+="<br><br><div id='confirmOK' class='pa-greenbs'>OK</div>&nbsp;&nbsp;";	// OK
+		str+="<div id='confirmCancel' class='pa-bs'>Cancel</div><br><br></div>";	// Cancel
+		$("body").append(str);														// Add popup to div or body
+		$("#popupDiv").fadeIn(500);													// Animate in and out		
+
+		$("#confirmOK").on("click", function() {									// ON OK BUT
+				$("#popupDiv").remove();											// Kill div
+				if (callback)	callback();											// If callback defines, run it
+				});
+
+		$("#confirmCancel").on("click", function() {								// ON cancel BUT
+				$("#popupDiv").remove();											// Kill div
+				Sound("delete");													// Delete sound
+			});
+	}
 
 </script>
 
