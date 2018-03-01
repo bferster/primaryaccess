@@ -32,7 +32,7 @@
 							border: 2px solid #999;
 							}
 		.pa-scriptText {	display: inline-block; width: calc(100% - 240px); vertical-align: top;
-							padding: 16px; font-size: 24px; line-height: 175%; height:100%
+							padding: 16px; font-size: 24px; line-height: 175%;
 							}
 		.pa-scriptText:focus{ outline:none;	
 							}
@@ -120,7 +120,7 @@
 		<div id="scriptDiv" class="pa-script">
 			<div id="titleDiv" contenteditable="true" class="pa-titleEdit"></div>
 			<div id="scriptPixDiv" class="pa-scriptPix"></div>	
-			<div id="scriptDivider" style="position:absolute;background-color:#99cc99;;width:6px;height:calc(100% - 200px);top:20px;left:160px;border-radius:4px;"></div>	
+			<div id="scriptDivider" style="position:absolute;background-color:#99cc99;;width:6px;top:20px;left:160px;border-radius:4px;"></div>	
 			<div id="scriptTextDiv" contenteditable="true" class="pa-scriptText"></div>		
 		</div>	
 		<div id="binDiv" class="pa-bin">
@@ -235,18 +235,11 @@
 		player=new CPlayer();												// Alloc CPlayer module
 		qmf=new QmediaFile("//viseyes.org/pa/",0);							// Alloc file system
 		if (url) { 															// A doc set
-			if (url.length == 8) {											// An assignemnt		
+			if (url.length == 9) {											// An assignemnt key		
 				doc.assigned=url;											// Save assigned id
-				url=doc.DecodeKey(url);										// Make id
-				if (!url) {													// No id extracted
-					doc.assigned="";										// Null assigned id
-					Sound("delete");										// Delete sound
-					PopUp("<p style='color:#990000'><b>Sorry, wrong key!</b></p>Please make sure you are using the key<br>your teacher assigned you.",5000); // Popup warning
-					}
-				else
-					qmf.LoadFile("123"+url,false);							// Load and set id, padded
+				qmf.LoadFile("123"+url,false);								// Load and set id, padded
 				}
-			else{
+			else{															// Numbered load
 				if (!url.match(/\*/)) 										// Full screen flag
 					isFullScreen=2;											// Starting full										
 				qmf.LoadFile("123"+url,true);								// Load, but don't set id, padded
@@ -299,13 +292,16 @@
 	function Draw()														//  RE DRAW SCREEN
 	{
 		if (script) script.Draw();											// Redraw script
-		if (bin)	bin.Draw();												// Redraw bin
+		if (bin) {
+			bin.Draw();														// Redraw bin
+			}
 		if (player)	{														// If player ready
-			if (doc.assigned) {
-				$("#picOptions option[value='loadShow']").remove();			// Remove option from menu
-				if (bin.noPicLoad)											// If adding new pix is inhibited		
-					$("#picOptions option[value='addNewPic']").remove();	// Remove option from menu
-				}
+			if (doc.allowNewPics == 0)										// If adding new pix is inhibited		
+				$("#picOptions option[value='addNewPic']").hide();			// Remove option from menu
+			else															// All it
+				$("#picOptions option[value='addNewPic']").show();			// Restore option from menu
+				if (doc.assigned)
+				$("#picOptions option[value='loadShow']").hide();			// Remove option from menu
 			player.InitAudio();												// Init audio
 			player.Draw();													// Redraw player
 			}
@@ -328,7 +324,7 @@
 		$("#soundOptions").css({ left:(pw+60)+"px",top:oh+"px" });			// Set option					
 		var x=$("#sliderBarDiv").offset().left-8;							// Set left
 		var y=$("#sliderBarDiv").offset().top+10;							// Set top
-		$("#scriptDivider").css({ "margin-top": th, height: $("#scriptTextDiv").height()+16+"px" });
+		$("#scriptDivider").css({ "margin-top": th, height: $("#scriptTextDiv").height()-16+"px" });
 		$("#sliderDiv").offset({ left:x,top:y });							// Set slider						
 		if ('ontouchstart' in document.documentElement) {					// Touch screens don't show scroll bars, so add a button
 			if (Math.abs($("#binPixDiv")[0].scrollWidth-$("#binPixDiv").outerWidth()) > 5) 	// If it can scroll
@@ -857,8 +853,13 @@
 				$("#scriptPic-"+(_this.pics.length-1)).trigger("click");	// Set as current
 				}
 			});
+		
+		$("#scriptTextDiv").on("focus",function() {							// ON SCRIPT FOCUS
+			var txt=$("#scriptTextDiv").html();								// Get script html
+			$("#scriptTextDiv").html(txt.replace(/<span.+">|<\/span>/g,""));// Remove spans
+			});
 
-		$("#scriptTextDiv")[0].addEventListener('input', function() {		// ON SCRIPT CHANGE
+		$("#scriptTextDiv").on("change keyup paste", function() {			// ON SCRIPT CHANGE
 			_this.ResizeImageArea();										// Equilibrate fields
 			player.maxTime=$("#scriptTextDiv").text().length*player.speechRate; // Set max time
 			$("#endTime").text(SecondsToTimecode(Math.round(player.maxTime)));// End display
@@ -1071,7 +1072,6 @@
 		$("#binDiv").disableSelection();									// Inhibit selection
 		this.pics=[];														// Alloc pics array
 		this.Draw();														// Show bin
-		this.noPicLoad=false;												// Don't inhibit pic loading
 
 		$("#binLeftBut").on("click", function() {							// Mobile scroll left
 			$("#metaDiv").remove();											// Kill popup
@@ -1260,16 +1260,15 @@
 		this.lastScriptLength=0;												// Script length
 		this.maxUndos=20;														// Max undos stored
 		this.assigned="";														// Not assigned
+		this.allowNewPics=1;													// Don't inhibit pic loading
 	}
 
 	CDoc.prototype.DecodeKey=function(key)									// DECODE KEY INTO ID & SET PIC ADD MODE
 	{
 		if (!key)								return null;					// No key
-		if (!key.match(/\d\d\d\d\d\d\d[3|4]/))	return null;					// No signature match (8 chars, last is '3' or '4')
 		var id=""+key;															// Copy key as string
-		bin.noPicLoad=(id.charAt(7) == '3') ? true : false;						// Set picture loading restruction (3 is inhibit)
 		var nn=id.charAt(0);													// Get shift order
-		id=id.substr(1,id.length-2);											// Trim mode and order
+		id=id.substr(3);														// Trim mode and order
 		while (nn-- > 0) 														// For each shift
 			id=id.substr(1,5)+id.charAt(0);										// Shift-left
 		return(id-0);															// Return id as an int
@@ -1293,7 +1292,6 @@
 		Sound("ding");															// Ding
 		PopUp("Undid last action",1000);										// Popup
 		Draw();																	// Redraw project							
-		trace(this.undos,this.curUndo)
 	}
 
 	CDoc.prototype.Serialize=function() 									//	SERIALIZE PROJECT INTO JSON OBJECT
@@ -1333,9 +1331,7 @@
 		player.pitch=o.pitch ? o.pitch : 100;									// Get TTS pitch
 		player.mp3=o.mp3 ? o.mp3 : "";											// Get audio file
 		bin.pics=$.parseJSON(JSON.stringify(o.binPics));						// Clone bin pics
-		trace(o.scriptPics)
 		script.pics=$.parseJSON(JSON.stringify(o.scriptPics));					// Clone script pics
-	trace(3)
 		ResizePanes();															// Redraw
 	}
 	
@@ -1372,10 +1368,14 @@
 	function LoadShow(data) 												// GET DATA FROM LOAD SHOW
 	{
 		doc.LoadJSON(data);														// Load show
+		doc.allowNewPics=1;														// Assume we're allowing new pics
+		if (data.allow != undefined)	doc.allowNewPics=data.allow;			// Set pic allow
+		if (data.newId != undefined)	qmf.curFile=data.newId;					// If an id set, use it
 		curJson=JSON.stringify(data);											// Turn data inrto JSON
 		curJson.replace(/\\'/g,"'");											// Unescape '
 		curJson.replace(/\\"/g,'"');											// Unescape "
 		curJson.scriptPics=$.parseJSON(curJson);								// Re-objectify
+		Draw();																	// Redraw
 	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1513,20 +1513,20 @@
 		{
 	
 
-		var iid=48;
-		var key=EncodeKey(iid,3);
-		trace(iid,key)
-		trace(133,doc.DecodeKey(key))
+		var key=EncodeKey(49,33);
+		trace(49,key)
+		trace(doc.DecodeKey(key))
 
-		function EncodeKey(id, mode)										// ENCODE ID INTO KEY
+		function EncodeKey(id, student)										// ENCODE ID INTO KEY
 		{
 			var nn;
 			var key=""+id;														// Copy id as string
-			while (key.length < 6) key="0"+key;									// At least 6 digits
+			while ((""+key).length < 6) 	   	key="0"+key;					// At least 6 digits
+			while ((""+student).length < 2) 	student="0"+student;			// At least 2 digits
 			var ord=nn=Math.floor(Math.random()*5)+1;							// Get order strategy 1-5
 			while (nn-- > 0) 													// For each shift
 				key=key.charAt(5)+key.substr(0,5);								// Shift-right
-			key=ord+key+mode;													// Add order and mode
+			key=""+ord+student+key;											// Make into key
 			return key;															// Return key
 		}
 

@@ -176,40 +176,7 @@
 	function gTest()
 	{
 		trace(123)
-		$.ajax( {   url: "//catalog.archives.gov/api/v1?resultTypes=item&q=army",
-				jsonp: "callback", 	dataType: 'json', 
-				success: function(res) {											// When loaded
-					res=res.opaResponse.results.result;								// Point at results
-					var i,p,o,data=[];
-					for (i=0;i<res.length;++i) {									// For each result
-						if (!res[i].objects)										// No objects
-							continue;												// Skip				
-						p=res[i].objects.object										// Point a obj
-						if (!p)														// No object
-							continue;												// Skip				
-						if (!p.file)												// No file
-							continue;												// Skip				
-						if (!p.file["@url"])										// No pic										
-							continue;												// Skip				
-						if (!p.file["@url"].match(/jpg|jpeg|gif|png/i))				// Not right format									
-							continue;												// Skip				
-						if (p.technicalMetadata && (p.technicalMetadata.size > 1000000))	// Too big
-							continue;												// Skip				
-						o={desc:"", era:"", link:"", title:"No title",id:i};		// Shell
-						o.src=p.file["@url"];										// Get source
-						p=res[i];													// Point a obj
-						if (p.description && p.description.item && p.description.item.title) // If a title
-							o.title= p.description.item.title;						// Add title
-						data.push(o);												// Add to data
-						
-					}
-	trace(data)
-					},
-				error: function(res) {											// Error
-					trace(res);
-					}
-				});
-}
+	}
 
 	function ShowHelp(page)												//  SHOW HELP
 	{
@@ -227,7 +194,7 @@
 
 	CRoster.prototype.Draw=function() 										// UPDATE 
 	{
-		$("#bodyDiv").html("Roster")
+		$("#bodyDiv").html("<br>You will be able to manage classes,<br>and assign projects to students here.")
 	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -241,13 +208,13 @@
 		this.ncssEras=[ "",													// NCSS eras
 			"1. Three Worlds Meet (Beginnings - 1620)",
 			"2. Colonization & Settlement (1585-1763)",
-			"3.	Revolution & the New Nation (1754-1820s)",
+			"3. Revolution & the New Nation (1754-1820s)",
 			"4. Expansion and Reform (1801-1861)",
 			"5. Civil War & Reconstruction (1850-1877)",
 			"6. Development of Industrial US (1870-1900)",
 			"7. Emergence of Modern America (1890-1930)",
 			"8. The Great Depression & WW-II (1929-1945)",
-			"9.	Postwar US (1945 to early 1970s)",
+			"9. Postwar US (1945 to early 1970s)",
 			"10. Contemporary US (1968 to the present)",
 			"11. The World" 
 			];
@@ -257,7 +224,7 @@
 	{
 		var i,o;
 		var _this=this;														// Context
-		var title=qmf.curFile ? " - "+this.curFile : " - New";				// Show number
+		var title=qmf.curFile ? " - "+qmf.curFile : " - New";				// Show number
 		var x=$("#bodyDiv").offset().left+560;								// Left
 		var str="<p class='pa-bodyTitle'>Edit assignment";					// Title
 		str+="<span class='pa-proTitle' id='proTitleTitle'>"+title+"</span>"; // Add show name
@@ -340,7 +307,10 @@
 				curJson={};													// Clear
 				curJson.script=_this.script;								// Get  script 
 				curJson.title=_this.title;									// Get title 
-				curJson.era=_this.era;										// Get era 
+				for (var i=0;i<_this.ncssEras.length;++i) {					// For each era
+					if (_this.ncssEras[i] == _this.era)						// Match				
+						curJson.era=i;										// Set era index
+					}
 				curJson.binPics=$.parseJSON(JSON.stringify(_this.pics)); 	// Clone pics
 				curJson.scriptPics=[];										// Empty
 				curJson.allow=_this.allow;									// Allow
@@ -359,7 +329,8 @@
 			}
 		projects.script=data.script;											// Get script
 		projects.title=data.title;												// Title
-		projects.era=data.era;													// Era
+		if (data.era != undefined)												// If era set
+			projects.era=projects.ncssEras[data.era];							// Era
 		projects.pics=data.binPics;												// Pics
 		projects.allow=data.allow ? 1 : 0;										// Allow
 		projects.Draw();														// Redraw

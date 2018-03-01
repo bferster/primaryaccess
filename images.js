@@ -20,16 +20,16 @@ function CImageFind()																// CONSTRUCTOR
 	this.ncssEras=[ "Any",															// NCSS eras
 		"1. Three Worlds Meet (Beginnings - 1620)",
 		"2. Colonization & Settlement (1585-1763)",
-		"3.	Revolution & the New Nation (1754-1820s)",
+		"3. Revolution & the New Nation (1754-1820s)",
 		"4. Expansion and Reform (1801-1861)",
 		"5. Civil War & Reconstruction (1850-1877)",
 		"6. Development of Industrial US (1870-1900)",
 		"7. Emergence of Modern America (1890-1930)",
 		"8. The Great Depression & WW-II (1929-1945)",
-		"9.	Postwar US (1945 to early 1970s)",
+		"9. Postwar US (1945 to early 1970s)",
 		"10. Contemporary US (1968 to the present)",
 		"11. The World" 
-		];
+	];
 }
 
 CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG

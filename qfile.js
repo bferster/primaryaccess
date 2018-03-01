@@ -137,6 +137,8 @@
 		$("#lightBoxDiv").remove();												// Close
 		var url=this.host+"loadshow.php";										// Base file
 		url+="?id="+id;															// Add id
+		if ((""+id.length) == 9)												// A key
+			id=doc.DecodeKey(id);												// Get real id
 		if (!dontSetId)															// Unless told otherwise
 			this.curFile=id;													// Set as current file
 		$.ajax({ url:url, dataType:'jsonp'});									// Get data and pass to LoadProject() in Edit
