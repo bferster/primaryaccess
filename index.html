@@ -242,6 +242,8 @@
 			else{															// Numbered load
 				if (!url.match(/\*/)) 										// Full screen flag
 					isFullScreen=2;											// Starting full										
+				else
+					url=url.substr(0,url.length-1);							// Remove *
 				qmf.LoadFile("123"+url,true);								// Load, but don't set id, padded
 				}
 			}	
