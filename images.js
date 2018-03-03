@@ -316,7 +316,7 @@ CImageFind.prototype.GetFlickrImage=function(callback)							// GET FLICKR IMAGE
 		str+="border-radius:8px 0 0 8px;background-color:#f8f8f8'>";			// Scrollable container
 		str+="<dl id='setTable' style='font-size:13px;margin-top:2px;margin-bottom:2px'>";		// Add table
 		str+="<dt><b>Choose album:<br><br></b></dt><dt></dt></dl></div>";		// Add header
-		str+="<div id='picGal' style='display:inline-block;border-radius: 0 8px 8px 0;width:664px;height:290px;overflow-y:auto;background-color:#fff;padding:12px;border:1px solid #999'></div>";		// Scrollable container
+		str+="<div id='picGal' style='display:inline-block;border-radius: 0 8px 8px 0;width:660px;height:290px;overflow-y:auto;background-color:#fff;padding:12px;border:1px solid #999'></div>";		// Scrollable container
 		$("#mdAssets").html(str);												// Add results to panel
 
 		$("#getBut").on("click",function() {									// ON GET CONTENT BUTTON
