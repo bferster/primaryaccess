@@ -4,9 +4,10 @@
 
 var CImageFindObj=null;																// Points at object
 
-function CImageFind()																// CONSTRUCTOR
+function CImageFind(div)														// CONSTRUCTOR
 {
 	CImageFindObj=this;																// Save pointer to obj
+	this.div=div;																	// Container div
 	this.rawData=null;																// Holds raw search results
 	this.data=null;																	// Folds formatted search results
 	this.filter="";																	// No filter
@@ -37,7 +38,7 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 	var i;
 	var _this=this;																	// Save context
 	$("#dialogDiv").remove();														// Remove any dialogs
-	var collections=["PrimaryAccess","WikiMedia","Library of Congress", "National Archives", "Cooper Hewitt Museum", "Flickr"];// Supported collections
+	var collections=["PrimaryAccess","WikiMedia","Library of Congress", "National Archives", "Cooper-Hewitt Museum", "Harvard Art", "Flickr"];// Supported collections
 	var str="<hr style='margin-top:12px'><p><span class='pa-bodyTitle'>Find pictures</span>";	// Title
 	str+="&nbsp;&nbsp;&nbsp;&nbsp;<i>(<span id='numItemsFound'>No</span> items found)</i>"; 	// Number of items
 	str+="<span style='float:right'>";												// Hold controls
@@ -45,7 +46,7 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 	str+="&nbsp;&nbsp;From: "+MakeSelect("mdType",false,collections,this.type);		// From where
 	str+="</span></p><div id='mdAssets' class='pa-dialogResults'></div>";			// Scrollable container
 	str+="<br><span id='useEra'>Limit by NCSS era: "+MakeSelect("mdEra",false,this.ncssEras)+"</span>"; 		// Add eras
-	$("#bodyDiv").append(str+"</div>");												// Add to body
+	$("#"+this.div).append(str+"</div>");											// Add to container
 	if (this.era)	$("#mdEra")[0].selectedIndex=this.era;							// Set era
 	this.LoadCollection();															// Load 1st collection
  	
@@ -185,7 +186,7 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 							}
 						});
 				}
-			else if (this.type == "Cooper Hewitt Museum") {							// COOPER HEWITT MUSEUM
+			else if (this.type == "Cooper-Hewitt Museum") {							// COOPER-HEWITT MUSEUM
 				$.ajax( { url: "//api.collection.cooperhewitt.org/rest",
 					jsonp: "callback", 	dataType: 'jsonp', 
 					data: { access_token:"a07c5bf33b26e047cd5eb1ad1734f16d",
@@ -194,7 +195,7 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 							query:this.filter
 							},
 						success: function(res) {										// When loaded
-							var i,p,data=[];
+								var i,p,data=[];
 							if (res && res.objects) {									// If valid
 								for (i=0;i<res.objects.length;++i) {					// For each object
 									p=res.objects[i];									// Point at it
@@ -202,13 +203,14 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 									if (p.title)		o.title=p.title;				// Set title
 									if (p.description)	o.desc=p.description;			// Set desc
 									if (p.url)			o.link=p.url;					// Set link
+									if (!p.images)		continue;						// No images
 									p=p.images[0];										// Point at primary image
-									if (p.b)			o.src=p.b.url;					// Set scr to biggesrt 1st
+									if (p.b)			o.src=p.b.url;					// Set scr to biggest 1st
 									else if (p.n)		o.src=p.n.url;					// Set scr
 									else 				continue;						// Don't add if no image
 									data.push(o);										// Add to data
 									}
-									GetPaRes(data);										// Add to viewer
+								GetPaRes(data);											// Add to viewer
 								}
 							},
 						error: function(res) {											// On error
@@ -217,8 +219,36 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 							}
 					});
 				}
-		}			
-																					// End closure
+			else if (this.type == "Harvard Art") {									// HAVARD ART
+				$.ajax( { url: "//api.harvardartmuseums.org/object",
+					data: { apikey:"d0c70200-1ee4-11e8-a3db-659c806f7a23",
+						"hasimage":1,
+						title:this.filter
+						},
+					success: function(res) {											// When loaded
+						var i,p,data=[];
+						if (res && res.records) {										// If valid
+							for (i=0;i<res.records.length;++i) {						// For each object
+								p=res.records[i];										// Point at it
+								o={desc:"", era:"", link:"", title:"No title",id:i};	// Shell
+								if (p.description)	o.desc=p.description;				// Set desc
+								if (p.title)		o.title=p.title;					// Set title
+								if (p.url)			o.link=p.url;						// Set link
+								if (p.primaryimageurl) o.src=p.primaryimageurl+"?width=1024";	// Get url
+								else				continue;							// No image
+								data.push(o);											// Add to data
+								}
+							GetPaRes(data);												// Add to viewer
+							}
+					},
+				error: function(res) {													// On error
+					trace(res)	
+					LoadingIcon();														// Hide loading icon
+					}
+				});
+			}
+	}																					// End closure
+																					
 	function GetPaRes(data)															// HADLE JSONP AJAX LOAD
 	{
 		var i,o;
