@@ -101,7 +101,7 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 								continue;											// Ignore
 							o={desc:"", era:"", link:"", title:"No title",id:++i};	// Shell
 							if (p.title)											// If a title
-								o.title=p.title.match(/(?<=File:).+?(?=\.)/)[0];	// Strip
+								o.title=p.title.substring(5,p.title.length-4);		// Strip File: && ext
 							o.src=u.url;											// Set url
 							data.push(o);											// Add to arrat
 							}
