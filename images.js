@@ -37,7 +37,7 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 	var i;
 	var _this=this;																	// Save context
 	$("#dialogDiv").remove();														// Remove any dialogs
-	var collections=["PrimaryAccess","WikiMedia","Library of Congress", "National Archives", "Flickr"];// Supported collections
+	var collections=["PrimaryAccess","WikiMedia","Library of Congress", "National Archives", "Cooper Hewitt Museum", "Flickr"];// Supported collections
 	var str="<hr style='margin-top:12px'><p><span class='pa-bodyTitle'>Find pictures</span>";	// Title
 	str+="&nbsp;&nbsp;&nbsp;&nbsp;<i>(<span id='numItemsFound'>No</span> items found)</i>"; 	// Number of items
 	str+="<span style='float:right'>";												// Hold controls
@@ -185,7 +185,39 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 							}
 						});
 				}
-	}			
+			else if (this.type == "Cooper Hewitt Museum") {							// COOPER HEWITT MUSEUM
+				$.ajax( { url: "//api.collection.cooperhewitt.org/rest",
+					jsonp: "callback", 	dataType: 'jsonp', 
+					data: { access_token:"a07c5bf33b26e047cd5eb1ad1734f16d",
+							method:"cooperhewitt.search.objects",
+							has_images:"true", page:1, per_page:300, format:"jsonp",
+							query:this.filter
+							},
+						success: function(res) {										// When loaded
+							var i,p,data=[];
+							if (res && res.objects) {									// If valid
+								for (i=0;i<res.objects.length;++i) {					// For each object
+									p=res.objects[i];									// Point at it
+									o={desc:"", era:"", link:"", title:"No title",id:i};// Shell
+									if (p.title)		o.title=p.title;				// Set title
+									if (p.description)	o.desc=p.description;			// Set desc
+									if (p.url)			o.link=p.url;					// Set link
+									p=p.images[0];										// Point at primary image
+									if (p.b)			o.src=p.b.url;					// Set scr to biggesrt 1st
+									else if (p.n)		o.src=p.n.url;					// Set scr
+									else 				continue;						// Don't add if no image
+									data.push(o);										// Add to data
+									}
+									GetPaRes(data);										// Add to viewer
+								}
+							},
+						error: function(res) {											// On error
+							trace(res)
+							LoadingIcon();												// Hide loading icon
+							}
+					});
+				}
+		}			
 																					// End closure
 	function GetPaRes(data)															// HADLE JSONP AJAX LOAD
 	{
@@ -390,3 +422,5 @@ CImageFind.prototype.GetFlickrImage=function(callback)							// GET FLICKR IMAGE
 				}});															// Ajax get sizes end
 	  	}
 	}																			// End closure function
+
+
