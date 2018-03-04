@@ -9,6 +9,7 @@
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 	<script src="lib/jquery.ui.touch-punch.min.js"></script>
+	<script src="images.js"></script>
 	<script src="qfile.js"></script>
 	<style type="text/css">
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
@@ -86,7 +87,22 @@
 		.pa-meta {			position: absolute;  width: 320px; padding: 16px; border-radius: 8px; font-size: 14px;
 							background-color: #eee; border: 1px solid #999; box-shadow: -4px -4px 12px 2px #aaa;
 							}
-		
+
+		/* FINDPIC  --------------------------------------------------------------------------------------------------*/
+	
+		.pa-dialogResults { width: 100%px; height: 354px; overflow-y: auto; border-radius: 6px;
+							background-color :#fff; padding: 8px; border: 1px solid #999;
+							}
+		.pa-gridItem {		color: #666; padding: 8px;  border: 1px solid #47ae80; margin-right: 8px; margin-bottom: 8px; display: inline-block;
+							width: 190px; height: 154px; cursor: pointer; border-radius: 4px; overflow: hidden; background-color:#f8f8f8;
+							}
+		.pa-gridItem:hover{ background-color: #dee7f1;
+							}
+		.pa-gridPic {		width: 100%; height: 100px; overflow: hidden; margin-bottom: 6px;
+							}
+		.pa-bodyTitle { 	color:#27ae60; font-weight: bold; font-size: 16px;
+							}
+
 		/* MISC --------------------------------------------------------------------------------------------------*/
 	
 		.pa-splash			{ position:absolute; left: calc(50% - 182px); top:  calc(40% - 51px);
@@ -102,6 +118,9 @@
 							}
 		.pa-bs {			display: inline-block; border-radius: 10px; padding-left: 8px; padding-right: 8px; background-color:#ccc; color: #333;
 							border: 1px solid #999; font-size: 12px; height: 16px; cursor: pointer; width: 50px; text-align:center;
+							}
+		.pa-greenbs {		border-radius: 16px; padding-left: 8px; padding-right: 8px; display: inline-block; height: 17px; padding-top: 1px;
+							font-size: 12px; background-color: #27ae5fb2; cursor: pointer; text-align: center; color:#fff; 
 							}
 		.pa-ok {			display:inline-block; border-radius: 20px; height: 18px; width: 22px; cursor: pointer;
 							border: 1px solid #666; color: #666; font-size: 10px; padding-top: 4px;
@@ -216,6 +235,7 @@
 	var bin=null;															// CBin
 	var script=null;														// CScript
 	var player=null;														// CPplayer
+	var findPic=null;														// Image finder
 	var qmf=null;															// QFile system
 	var isMobile=false;														// Is a mobile platform
 	var isFullScreen=0;														// Is it full screen?
@@ -233,6 +253,7 @@
 		bin=new CBin();														// Alloc CBin module
 		script=new CScript();												// Alloc CScript module
 		player=new CPlayer();												// Alloc CPlayer module
+		picFind=new CImageFind("dialogDiv");										// Alloc CImageFind module
 		qmf=new QmediaFile("//viseyes.org/pa/",0);							// Alloc file system
 		if (url) { 															// A doc set
 			if (url.length == 9) {											// An assignemnt key		
@@ -1192,7 +1213,7 @@
 		str+="</table></div>";														// End div
 		str+="<div style='display:inline-block;overflow:hidden;width:160px;margin-left:32px;vertical-align:top'>";
 		str+="<img id='addImg' src='img/newbinpic.png' style='width:100%'></div>";
-			
+		str+="<div id='findPic' class='pa-greenbs'>Find picture</div>";	
 		DialogBox("Add new picture",str,x,y,500, function() {				// Run dialog			
 			var o={};
 			doc.Do();														// Save a do
@@ -1207,6 +1228,14 @@
 
 		$("#addUrl").on("change", function() {								// ON IMAGE URL SET
 			$("#addImg").prop("src",$(this).val());							// Show it
+			});
+		
+		$("#findPic").on("click", function() {								// ON FIND CLICK
+			$("#findPic").remove();											// Remove button
+			$("#dialogDiv").append("<br>");									// Shift down
+			$("#dialogDiv").width(900);										// Widen
+			$("#dialogDiv").draggable();									// Draggable
+			picFind.ImportDialog() 											// Show pix finder
 			});
 	}
 
@@ -1384,6 +1413,26 @@
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	function MakeSelect(id, multi, items, sel, extra, values)				// CREATE HTML SELECT
+	{
+		var	str="<select class='pa-is' id='"+id+"' ";							// Header
+		str+="style='width:auto;height:22px'";									// Size
+		if (extra)																// If extra param
+			str+=extra;															// Add them
+		if (multi)																// Multi select
+			str+="multiple='multiple' size='"+multi+"'";						// Add flag
+		str+=">";																// End header
+		for (i=0;i<items.length;++i) {											// For each option
+			str+="<option";														// Add tag
+			if (sel == items[i])												// If selected
+				str+=" selected='selected'"										// Add tag
+			if (values && values[i])											// If has a value
+				str+=" value='"+values[i]+"'";									// Add it
+			str+=">"+items[i]+"</option>";										// End option
+			}	
+		return str+"</select>";													// Return element				
+	}
+
 	function ShortenString(str, len)										// SHORTEN A STRING TO LENGTH
 	{
 		if (str && str.length > len)											// Too long
@@ -1511,9 +1560,20 @@
 			}
 		}
 
-		function myTest()
+	function LoadingIcon(mode, size, container)									// SHOW/HIDE LOADING ICON		
+	{
+		container=container ? "#"+container: "#bodyDiv";							// If no container spec'd, use dialog
+		if (!mode) {																// If hiding
+			$("#sf-loadingIcon").remove();											// Remove it
+			return;																	// Quit
+			}
+		var str="<img src='img/loading.gif' width='"+size+"' ";						// Img
+		str+="id='sf-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
+		$(container).append(str);														// Add icon to container
+	}
+
+	function myTest()
 		{
-	
 
 		var key=EncodeKey(49,33);
 		trace(49,key)

@@ -7,7 +7,7 @@ var CImageFindObj=null;																// Points at object
 function CImageFind(div)														// CONSTRUCTOR
 {
 	CImageFindObj=this;																// Save pointer to obj
-	this.div=div;																	// Container div
+	this.div=(div == "body") ? div : "#"+div;										// Container div
 	this.rawData=null;																// Holds raw search results
 	this.data=null;																	// Folds formatted search results
 	this.filter="";																	// No filter
@@ -37,7 +37,6 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 {
 	var i;
 	var _this=this;																	// Save context
-	$("#dialogDiv").remove();														// Remove any dialogs
 	var collections=["PrimaryAccess","WikiMedia","Library of Congress", "National Archives", "Cooper-Hewitt Museum", "Harvard Art", "Flickr"];// Supported collections
 	var str="<hr style='margin-top:12px'><p><span class='pa-bodyTitle'>Find pictures</span>";	// Title
 	str+="&nbsp;&nbsp;&nbsp;&nbsp;<i>(<span id='numItemsFound'>No</span> items found)</i>"; 	// Number of items
@@ -46,7 +45,7 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 	str+="&nbsp;&nbsp;From: "+MakeSelect("mdType",false,collections,this.type);		// From where
 	str+="</span></p><div id='mdAssets' class='pa-dialogResults'></div>";			// Scrollable container
 	str+="<br><span id='useEra'>Limit by NCSS era: "+MakeSelect("mdEra",false,this.ncssEras)+"</span>"; 		// Add eras
-	$("#"+this.div).append(str+"</div>");											// Add to container
+	$(this.div).append(str+"</div>");												// Add to container
 	if (this.era)	$("#mdEra")[0].selectedIndex=this.era;							// Set era
 	this.LoadCollection();															// Load 1st collection
  	
@@ -296,7 +295,7 @@ CImageFind.prototype.Preview=function(num)										// PREVIEW RESULT
 	$("#addUrl").val(o.src);														// Src
 	$("#addTitle").val(o.title);													// Title
 	$("#addDesc").val(o.desc);														// Desc
-	$("#addLink").val(o.html);														// Link
+	$("#addLink").val(o.link);														// Link
 	if (o.era)	$("#addEra")[0].selectedIndex=o.era;								// Set it
 }
 
@@ -316,7 +315,7 @@ CImageFind.prototype.GetFlickrImage=function(callback)							// GET FLICKR IMAGE
 		str+="border-radius:8px 0 0 8px;background-color:#f8f8f8'>";			// Scrollable container
 		str+="<dl id='setTable' style='font-size:13px;margin-top:2px;margin-bottom:2px'>";		// Add table
 		str+="<dt><b>Choose album:<br><br></b></dt><dt></dt></dl></div>";		// Add header
-		str+="<div id='picGal' style='display:inline-block;border-radius: 0 8px 8px 0;width:660px;height:290px;overflow-y:auto;background-color:#fff;padding:12px;border:1px solid #999'></div>";		// Scrollable container
+		str+="<div id='picGal' style='display:inline-block;border-radius: 0 8px 8px 0;width:656px;height:290px;overflow-y:auto;background-color:#fff;padding:12px;border:1px solid #999'></div>";		// Scrollable container
 		$("#mdAssets").html(str);												// Add results to panel
 
 		$("#getBut").on("click",function() {									// ON GET CONTENT BUTTON
