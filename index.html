@@ -1298,7 +1298,7 @@
 	{
 		if (!key)								return null;					// No key
 		var id=""+key;															// Copy key as string
-		var nn=id.charAt(0);													// Get shift order
+		var nn=parseInt(id.charAt(0),16)&7;										// Get shift order
 		id=id.substr(3);														// Trim mode and order
 		while (nn-- > 0) 														// For each shift
 			id=id.substr(1,5)+id.charAt(0);										// Shift-left
@@ -1572,6 +1572,26 @@
 		$(container).append(str);														// Add icon to container
 	}
 
+	function SetCookie(cname, cvalue, exdays)								// SET COOKIE
+	{
+		var d=new Date();
+		d.setTime(d.getTime()+(exdays*24*60*60*1000));
+		var expires = "expires="+d.toGMTString();
+		document.cookie = cname + "=" + cvalue + "; " + expires;
+	}
+	
+	function GetCookie(cname) 												// GET COOKIE
+		{
+		var name=cname+"=",c;
+		var ca=document.cookie.split(';');
+		for (var i=0;i<ca.length;i++)  {
+		  c=ca[i].trim();
+		  if (c.indexOf(name) == 0) 
+		  	return c.substring(name.length,c.length);
+		  }
+		return "";
+	}
+
 	function myTest()
 		{
 
@@ -1586,9 +1606,11 @@
 			while ((""+key).length < 6) 	   	key="0"+key;					// At least 6 digits
 			while ((""+student).length < 2) 	student="0"+student;			// At least 2 digits
 			var ord=nn=Math.floor(Math.random()*5)+1;							// Get order strategy 1-5
+			ord=(ord&7).toString(16);											// Mask out lower 3 bits and make hex
+			trace("HEX= "+ord,nn)
 			while (nn-- > 0) 													// For each shift
 				key=key.charAt(5)+key.substr(0,5);								// Shift-right
-			key=""+ord+student+key;											// Make into key
+			key=""+ord+student+key;												// Make into key
 			return key;															// Return key
 		}
 
