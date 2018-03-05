@@ -296,7 +296,7 @@ CImageFind.prototype.Preview=function(num)										// PREVIEW RESULT
 	$("#addTitle").val(o.title);													// Title
 	$("#addDesc").val(o.desc);														// Desc
 	$("#addLink").val(o.link);														// Link
-	if (o.era)	$("#addEra")[0].selectedIndex=o.era;								// Set it
+	if (o.er0 && $("#addEra")[0])	$("#addEra")[0].selectedIndex=o.era;			// Set it
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -7,7 +7,8 @@ require_once('config.php');
 	$id=$_GET['id'];											// Get ID
 	$id=addEscapes($id);										// ID
 	if (strlen($id) == 9) {										// Must be a key
-		$id[0]=($id[0]-0)&7;									// Get only 1st 3 bits of 1st char
+		$id[0]=hexdec($id[0]);									// Get only 1st 3 bits of 1st char
+		if ($id[0] > 8)		$id[0]-=8;							// Strip 4th bit
 		$query="SELECT * FROM qshow WHERE email = '$id'";		// Look for key in email
 		$result=mysql_query($query);							// Run query
 		if (($result == false) || (!mysql_numrows($result))) {	// Not found
