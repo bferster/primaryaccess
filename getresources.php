@@ -46,7 +46,4 @@ require_once('config.php');
 		$str=str_replace("\n","",$str);							// No lfs
 		return $str;
 	}
-
-/*	Rupert, Idaho. Former CCC (Civilian Conservation Corps) camp now under FSA (Farm Security Administration) management. Japanese-Americans taking down their flag in the evening
-*/
 ?>

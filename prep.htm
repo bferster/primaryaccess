@@ -54,7 +54,10 @@
 							}
 		.pa-gridPic {		width: 100%; height: 100px; overflow: hidden; margin-bottom: 6px;
 							}
-
+		.pa-listItem {		height:20px;cursor: pointer; background-color: #fff;
+							}
+		.pa-listItem:hover{ background-color: #dee7f1;
+							}
 		.pa-binItem {		color: #666; padding: 4px; border: 1px solid #47ae80; margin-right: 4px; margin-bottom: 4px; display: inline-block;
 							width: 112px; height: 75px; cursor: pointer; border-radius: 4px; overflow: hidden;
 							}
@@ -266,10 +269,6 @@
 		str+="<tr><td>Script</td><td><textarea id='proScript' class='pa-is' style='height:40px'>"+this.script+"</textarea></td></td>";
 		str+="<td style='vertical-align:top'>&nbsp;&nbsp;&nbsp;&nbsp;Allow&nbsp;new&nbsp;pics?&nbsp;&nbsp;</td><td style='vertical-align:top'><input type='checkbox' id='proAllow'"+(this.allow ? 'checked' : "")+"></input></td></tr>";
 		str+="<tr><td>Pictures&nbsp;&nbsp;</td><td colspan='3'><div style='display:inline-block;margin-top:4px' id='picsBin'></div></td></tr></table>";
-		str+="<hr style='margin-top:-8px'>Search for&nbsp;&nbsp;<input id='proSearch' class='pa-is' style='width:200px'></input>&nbsp;&nbsp;in NCSS era&nbsp;&nbsp;";
-		str+=MakeSelect("proEra",false,this.ncssEras,this.era);
-		str+="&nbsp;&nbsp;<div id='findAss' class='pa-greenbs' style='margin-top:6px'>Find assignment</div>";
-		str+="<div id='assDiv'></div>";
 		$("#bodyDiv").html(str);
 
 		for (i=0;i<this.pics.length;++i) {									// For each pic
@@ -299,6 +298,7 @@
 				});
 			}
 		$("#picsBin").append("&nbsp;<div id='addPics' class='pa-greenbs' style='vertical-align:42px;margin-top:36px;'>Add</div>");
+		this.FindAssignments();												// Add ind assignemnts module											
 
 		$("#addPics").on("click", function() {								// ON ADD CLICK
 			_this.AddPic();
@@ -347,6 +347,82 @@
 			}
 			$(this).val("File options");									// Restore  pulldown
 			});
+	}
+
+	CProject.prototype.FindAssignments=function() 						// FIND ASSIGNMENTS
+	{
+		var str="<hr style='margin-top:-8px'><p><span class='pa-bodyTitle'>Find other teacher's assignments</span>";	// Title
+		str+="&nbsp;&nbsp;&nbsp;&nbsp;<i>(<span id='numAssFound'>No</span> assignments found)</i>"; 			// Number of items
+		str+="<span style='float:right'>";																		// Hold controls
+		str+="Search for&nbsp;&nbsp;<input id='assSearch' class='pa-is' style='width:150px;vertical-align:0'>";	// Search
+		str+="&nbsp;&nbsp;<span id='assFind' class='pa-greenbs'>Find</span>";									// Find
+		str+="</span></p><div id='assAssets' style='height:200px' class='pa-dialogResults'></div>";				// Scrollable container
+		$("#bodyDiv").append(str);																				// Add to container
+
+		$("#assSearch").on("change", function() {							// ON SEARCH ENTER
+			$("#assFind").trigger("click");									// Trigger find
+			});
+
+		$("#assFind").on("click", function() {								// ON FIND CLICK
+			var q=$("#assSearch").val();									// Get search
+			loadAssignments(q);												// Load assignemnts
+			});
+		function loadAssignments(q) {										// LOAD ASSIGNMENTS
+			$.ajax( { 	url: "//viseyes.org/pa/findshows.php",				// URL
+						data: { q:q, ver:1 },								// Query
+						success: function(res) {							// When loaded
+							fillAssignmentTable(res);						// Fill table
+							}
+						});
+			}
+
+		function fillAssignmentTable(res) {									// FILL TABLE WITH ASSIGNMENTS FOUND
+			var i,o;
+			var trsty="class='pa-listItem'  onclick='projects.AssignmentPreview(this.id.substr(7))'";	// Row style
+			var str="<table style='width:100%'><tr style='font-weight:bold'><td>ID</td><td>Title</td></tr>";
+			str+="<tr><td colspan='4'><hr></td</tr>";
+			res=$.parseJSON(res);											// Objectify
+			for (i=0;i<res.length;++i) {									// For each show
+				o=res[i];													// Point at it
+				str+="<tr id='assRow-"+o.id+"'"+trsty+"><td>"+o.id;			// Id
+				str+="</td><td>"+ShortenString(o.title,90);					// Title
+				str+="</td></tr>";											// End row	
+				}
+			str+="</table>"
+			$("#assAssets").html(str);										// Fill it
+			$("#numAssFound").text(res.length);								// Show number of results
+			}	
+	}
+
+
+	CProject.prototype.AssignmentPreview=function(num) 					//	SHOW ASSIGNMENT
+	{
+		$("#pa-webpage").remove();											// Remove old image, if any
+		var h=$("#bodyDiv").width()*.75;									// Set height
+		var x=$("#bodyDiv").offset().left-24;								// Left edge
+		var str="<div id='pa-webpage' class='pa-webpage' style='";			// Add div
+		str+="width:"+($("#bodyDiv").width()+80);							// Width
+		str+="px;height:"+(h-22)+"px;top:60px;left:"+x+"px'>";				// Finish div	
+		str+="<b>Assignment - "+num+"</b><img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer'><br><br>"	// Add close button
+		str+="<div style='overflow:hidden'>";	
+		str+="<iframe src='index.html?"+num+"*' "; 
+		str+="style='width:100%;height:"+(h-83)+"px;overflow:hidden;border:1px solid #999;border-radius:8px'></iframe>";
+		str+="<p style='float:right'><span id='assAdd-"+num+"' class='pa-greenbs'>Add this assignemnt</span>";	// Add
+		str+="&nbsp;&nbsp;<span id='assCancel' class='pa-bs'>Cancel</span></p>";	// Cancel
+
+		$("body").append("</div>"+str+"</div>");							// Add popup
+		$("#pa-webpage").fadeIn(1000);										// Fade in
+		$("#pa-close").click(function() { $("#pa-webpage").remove(); });	// Remove on click of close but
+		$("#assCancel").click(function() { $("#pa-webpage").remove(); });	// Remove on click of cancel but
+
+		$("#assAdd-"+num).click(function(e) {								// ON ADD CLICK
+			ConfirmBox(function() {											// Are you sure?
+				var id=e.target.id.substr(7);								// Get index into script pics
+				Sound("ding");												// Ding
+				$.ajax( { url: "//viseyes.org/pa/loadshow.php?id="+id, dataType:'jsonp' });		// Load show
+				$("#pa-webpage").remove(); 									// Remove 
+				})
+			});									
 	}
 
 	function LoadShow(data) 												// GET DATA FROM LOAD SHOW

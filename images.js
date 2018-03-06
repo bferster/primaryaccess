@@ -78,7 +78,7 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 			var era=this.era;														// Index of era
 			var url="//viseyes.org/pa/getresources.php";
 			if (this.filter && this.era) url+="?q="+this.filter+"&era="+era;		// Q and era
-			else if (this.filter) url+="?q="+this.filter;							// Q
+			else if (this.filter) url+="?q="+this.filter.toLowerCase();				// Q
 			else if (this.era) url+="?era="+era;									// Era
 			$.ajax( { url: url,  dataType: 'jsonp' });
 			}
