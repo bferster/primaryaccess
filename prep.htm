@@ -54,7 +54,7 @@
 							}
 		.pa-gridPic {		width: 100%; height: 100px; overflow: hidden; margin-bottom: 6px;
 							}
-		.pa-listItem {		height:20px;cursor: pointer; background-color: #fff;
+		.pa-listItem {		height: 22px; cursor: pointer; background-color: #fff;
 							}
 		.pa-listItem:hover{ background-color: #dee7f1;
 							}
@@ -135,8 +135,6 @@
 		roster=new CRoster();												// Alloc CRoster module
 		projects=new CProject();											// Alloc CProject module
 		picFind=new CImageFind("bodyDiv");									// Alloc CImageFind module
-		$(window).resize(ResizePanes);                                     	// On window resizing
-		ResizePanes();														// Start up sizing
 		Draw(curTab);														// Draw body
 
 		$("#splashDiv").delay(noSplash?1:1000).animate({ opacity:0},noSplash?1:500, // Hide logo
@@ -173,41 +171,9 @@
 		else if (tab == "pro")	projects.Draw();							// Draw projects
 		}
 
-	function ResizePanes()												//  REACT TO SCREEN SIZE
-	{
-	}
-
 	function gTest()
 	{
 		trace(123)
-		$.ajax( { url: "//api.harvardartmuseums.org/object",
-					data: { apikey:"d0c70200-1ee4-11e8-a3db-659c806f7a23",
-						"hasimage":1,
-						title:"dog"
-						},
-					success: function(res) {											// When loaded
-						var i,p,data=[];
-						if (res && res.records) {										// If valid
-							for (i=0;i<res.records.length;++i) {						// For each object
-								p=res.records[i];										// Point at it
-								trace(p)
-								o={desc:"", era:"", link:"", title:"No title",id:i};	// Shell
-								if (p.description)	o.desc=p.description;				// Set desc
-								if (p.title)		o.title=p.title;					// Set title
-								if (p.url)			o.link=p.url;						// Set link
-								if (p.primaryimageurl) o.src=p.primaryimageurl+"?width=1024";	// Get url
-								else				continue;							// No image
-								data.push(o);											// Add to data
-								}
-							trace(data);												// Add to viewer
-							}
-					},
-				error: function(res) {												// On error
-					trace(res)
-					LoadingIcon();													// Hide loading icon
-					}
-				});
-
 	}
 
 	function ShowHelp(page)												//  SHOW HELP
@@ -222,12 +188,122 @@
 
 	function CRoster()														// PLAYER CONSTRUCTOR
 	{
-	}
+		this.email="";															// Teacher's email
+		this.title="";															// Class title
+		this.curAssign="";														// Current mass assignment
+		this.assigns=[];														// List of assignments
+		this.roster=[];															// Roster
+this.roster[0]={name:"Manny",id:0, assign: 49, key: 400004900  };
+this.roster[1]={name:"Moe",id:1, assign: 49 };
+this.roster[2]={name:"Jack",id:2, assign: 49 };
+this.roster[3]={name:"Jill",id:3, assign: 49 };
+}
 
 	CRoster.prototype.Draw=function() 										// UPDATE 
 	{
-		$("#bodyDiv").html("<br>You will be able to manage classes,<br>and assign projects to students here.")
+		var i,o;
+		var _this=this;														// Context
+		var title=qmf.curFile ? " - "+qmf.curFile : " - New";				// Show number
+		var x=$("#bodyDiv").offset().left+560;								// Left
+		var str="<p class='pa-bodyTitle'>Edit classes";						// Title
+		str+="<span class='pa-proTitle' id='classTitleTitle'>"+title+"</span>"; // Add show name
+		str+="<span style='float:right'>";
+		str+=MakeSelect("classOptions",false,["File options","New","Load","Save"]);
+		str+="&nbsp;&nbsp;<img src='img/helpicon.gif' style='cursor:pointer;vertical-align:-5px' onclick='ShowHelp(\"assign\")'></span></p>"; 
+		str+="<table style='display:inline-block;padding-bottom:8px'>";	
+		str+="<tr><td>Class name&nbsp;&nbsp;</td><td><input id='classTitle' class='pa-is' value='"+this.title+"'></input></td></tr>";
+		str+="<tr><td>Assign to all&nbsp;&nbsp;</td><td>"+MakeSelect("classAssigns",false,[],this.curAssign)+"</td></tr>";
+		str+="</table><br><br><hr style='margin-top:-8px'><p><span class='pa-bodyTitle'>Students</span><br>";	// Title
+		str+="</span></p><div id='classAssets' style='height:400px' class='pa-dialogResults'></div>";	// Scrollable container
+		str+="<br><span id='classAdd' class='pa-greenbs'>Add student</span>";		// Find
+		$("#bodyDiv").html(str);
+		this.DrawClass();													// Fill in class
+
+		$.ajax({ url: "//viseyes.org/pa/findshows.php",						// GET ASSIGNMENTS FROM DB
+				data: { email: this.email, ver:1 },							// Query
+				success: function(res) {									// When loaded
+				_this.assigns=[];											// Start fresh
+				res=$.parseJSON(res);										// Objectify
+				for (var i=0;i<res.length;++i) {							// For each assignment
+					_this.assigns.push(res[i].id);							// Add assignment id
+					$("#classAssigns").append("<option>"+ShortenString(res[i].title,60)+"</option>");	// Add to pulldown
+					}
+				}
+			});
+
+		$("#classTitle").on("change", function() {							// ON TITLE CHANGE
+			_this.title=$(this).val();										// Set 
+			});
+		
+		$("#classoOptions").on("change", function() {						// ON OPTIONS CHANGE
+			var opt=$(this).val();											// Current option
+			if (opt == "New") 												// New show
+				ConfirmBox(function() {										// Confirm 
+					_this.title="";		_this.roster=[];					// Defaults
+					_this.Draw();		qmf.curFile=0;
+					});
+			else if (opt == "Load")											// Load show
+				ConfirmBox(function() {										// Confirm 
+					qmf.Load();												// Load
+					});
+			else if (opt == "Save")	{										// Save show
+				curJson={};													// Clear
+				curJson.script=_this.script;								// Get  script 
+				curJson.title=_this.title;									// Get title 
+				for (var i=0;i<_this.ncssEras.length;++i) {					// For each era
+					if (_this.ncssEras[i] == _this.era)						// Match				
+						curJson.era=i;										// Set era index
+					}
+				curJson.binPics=$.parseJSON(JSON.stringify(_this.pics)); 	// Clone pics
+				curJson.scriptPics=[];										// Empty
+				curJson.allow=_this.allow;									// Allow
+				qmf.Save();													// Save
+			}
+			$(this).val("File options");									// Restore  pulldown
+			});
 	}
+
+
+	CRoster.prototype.DrawClass=function() 								// UPDATE CLASS
+	{
+		var i,o;
+		var str="<table style='width:100%'><tr style='font-weight:bold'><td>Name</td><td>Assignment</td><td>Key</td><td></td><td></td></tr>";
+		str+="<tr><td colspan='5'><hr></td</tr>";
+		for (i=0;i<this.roster.length;++i) {								// For each show
+			o=this.roster[i];												// Point at it
+			str+="<tr id='classRow-"+o.id+"' class='pa-listItem'><td>"+o.name;	// Name
+			str+="</td><td>"+o.assign;										// Assignment
+			key=this.EncodeKey(o.assign,o.id,0);							// Get key
+			str+="</td><td>"+key;											// Title
+			str+="</td><td>edit";											// Title
+			str+="</td><td><div class='pa-greenbs' id='viewPro-";			// View
+			str+=this.EncodeKey(o.assign,o.id,1)+"'>View</div>";			// View key
+			str+="</td></tr>";												// End row	
+			}
+		str+="</table>"
+		$("#classAssets").html(str);										// Fill it
+		
+		$("[id^=viewPro-]").click(function(e) {								// Look for click on view
+			var id=e.currentTarget.id.substr(8);							// Get key from id
+			projects.AssignmentPreview(id,true);							// Preview			
+			});	
+}
+
+	CRoster.prototype.EncodeKey=function(id, student, teacher) 		// ENCODE ID INTO KEY
+	{	
+		var nn;
+		var key=""+id;														// Copy id as string
+		while ((""+key).length < 6) 	   	key="0"+key;					// At least 6 digits
+		while ((""+student).length < 2) 	student="0"+student;			// At least 2 digits
+		var ord=nn=(student%5)+1;											// Get order strategy 1-5
+		if (teacher)														// If teacher
+			ord+=8;															// Turn on 4th bit
+		ord=(ord&0xf).toString(16);											// Keep only 4 bits and make hex
+		while (nn-- > 0) 													// For each shift
+			key=key.charAt(5)+key.substr(0,5);								// Shift-right
+		key=""+ord+student+key;												// Make into key
+		return key;															// Return key
+		}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // PROJECT
@@ -394,8 +470,7 @@
 			}	
 	}
 
-
-	CProject.prototype.AssignmentPreview=function(num) 					//	SHOW ASSIGNMENT
+	CProject.prototype.AssignmentPreview=function(num, assigned) 		//	SHOW ASSIGNMENT
 	{
 		$("#pa-webpage").remove();											// Remove old image, if any
 		var h=$("#bodyDiv").width()*.75;									// Set height
@@ -405,8 +480,9 @@
 		str+="px;height:"+(h-22)+"px;top:60px;left:"+x+"px'>";				// Finish div	
 		str+="<b>Assignment - "+num+"</b><img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer'><br><br>"	// Add close button
 		str+="<div style='overflow:hidden'>";	
-		str+="<iframe src='index.html?"+num+"*' "; 
-		str+="style='width:100%;height:"+(h-83)+"px;overflow:hidden;border:1px solid #999;border-radius:8px'></iframe>";
+		str+="<iframe src='index.html?"+num;
+		if (!assigned)	str+="*"											// If not an assigned
+		str+="' style='width:100%;height:"+(h-83)+"px;overflow:hidden;border:1px solid #999;border-radius:8px'></iframe>";
 		str+="<p style='float:right'><span id='assAdd-"+num+"' class='pa-greenbs'>Add this assignemnt</span>";	// Add
 		str+="&nbsp;&nbsp;<span id='assCancel' class='pa-bs'>Cancel</span></p>";	// Cancel
 
