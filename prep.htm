@@ -74,7 +74,7 @@
 							color: #999; font-size: 36px; text-align:center; font-weight: bold;
 							}
 		.pa-webpage	{ 		position: absolute; padding: 12px; border-radius: 6px; display: none; padding: 12px; height:auto; font-size: 14px; 
-							border: 1px solid #999; background-color:#eee; font-size: 11px; box-shadow: 4px 4px 12px 2px #aaa;
+							border: 1px solid #999; background-color:#eee; font-size: 11px; box-shadow: 4px 4px 12px 2px #aaa; 
 							}
 		.pa-is {			border-radius:16px; padding-left: 8px; padding-right: 8px; padding-top: 1px;
 							border: 1px solid #999; font-size: 12px; height: 18px; width: 270px;
@@ -101,6 +101,7 @@
 									}
 		 table {			border-spacing: 0px;  }
 		 input {		    vertical-align: -2px; }
+		 select:focus {  	outline: none; }
 
 							
 	</style>
@@ -195,7 +196,6 @@
 		this.curAssign="";														// Current mass assignment
 		this.assigns=[];														// List of assignments
 		this.roster=[];															// Roster
-
 this.title="Sample class";
 this.roster[0]={name:"Manny",id:0, assign: 49, key: 400004900  };
 this.roster[1]={name:"Moe",id:1, assign: 49 };
@@ -216,7 +216,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 		str+="&nbsp;&nbsp;<img src='img/helpicon.gif' style='cursor:pointer;vertical-align:-5px' onclick='ShowHelp(\"assign\")'></span></p>"; 
 		str+="<table style='display:inline-block;padding-bottom:8px'>";	
 		str+="<tr><td>Class name&nbsp;&nbsp;</td><td><input id='classTitle' class='pa-is' value='"+this.title+"'></input></td></tr>";
-		str+="<tr><td>Assign to all&nbsp;&nbsp;</td><td>"+MakeSelect("classAssigns",false,[],this.curAssign)+"</td></tr>";
+		str+="<tr><td>Assign to all&nbsp;&nbsp;</td><td>"+MakeSelect("classAssigns",false,["Choose assignment"],this.curAssign)+"</td></tr>";
 		str+="</table><br><br><hr style='margin-top:-8px'><p><span class='pa-bodyTitle'>Students</span><br>";	// Title
 		str+="</span></p><div id='classAssets' style='height:400px' class='pa-dialogResults'></div>";	// Scrollable container
 		str+="<br><span id='classAdd' class='pa-greenbs'>Add student</span>";		// Find
@@ -241,6 +241,18 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 			_this.title=$(this).val();										// Set 
 			});
 		
+		$("#classAssigns").on("change", function() {						// ON ASSIGNMENT CHANGE
+			var i;
+			var a=$(this).val();											// Get assignment 
+			if (a == "Choose assignment")									// No pick
+				return;														// Quit
+			_this.assign=a.match(/\d+/);									// Extract id
+			for (i=0;i<_this.roster.length;++i) 							// For each show
+			_this.roster[i].assign=_this.assign;							// Set assignment
+			$(this).val("Choose assignment");								// Restore menu
+			_this.DrawClass();												// Draw roster
+			});
+
 		$("#classOptions").on("change", function() {						// ON OPTIONS CHANGE
 			var opt=$(this).val();											// Current option
 			if (opt == "New") 												// New show
@@ -263,7 +275,6 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 			});
 	}
 
-
 	CRoster.prototype.DrawClass=function() 								// UPDATE CLASS
 	{
 		var i,o;
@@ -272,7 +283,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 		str+="<tr><td colspan='5'><hr></td</tr>";
 		for (i=0;i<this.roster.length;++i) {								// For each show
 			o=this.roster[i];												// Point at it
-			str+="<tr class='selectable' id='classRow-"+o.id+"' class='pa-listItem'><td>"+o.name;	// Name
+			str+="<tr id='classRow-"+o.id+"' class='pa-listItem selectable'><td>"+o.name;	// Name
 			str+="</td><td>"+getAssignment(o.assign);						// Assignment
 			
 			key=this.EncodeKey(o.assign,o.id,0);							// Get key
@@ -301,7 +312,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 	
 	}
 
-	CRoster.prototype.EncodeKey=function(id, student, teacher) 		// ENCODE ID INTO KEY
+	CRoster.prototype.EncodeKey=function(id, student, teacher) 			// ENCODE ID INTO KEY
 	{	
 		var nn;
 		var key=""+id;														// Copy id as string
