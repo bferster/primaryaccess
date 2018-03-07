@@ -26,7 +26,7 @@ require_once('config.php');
 				$title=mysql_result($result,0,"title");			// Get title
 				$query="INSERT INTO qshow (email, password, title, script, version) VALUES ('";
 				$query.=addEscapes($oid)."','";
-				$query.=addEscapes($oid)."','";
+				$query.=addEscapes("none")."','";
 				$query.=addEscapes($title)."','";
 				$query.=addEscapes($script)."','";
 				$query.=addEscapes(0)."')";

@@ -95,8 +95,10 @@
 	
 		/* GLOBAL --------------------------------------------------------------------------------------------------*/
 					
-		.unselectable { 	-moz-user-select: none; -khtml-user-select: none; -webkit-user-select: none; -ms-user-select: none;  user-select: none;	
+		.unselectable { 	-moz-user-select: none; -khtml-user-select: none; -ms-user-select: none;  user-select: none; -webkit-user-select: none;
 							}
+		.selectable { 		-moz-user-select: text; -khtml-user-select: text; -ms-user-select: text;  user-select: text; -webkit-user-select: text;
+									}
 		 table {			border-spacing: 0px;  }
 		 input {		    vertical-align: -2px; }
 
@@ -193,6 +195,8 @@
 		this.curAssign="";														// Current mass assignment
 		this.assigns=[];														// List of assignments
 		this.roster=[];															// Roster
+
+this.title="Sample class";
 this.roster[0]={name:"Manny",id:0, assign: 49, key: 400004900  };
 this.roster[1]={name:"Moe",id:1, assign: 49 };
 this.roster[2]={name:"Jack",id:2, assign: 49 };
@@ -225,9 +229,11 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 				_this.assigns=[];											// Start fresh
 				res=$.parseJSON(res);										// Objectify
 				for (var i=0;i<res.length;++i) {							// For each assignment
-					_this.assigns.push(res[i].id);							// Add assignment id
-					$("#classAssigns").append("<option>"+ShortenString(res[i].title,60)+"</option>");	// Add to pulldown
+					var opt=ShortenString(res[i].id+" - "+res[i].title,60);	// Make optioms
+					_this.assigns.push(opt);								// Add assignment id
+					$("#classAssigns").append("<option>"+opt+"</option>");	// Add to pulldown
 					}
+				_this.DrawClass();											// Fill in class
 				}
 			});
 
@@ -235,7 +241,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 			_this.title=$(this).val();										// Set 
 			});
 		
-		$("#classoOptions").on("change", function() {						// ON OPTIONS CHANGE
+		$("#classOptions").on("change", function() {						// ON OPTIONS CHANGE
 			var opt=$(this).val();											// Current option
 			if (opt == "New") 												// New show
 				ConfirmBox(function() {										// Confirm 
@@ -244,20 +250,14 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 					});
 			else if (opt == "Load")											// Load show
 				ConfirmBox(function() {										// Confirm 
-					qmf.Load();												// Load
+//					qmf.Load();												// Load
 					});
 			else if (opt == "Save")	{										// Save show
 				curJson={};													// Clear
-				curJson.script=_this.script;								// Get  script 
 				curJson.title=_this.title;									// Get title 
-				for (var i=0;i<_this.ncssEras.length;++i) {					// For each era
-					if (_this.ncssEras[i] == _this.era)						// Match				
-						curJson.era=i;										// Set era index
-					}
-				curJson.binPics=$.parseJSON(JSON.stringify(_this.pics)); 	// Clone pics
+				curJson.roster=$.parseJSON(JSON.stringify(_this.roster)); 	// Clone roster
 				curJson.scriptPics=[];										// Empty
-				curJson.allow=_this.allow;									// Allow
-				qmf.Save();													// Save
+//				qmf.Save();													// Save
 			}
 			$(this).val("File options");									// Restore  pulldown
 			});
@@ -267,17 +267,19 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 	CRoster.prototype.DrawClass=function() 								// UPDATE CLASS
 	{
 		var i,o;
-		var str="<table style='width:100%'><tr style='font-weight:bold'><td>Name</td><td>Assignment</td><td>Key</td><td></td><td></td></tr>";
+		var _this=this;														// Context
+		var str="<table style='width:100%'><tr style='font-weight:bold'><td>Name</td><td>Assignment</td><td>Link</td><td></td><td></td></tr>";
 		str+="<tr><td colspan='5'><hr></td</tr>";
 		for (i=0;i<this.roster.length;++i) {								// For each show
 			o=this.roster[i];												// Point at it
-			str+="<tr id='classRow-"+o.id+"' class='pa-listItem'><td>"+o.name;	// Name
-			str+="</td><td>"+o.assign;										// Assignment
+			str+="<tr class='selectable' id='classRow-"+o.id+"' class='pa-listItem'><td>"+o.name;	// Name
+			str+="</td><td>"+getAssignment(o.assign);						// Assignment
+			
 			key=this.EncodeKey(o.assign,o.id,0);							// Get key
-			str+="</td><td>"+key;											// Title
-			str+="</td><td>edit";											// Title
+			str+="</td><td>viseyes.org/pa?"+key;							// Show link
 			str+="</td><td><div class='pa-greenbs' id='viewPro-";			// View
 			str+=this.EncodeKey(o.assign,o.id,1)+"'>View</div>";			// View key
+			str+="</td><td><img id='editBut-"+i+"' src='img/editbut.gif' style='cursor:pointer'>";	// Edit
 			str+="</td></tr>";												// End row	
 			}
 		str+="</table>"
@@ -287,7 +289,17 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 			var id=e.currentTarget.id.substr(8);							// Get key from id
 			projects.AssignmentPreview(id,true);							// Preview			
 			});	
-}
+		
+		function getAssignment(id) {										// GET ASSIGNMENT NAME
+			var i;	
+			var re=new RegExp(id+" - ");									// Search for id
+			for (i=0;i<_this.assigns.length;++i)							// For each assignment
+				if (_this.assigns[i].match(re))								// A match
+				return _this.assigns[i];									// Return name
+			return id;
+			}
+	
+	}
 
 	CRoster.prototype.EncodeKey=function(id, student, teacher) 		// ENCODE ID INTO KEY
 	{	
@@ -455,7 +467,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 		function fillAssignmentTable(res) {									// FILL TABLE WITH ASSIGNMENTS FOUND
 			var i,o;
 			var trsty="class='pa-listItem'  onclick='projects.AssignmentPreview(this.id.substr(7))'";	// Row style
-			var str="<table style='width:100%'><tr style='font-weight:bold'><td>ID</td><td>Title</td></tr>";
+			var str="<table style='width:100%'><tr><td><b>ID</b></td><td><b>Title</b></td><td style='text-align:right'><i>Click on assignment to view&nbsp; </i></td></tr>";
 			str+="<tr><td colspan='4'><hr></td</tr>";
 			res=$.parseJSON(res);											// Objectify
 			for (i=0;i<res.length;++i) {									// For each show
@@ -474,9 +486,9 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 	{
 		$("#pa-webpage").remove();											// Remove old image, if any
 		var h=$("#bodyDiv").width()*.75;									// Set height
-		var x=$("#bodyDiv").offset().left-24;								// Left edge
+		var x=$("#bodyDiv").offset().left+16;								// Left edge
 		var str="<div id='pa-webpage' class='pa-webpage' style='";			// Add div
-		str+="width:"+($("#bodyDiv").width()+80);							// Width
+		str+="width:"+($("#bodyDiv").width()+8);							// Width
 		str+="px;height:"+(h-22)+"px;top:60px;left:"+x+"px'>";				// Finish div	
 		str+="<b>Assignment - "+num+"</b><img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer'><br><br>"	// Add close button
 		str+="<div style='overflow:hidden'>";	

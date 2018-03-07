@@ -15,9 +15,9 @@
 	QmediaFile.prototype.Load=function() 									//	LOAD FILE DIALOG
 	{
 		var _this=this;															// Save context
-		var str="<br/>To load one of your projects, type your email address in the box below. If you were given an ID to use, use that instead."
+		var str="<br/>To load one of your projects, type your email address in the box below."
 		str+="<br><br><div style='text-align:center'>";							// Center	
-		str+="<b>Email or ID:&nbsp;&nbsp</b> <input class='pa-is' type='text' id='email' value='"+this.email+"'/>";
+		str+="<b>Email:&nbsp;&nbsp</b> <input class='pa-is' type='text' id='email' value='"+this.email+"'/>";
 		str+="</div><br><div style='text-align:right'><br>";					// Right justify	
 		str+="<div class='pa-bs' id='logBut'>Login</div>&nbsp;&nbsp;";			// OK but
 		str+="<div class='pa-bs' id='cancelBut'>Cancel</div></div>";			// Cancel but
@@ -55,9 +55,9 @@
 		{	
 		if ((this.password == "undefined" | this.password == undefined))		// No password
 			this.password="";													// Null it out
-		var str="<br/>To save your project, type your email address in the box below. If you were given an ID to use, use that instead. Type in a password if you want to protect it."
+		var str="<br/>To save your project, type your email address in the box below. Type in a password if you want to protect it."
 		str+="<br/><blockquote><table cellspacing=0 cellpadding=0 style='font-size:11px'>";
-		str+="<tr><td><b>Email or ID</b><span style='color:#990000'> * </span>&nbsp;</td><td><input class='pa-is' type='text' id='email' value='"+this.email+"'/></td></tr>";
+		str+="<tr><td><b>Email</b><span style='color:#990000'> * </span>&nbsp;</td><td><input class='pa-is' type='text' id='email' value='"+this.email+"'/></td></tr>";
 		str+="<tr><td><b>Password</b><span style='color:#990000'></span></b></td><td><input class='pa-is' type='password' id='password' value='"+this.password+"'/></td></tr>";
 		if (this.curFile) {														// If a project loaded, as for save as...
 			str+="<tr><td colspan='2'>&nbsp;</td></tr>";

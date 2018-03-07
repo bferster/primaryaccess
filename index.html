@@ -16,7 +16,7 @@
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
 							padding: 0; margin:0px; 
 							}
-		.pa-main {		 	width: 100vw; min-width: 800px; overflow: auto;  background-color:#eee; opacity: 0; 
+		.pa-main {		 	width: 100vw; min-width: 768px; overflow: auto;  background-color:#eee; opacity: 0; 
 							}
 		
 		/* SCRIPT --------------------------------------------------------------------------------------------------*/
@@ -351,8 +351,8 @@
 
 	function ResizePanes()												//  REACT TO SCREEN SIZE
 	{
-		var sw=$("#mainDiv").width()*.6;									// Script width
-		var pw=$("#mainDiv").width()*.4;									// Player width
+		var pw=Math.max(380,$("#mainDiv").width()*.4);						// Player width, capped
+		var sw=$("#mainDiv").width()-pw;									// Script width
 		var th=$("#titleDiv").height()+10;									// Get height of title bar
 		var ph=$(window).outerHeight()-150;									// Player/script height			
 		$("#playerDiv").css({ width:pw+"px", left: sw+"px", top: 0, height:ph+"px" });	// Position player
@@ -576,7 +576,7 @@
 		else{																// If regular screen
 			$("#screenTitleDiv").text("");									// No title
 			$("body").css({ "background-color":"#fff", overflow:"auto" });	// White back, overflow
-			$("#mainDiv").css({ "min-width":"800px" });						// Restore min-wid
+			$("#mainDiv").css({ "min-width":"768px" });						// Restore min-wid
 			$("#binDiv").fadeIn();											// Fade bin in
 			$("#scriptDiv").fadeIn();										// Script
 			$("#picOptions").fadeIn(0);	$("#soundOptions").fadeIn(0);		// Show options
@@ -1409,7 +1409,7 @@
 		curJson=this.Serialize();												// Serialize show into JSON object
 		this.changed=false;														// No unsaved changes
 		if (this.assigned)														// If assigned
-			qmf.SaveFile(this.assigned,this.assigned);							// Save data
+			qmf.SaveFile(this.assigned,"none");									// Save data
 		else if (!qmf.curFile && window.location.search.substring(1)) 			// If nothing loaded and an assigned task
 			qmf.SaveDirector();													// Ask if sure
 		else																	// Normal save
