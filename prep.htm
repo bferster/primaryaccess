@@ -309,7 +309,6 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 				return _this.assigns[i];									// Return name
 			return id;
 			}
-	
 	}
 
 	CRoster.prototype.EncodeKey=function(id, student, teacher) 			// ENCODE ID INTO KEY
@@ -506,9 +505,10 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 		str+="<iframe src='index.html?"+num;
 		if (!assigned)	str+="*"											// If not an assigned
 		str+="' style='width:100%;height:"+(h-83)+"px;overflow:hidden;border:1px solid #999;border-radius:8px'></iframe>";
-		str+="<p style='float:right'><span id='assAdd-"+num+"' class='pa-greenbs'>Add this assignemnt</span>";	// Add
-		str+="&nbsp;&nbsp;<span id='assCancel' class='pa-bs'>Cancel</span></p>";	// Cancel
-
+		if (!assigned) {													// If a preview
+			str+="<p style='float:right'><span id='assAdd-"+num+"' class='pa-greenbs'>Add this assignemnt</span>";	// Add
+			str+="&nbsp;&nbsp;<span id='assCancel' class='pa-bs'>Cancel</span></p>";	// Cancel
+			}
 		$("body").append("</div>"+str+"</div>");							// Add popup
 		$("#pa-webpage").fadeIn(1000);										// Fade in
 		$("#pa-close").click(function() { $("#pa-webpage").remove(); });	// Remove on click of close but
