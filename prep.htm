@@ -212,7 +212,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 		var str="<p class='pa-bodyTitle'>Edit classes";						// Title
 		str+="<span class='pa-proTitle' id='classTitleTitle'>"+title+"</span>"; // Add show name
 		str+="<span style='float:right'>";
-		str+=MakeSelect("classOptions",false,["File options","New","Load","Save"]);
+		str+=MakeSelect("classOptions",false,["Class options","New","Load","Save"]);
 		str+="&nbsp;&nbsp;<img src='img/helpicon.gif' style='cursor:pointer;vertical-align:-5px' onclick='ShowHelp(\"assign\")'></span></p>"; 
 		str+="<table style='display:inline-block;padding-bottom:8px'>";	
 		str+="<tr><td>Class name&nbsp;&nbsp;</td><td><input id='classTitle' class='pa-is' value='"+this.title+"'></input></td></tr>";
@@ -274,7 +274,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 				curJson.roster=$.parseJSON(JSON.stringify(_this.roster)); 	// Clone roster
 				qmf2.Save();												// Save
 				}
-			$(this).val("File options");									// Restore  pulldown
+			$(this).val("Class options");									// Restore  pulldown
 			});
 	}
 
@@ -286,6 +286,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 		str+="<tr><td colspan='5'><hr></td</tr>";
 		for (i=0;i<this.roster.length;++i) {								// For each show
 			o=this.roster[i];												// Point at it
+			if (!o.name)	continue;										// Skip over no-names
 			str+="<tr id='classRow-"+o.id+"' class='pa-listItem selectable'><td><b>"+ShortenString(o.name,30);	// Name
 			str+="</b></td><td>"+getAssignment(o.assign);						// Assignment
 			key=this.EncodeKey(o.assign,o.id,0);							// Get key
@@ -331,11 +332,11 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 		var str="<div style='display:inline-block'><table>";				// Info div/table
 		str+="<tr><td>Name(s)</td><td><textarea id='addName' type='text' class='pa-is' style='width:200px;font-family:sans-serif;padding:3px 8px 0 8px'>"+o.name+"</textarea></td></tr>";
 		str+="<tr><td>Email</td><td><input id='addEmail' type='text' class='pa-is' style='width:200px'value='"+o.email+"'></td></tr>";
-		str+="<tr><td>Assignment;&nbsp;</td><td>"+MakeSelect("addAssigns",false,this.assigns,o.assign)+"</td></tr>";
+		str+="<tr><td>Assignment&nbsp;</td><td>"+MakeSelect("addAssigns",false,this.assigns,o.assign)+"</td></tr>";
 		str+="</table></div>";												// End div
 			
 		DialogBox(title,str,x,y,500, function() {							// Run dialog			
-			o.name=$("#addName").val() ? $("#addName").val() : "No name";	// Add name
+			o.name=$("#addName").val() ? $("#addName").val() : "";			// Add name
 			o.email=$("#addEmail").val() ? $("#addEmail").val() : "";		// Add name
 			o.assign=$("#addAssigns").val().match(/(\d+)/)[0]-0;			// Get id of assignment
 			o.name=o.name.replace(/\\r/,"");								// Remove CRs
@@ -351,9 +352,20 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 					}
 				}
 			else															// Edit it
-				_this.roster[num]=o;										// Replace it
-			_this.DrawClass();												// Redraw
-			Sound("ding");													// Ding
+				if (!o.name) { 												// No name set
+					ConfirmBox(function() {									// Confirm if no name
+							_this.roster[num]=o; 							// Set it
+							_this.DrawClass();								// Redraw
+							Sound("delete");								// Delete
+							},								
+						"This will remove the student from the class"		// Sub-prompt		
+						);
+					}
+				else{
+					_this.roster[num]=o;									// Replace it
+					_this.DrawClass();										// Redraw
+					Sound("ding");											// Ding
+					}
 			});
 	}
 
@@ -405,7 +417,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 		var str="<p class='pa-bodyTitle'>Edit assignment";					// Title
 		str+="<span class='pa-proTitle' id='proTitleTitle'>"+title+"</span>"; // Add show name
 		str+="<span style='float:right'>";
-		str+=MakeSelect("proOptions",false,["File options","New","Load","Save"]);
+		str+=MakeSelect("proOptions",false,["Assignment options","New","Load","Save"]);
 		str+="&nbsp;&nbsp;<img src='img/helpicon.gif' style='cursor:pointer;vertical-align:-5px' onclick='ShowHelp(\"assign\")'></span><hr></p>"; 
 		str+="<table style='display:inline-block;padding-bottom:8px'>";	
 		str+="<tr><td>Title</td><td><input id='proTitle' class='pa-is' value='"+this.title+"'></input></td>";
@@ -489,7 +501,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 				curJson.allow=_this.allow;									// Allow
 				qmf.Save();													// Save
 				}
-			$(this).val("File options");									// Restore  pulldown
+			$(this).val("Assignment options");								// Restore  pulldown
 			});
 	}
 
@@ -552,7 +564,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 		if (!assigned)	str+="*"											// If not an assigned
 		str+="' style='width:100%;height:"+(h-83)+"px;overflow:hidden;border:1px solid #999;border-radius:8px'></iframe>";
 		if (!assigned) {													// If a preview
-			str+="<p style='float:right'><span id='assAdd-"+num+"' class='pa-greenbs'>Add this assignemnt</span>";	// Add
+			str+="<p style='float:right'><span id='assAdd-"+num+"' class='pa-greenbs'>Add this assignment</span>";	// Add
 			str+="&nbsp;&nbsp;<span id='assCancel' class='pa-bs'>Cancel</span></p>";	// Cancel
 			}
 		$("body").append("</div>"+str+"</div>");							// Add popup
@@ -599,8 +611,8 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 		str+="<span class='pa-proTitle' id='addSubTitle'> - (has "+this.pics.length+" pictures)</span>";	// Add # pics
 		str+="<img src='img/helpicon.gif'style='float:right;cursor:pointer' onclick='ShowHelp(\"addpic\")'><hr></p>"; 
 		str+="<div style='display:inline-block'><table>";					// Info div/table
-		str+="<tr><td>Picture title</td><td><input id='addTitle' type='text' class='pa-is'</td></tr>";
-		str+="<tr><td>Picture url</td><td><input id='addUrl' type='text' class='pa-is'></td></tr>";
+		str+="<tr><td>Picture title<span style='color:#990000'> *</span></td><td><input id='addTitle' type='text' class='pa-is'></td></tr>";
+		str+="<tr><td>Picture url<span style='color:#990000'> *</span></td><td><input id='addUrl' type='text' class='pa-is'></td></tr>";
 		str+="<tr><td>Description&nbsp;&nbsp;</td><td><textarea id='addDesc' type='text' class='pa-is' style='height:60px'></textarea></td></tr>";
 		str+="<tr><td>Link to website&nbsp;&nbsp;</td><td><input id='addLink' type='text' class='pa-is'>";
 		str+="<tr><td>NCSS era:</td><td>"+MakeSelect("addEra",false,this.ncssEras,this.era)+"</td></tr>";

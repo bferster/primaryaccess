@@ -181,12 +181,13 @@ function GetCookie(cname) 												// GET COOKIE
 	return "";
 }
 
-function ConfirmBox(callback)												// CONFIRMATION BOX
+function ConfirmBox(callback, msg)												// CONFIRMATION BOX
 {
 	Sound("ding");																// Ding sound
 	$("#popupDiv").remove();													// Kill old one, if any
 	var str="<div id='popupDiv' class='pa-popup' style='width:250px'>"; 		// Add div
 	str+="<br><span class='pa-bodyTitle'>Are you sure?</span>"; 				// Add content
+	if (msg) str+="<br><br>"+msg;												// Add submessage
 	str+="<br><br><div id='confirmOK' class='pa-greenbs'>OK</div>&nbsp;&nbsp;";	// OK
 	str+="<div id='confirmCancel' class='pa-bs'>Cancel</div><br><br></div>";	// Cancel
 	$("body").append(str);														// Add popup to div or body
