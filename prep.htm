@@ -125,7 +125,8 @@
 	var projects=null;														// Holds projects module
 	var pictures=null;														// Holds pictures module
 	var picFind=null;														// Hold pic search module
-	var qmf=null;															// QFile system
+	var qmf=null;															// QFile assignment system
+	var qmf2=null;															// QFile class system
 	var curJson={};															// To save show
 
 	$(document).ready(function() {								        // ON PAGE LOADED
@@ -133,8 +134,8 @@
 		if (!isMobile)														// Check for Android
 			isMobile=navigator.userAgent.match(/android/i) ? true : false; 	// Set mobile flag
 		var url=window.location.search.substring(1);					 	// Get query string
-		qmf=new QmediaFile("//viseyes.org/pa/",1);							// Alloc file system
-
+		qmf=new QmediaFile("//viseyes.org/pa/",1);							// Alloc assignment file system
+		qmf2=new QmediaFile("//viseyes.org/pa/",2);							// Alloc class file system
 		roster=new CRoster();												// Alloc CRoster module
 		projects=new CProject();											// Alloc CProject module
 		picFind=new CImageFind("bodyDiv");									// Alloc CImageFind module
@@ -193,11 +194,10 @@
 	{
 		this.email="";															// Teacher's email
 		this.title="";															// Class title
-		this.curAssign="";														// Current mass assignment
 		this.assigns=[];														// List of assignments
 		this.roster=[];															// Roster
 this.title="Sample class";
-this.roster[0]={name:"Manny",id:0, assign: 49, key: 400004900  };
+this.roster[0]={name:"Manny",id:0, assign: 49 };
 this.roster[1]={name:"Moe",id:1, assign: 49 };
 this.roster[2]={name:"Jack",id:2, assign: 49 };
 this.roster[3]={name:"Jill",id:3, assign: 49 };
@@ -207,7 +207,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 	{
 		var i,o;
 		var _this=this;														// Context
-		var title=qmf.curFile ? " - "+qmf.curFile : " - New";				// Show number
+		var title=qmf2.curFile ? " - "+qmf2.curFile : " - New";				// Show number
 		var x=$("#bodyDiv").offset().left+560;								// Left
 		var str="<p class='pa-bodyTitle'>Edit classes";						// Title
 		str+="<span class='pa-proTitle' id='classTitleTitle'>"+title+"</span>"; // Add show name
@@ -216,7 +216,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 		str+="&nbsp;&nbsp;<img src='img/helpicon.gif' style='cursor:pointer;vertical-align:-5px' onclick='ShowHelp(\"assign\")'></span></p>"; 
 		str+="<table style='display:inline-block;padding-bottom:8px'>";	
 		str+="<tr><td>Class name&nbsp;&nbsp;</td><td><input id='classTitle' class='pa-is' value='"+this.title+"'></input></td></tr>";
-		str+="<tr><td>Assign to all&nbsp;&nbsp;</td><td>"+MakeSelect("classAssigns",false,["Choose assignment"],this.curAssign)+"</td></tr>";
+		str+="<tr><td>Assign to all&nbsp;&nbsp;</td><td>"+MakeSelect("classAssigns",false,["Choose assignment"],"")+"</td></tr>";
 		str+="</table><br><br><hr style='margin-top:-8px'><p><span class='pa-bodyTitle'>Students</span><br>";	// Title
 		str+="</span></p><div id='classAssets' style='height:400px' class='pa-dialogResults'></div>";	// Scrollable container
 		str+="<br><span id='classAdd' class='pa-greenbs'>Add student</span>";		// Find
@@ -257,20 +257,19 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 			var opt=$(this).val();											// Current option
 			if (opt == "New") 												// New show
 				ConfirmBox(function() {										// Confirm 
-					_this.title="";		_this.roster=[];					// Defaults
-					_this.Draw();		qmf.curFile=0;
+					_this.title="";	 _this.roster=[]; qmf2.curFile=0;		// Defaults
+					_this.Draw();											// Redraw
 					});
 			else if (opt == "Load")											// Load show
 				ConfirmBox(function() {										// Confirm 
-//					qmf.Load();												// Load
+					qmf2.Load();											// Load
 					});
 			else if (opt == "Save")	{										// Save show
 				curJson={};													// Clear
 				curJson.title=_this.title;									// Get title 
 				curJson.roster=$.parseJSON(JSON.stringify(_this.roster)); 	// Clone roster
-				curJson.scriptPics=[];										// Empty
-//				qmf.Save();													// Save
-			}
+				qmf2.Save();												// Save
+				}
 			$(this).val("File options");									// Restore  pulldown
 			});
 	}
@@ -423,8 +422,8 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 			if (opt == "New") 												// New show
 				ConfirmBox(function() {										// Confirm 
 					_this.pics=[];		_this.era=0;	_this.title="";		// Defaults
-					_this.script=""; 	_this.allow=1;			
-					_this.Draw();		qmf.curFile=0;
+					_this.script=""; 	_this.allow=1;	qmf.curFile=0;		
+					_this.Draw();											// Redraw	
 					});
 			else if (opt == "Load")											// Load show
 				ConfirmBox(function() {										// Confirm 
@@ -442,7 +441,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 				curJson.scriptPics=[];										// Empty
 				curJson.allow=_this.allow;									// Allow
 				qmf.Save();													// Save
-			}
+				}
 			$(this).val("File options");									// Restore  pulldown
 			});
 	}
@@ -529,6 +528,12 @@ this.roster[3]={name:"Jill",id:3, assign: 49 };
 		var o=data;																// Point at data
 		if (o && o.qmfmsg && o.qmfmsg == "error") {								// Error loading
 			PopUp("<p style='color:#990000'><b>Couldn't load project!</b></p>",3000); // Popup warning
+			return;																// Quit
+			}
+		if (o.roster) {															// Must be a class
+			roster.roster=data.roster;											// Get roster
+			roster.title=data.title;											// Title
+			roster.Draw();														// Redraw
 			return;																// Quit
 			}
 		projects.script=data.script;											// Get script

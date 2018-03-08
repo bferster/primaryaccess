@@ -4,7 +4,6 @@
 		
 	function QmediaFile(host, version) 										// CONSTRUCTOR
 	{
-		qmf=this;																// Point to obj
 		this.host=host;															// Get host
 		this.version=version;													// Get version
 		this.email=this.GetCookie("email");										// Get email from cookie
@@ -146,38 +145,44 @@
 		
 	QmediaFile.prototype.ListFiles=function() 								//	LIST PROJECTS IN DB
 	{
+		var _this=this;															// Save context
 		this.email=$("#email").val();											// Get current email
 		this.SetCookie("email",this.email,7);									// Save cookie
 		var url=this.host+"listshow.php?ver="+this.version+"&deleted=0";		// Base file
 		if (this.email)															// If email
 			url+="&email="+this.email;											// Add email and deleted to query line
-		$.ajax({ url:url, dataType:'jsonp', complete:function() { Sound('click'); } });	// Get data and pass qmfListFiles()
-	}
-	
-	function qmfListFiles(files)											// CALLBACK TO List()
-	{
-		var trsty=" style='height:20px;cursor:pointer' onMouseOver='this.style.backgroundColor=\"#dee7f1\"' ";
-		trsty+="onMouseOut='this.style.backgroundColor=\"#f8f8f8\"' onclick='";
-		trsty+="qmf.LoadFile(this.id)'";										// Load
-		qmf.email=$("#email").val();											// Get current email
-		qmf.SetCookie("email",qmf.email,7);										// Save cookie
-		$("#lightBoxDiv").remove();												// Close old one
-		str="<br>Choose project from the list below:<br>";						// Title
-		str+="<br><div style='width:100%;max-height:300px;overflow-y:auto'>";	// Scrolling div
-		str+="<table style='font-size:12px;width:100%;padding:0px;border-collapse:collapse;'>";
-		str+="<tr></td><td><b>Title </b></td><td><b>Date&nbsp;&&nbsp;time</b></td><td style='float:right'><b> Project ID</b></tr>";
-		str+="<tr><td colspan='3'><hr></td></tr>";
-		for (var i=0;i<files.length;++i) 										// For each file
-			str+="<tr id='qmf"+files[i].id+"' "+trsty+"><td>"+ShortenString(files[i].title,30)+"</td><td>"+files[i].date.substr(5,11)+"</td><td align=right>"+files[i].id+"</td></tr>";
-		str+="</table><br><div class='pa-bs' style='float:right' id='cancelBut'>Cancel</div>";	// Cancel but
-		qmf.ShowLightBox("Load a project",str);									// Show lightbox
-		
-		$("#cancelBut").on("click", function() {								// CANCEL BUTTON
-			$("#lightBoxDiv").remove();											// Close
-			});
-	}
+		$.ajax({ url:url, success:function(files) {								// Get file list
+			files=files.substr(14,files.length-15);								// Remove jsonp part
+			files=$.parseJSON(files);											// Objectify
+			var trsty=" style='height:20px;cursor:pointer' onMouseOver='this.style.backgroundColor=\"#dee7f1\"' ";
+			trsty+="onMouseOut='this.style.backgroundColor=\"#f8f8f8\"'";
+			_this.email=$("#email").val();										// Get current email
+			_this.SetCookie("email",_this.email,7);								// Save cookie
+			$("#lightBoxDiv").remove();											// Close old one
+			str="<br>Choose project from the list below:<br>";					// Title
+			str+="<br><div style='width:100%;max-height:300px;overflow-y:auto'>";	// Scrolling div
+			str+="<table style='font-size:12px;width:100%;padding:0px;border-collapse:collapse;'>";
+			str+="<tr></td><td><b>Title </b></td><td><b>Date&nbsp;&&nbsp;time</b></td><td style='float:right'><b> Project ID</b></tr>";
+			str+="<tr><td colspan='3'><hr></td></tr>";
+			for (var i=0;i<files.length;++i) 									// For each file
+				str+="<tr id='qmf"+files[i].id+"' "+trsty+"><td>"+ShortenString(files[i].title,30)+"</td><td>"+files[i].date.substr(5,11)+"</td><td align=right>"+files[i].id+"</td></tr>";
+			str+="</table><br><div class='pa-bs' style='float:right' id='cancelBut'>Cancel</div>";	// Cancel but
+			_this.ShowLightBox("Load a project",str);								// Show lightbox
 
+			for (var i=0;i<files.length;++i)									// For each file
+				$("#qmf"+files[i].id).on("click", function(e) {					// ON CLICK
+					_this.LoadFile(e.currentTarget.id);							// Load
+					});
+
+			$("#cancelBut").on("click", function() {							// CANCEL BUTTON
+				$("#lightBoxDiv").remove();										// Close
+				});
+			Sound('click'); 
+			}
+		});	
+	}
 	
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  HELPERS
 ///////////////////////////////////////////////////////////////////////////////////////////////
