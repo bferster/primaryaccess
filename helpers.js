@@ -74,7 +74,7 @@ function DialogBox(title, content, x, y, width, callback, callback2) 	// DIALOG 
 {
 	$("#dialogDiv").remove();												// Kill old one, if any
 	var str="<div id='dialogDiv' class='pa-meta' style='width:"+width+"px'>"; // Add div
-	str+="<b>"+title+"</b><br><br>"+content+"<br><br>";						// Content	
+	str+="<span class='pa-bodyTitle'>"+title+"</span><br><br>"+content+"<br><br>";	// Content	
 	str+="<div style='float:right'>"										// Div to hold buttons
 	str+="<div id='okBut' class='pa-bs'>OK</div>&nbsp";						// OK Button
 	str+="<div id='cancelBut' class='pa-bs'>Cancel</div></div";				// Cancel

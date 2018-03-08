@@ -91,6 +91,7 @@
 	QmediaFile.prototype.SaveFile=function(email, password) 				//	SAVE A FILE FROM DB
 	{
 		var dat={};
+		var _this=this;															// Save context
 		var url=this.host+"saveshow.php";										// Base file
 		if ($("#saveNew").prop("checked"))										// Save as
 			this.curFile="";													// Force saving to a new file
@@ -113,7 +114,7 @@
 				 else if (d == -4) 												// Error
 					 AlertBox("Error","Sorry, there was an error updating that project (4)");		
 				 else if (!isNaN(d)){											// Success if a number
-					 this.curFile=d;											// Set current file
+					 _this.curFile=d;											// Set current file
 					Sound("ding");												// Ding
 					PopUp("<span style='color:#009900'<b>Saved!</b></span>",100);	// Saved!
 					Draw();														// Redraw menu
