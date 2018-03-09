@@ -11,6 +11,30 @@
 		this.password=this.GetCookie("password");								// Password
 	}
 	
+	QmediaFile.prototype.LogIn=function(callback) 							//	LOGIN DIALOG
+	{
+		var _this=this;															// Save context
+		var str="<br/>Type your email address in the box below."
+		str+="<br><br><div style='text-align:center'>";							// Center	
+		str+="<b>Email:&nbsp;&nbsp</b> <input class='pa-is' type='text' id='email' value='"+this.email+"'/>";
+		str+="</div><br><div style='text-align:right'><br>";					// Right justify	
+		str+="<div class='pa-bs' id='logBut'>Login</div>&nbsp;&nbsp;";			// OK but
+		str+="<div class='pa-bs' id='cancelBut'>Cancel</div></div>";			// Cancel but
+		this.ShowLightBox("Login",str);
+		
+		$("#cancelBut").on("click", function() {								// CANCEL BUTTON
+			$("#lightBoxDiv").remove();											// Close
+			if (callback) callback(false);										// Run callback 
+			});
+	
+		$("#logBut").on("click",function() {									// LOGIN BUTTON
+			_this.email=$("#email").val();										// Get current email
+			_this.SetCookie("email",_this.email,7);								// Save cookie
+			$("#lightBoxDiv").remove();											// Close
+			if (callback) callback(true);										// Run callback
+			});
+	}	
+
 	QmediaFile.prototype.Load=function() 									//	LOAD FILE DIALOG
 	{
 		var _this=this;															// Save context

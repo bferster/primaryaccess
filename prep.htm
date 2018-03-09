@@ -109,18 +109,18 @@
 <body>
 	<div id="mainDiv" class="pa-main unselectable">
 		<div id="tabsDiv" class="pa-tabs">
-			<div id="proTabDiv" class="pa-tab unselectable">Assignments</div>
 			<div id="rosTabDiv" class="pa-tab unselectable">Classes</div>
+			<div id="proTabDiv" class="pa-tab unselectable">Assignments</div>
 		</div>
 	<div id="bodyDiv" class="pa-body"></div>
 	</div>
-	<div id="splashDiv" class="pa-splash"><img src="img/palogo.gif"><br>Teacher Prep</div>
+	<div id="splashDiv" class="pa-splash"><img src="img/palogo.gif"><br>TeacherPrep</div>
 
 <script>
 
 	var isMobile=false;														// Is a mobile platform
 	var noSplash=(window.location.host == "localhost") ? true : false;		// Splash screen inhibitor
-	var curTab="pro";														// Start on assignments
+	var curTab="ros";														// Start tab
 	var roster=null;														// Holds roster module
 	var projects=null;														// Holds projects module
 	var pictures=null;														// Holds pictures module
@@ -139,8 +139,22 @@
 		roster=new CRoster();												// Alloc CRoster module
 		projects=new CProject();											// Alloc CProject module
 		picFind=new CImageFind("bodyDiv");									// Alloc CImageFind module
-		Draw(curTab);														// Draw body
-
+		
+		qmf.LogIn(function(ok) { 											// Login
+			if (ok)			roster.email=qmf.email;							// Set mail
+			if (!roster.email) {											// No email
+				qmf.LoadFile("xxx49");										// Load demo assignemnt
+				qmf2.LoadFile("xxx74");										// Load demo class
+				}
+			else{
+				if (GetCookie("lastAssign"))  								// If a last show loaded
+					qmf.LoadFile("xxx"+GetCookie("lastAssign"));			// Load it
+				if (GetCookie("lastClass"))  								// If a last class loaded
+					qmf2.LoadFile("xxx"+GetCookie("lastClass"));			// Load it
+				}
+			Draw();															// Draw body
+			});					
+		
 		$("#splashDiv").delay(noSplash?1:1000).animate({ opacity:0},noSplash?1:500, // Hide logo
 				function() {	 											// When done
 					if (url && url.match(/&fs/i)) 							// Full screen flag
@@ -156,23 +170,24 @@
 
 		$("#rosTabDiv").on("click", function() {							// Roster tab click
 			Sound("click");													// Click
-			Draw("ros");													// Draw
+			curTab="ros";													// Set current tab to roster
+			Draw();															// Draw
 			});
 		$("#proTabDiv").on("click", function() {							// Project tab click
 			Sound("click");													// Click
-			Draw("pro");													// Draw
+			curTab="pro";													// Set current tab to project
+			Draw();															// Draw
 			});
 	});
 	
-	function Draw(tab)
+	function Draw()
 	{
 		$("[id$=TabDiv]").css({ "border-bottom":"1px solid #999","background-color":"#fff","color":"#666" });
-		$("#"+tab+"TabDiv").css({ "border-bottom":"1px solid #f8f8f8","background-color":"#f8f8f8","color":"#339933" });
-		curTab=tab;															// Set current tab
+		$("#"+curTab+"TabDiv").css({ "border-bottom":"1px solid #f8f8f8","background-color":"#f8f8f8","color":"#339933" });
 		$("#pa-webpage").remove();											// Kill image
 		$("#metaDiv").remove();												// Kill metadata
-		if (tab == "ros")		roster.Draw();								// Draw roster
-		else if (tab == "pro")	projects.Draw();							// Draw projects
+		if (curTab == "ros")		roster.Draw();							// Draw roster
+		else if (curTab == "pro")	projects.Draw();						// Draw projects
 		}
 
 	function gTest()
@@ -196,12 +211,7 @@
 		this.title="";															// Class title
 		this.assigns=[];														// List of assignments
 		this.roster=[];															// Roster
-this.title="Sample class";
-this.roster[0]={name:"Manny",id:0, assign: 49, email:"manny@mail.com" };
-this.roster[1]={name:"Moe",id:1, assign: 49, email:"" };
-this.roster[2]={name:"Jack",id:2, assign: 49, email:"" };
-this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
-}
+	}
 
 	CRoster.prototype.Draw=function() 										// UPDATE 
 	{
@@ -209,7 +219,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 		var _this=this;														// Context
 		var title=qmf2.curFile ? " - "+qmf2.curFile : " - New";				// Show number
 		var x=$("#bodyDiv").offset().left+560;								// Left
-		var str="<p class='pa-bodyTitle'>Edit classes";						// Title
+		var str="<p class='pa-bodyTitle'>Edit class";						// Title
 		str+="<span class='pa-proTitle' id='classTitleTitle'>"+title+"</span>"; // Add show name
 		str+="<span style='float:right'>";
 		str+=MakeSelect("classOptions",false,["Class options","New","Load","Save"]);
@@ -223,19 +233,25 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 		$("#bodyDiv").html(str);
 		this.DrawClass();													// Fill in class
 
-		$.ajax({ url: "//viseyes.org/pa/findshows.php",						// GET ASSIGNMENTS FROM DB
-				data: { email: this.email, ver:1 },							// Query
-				success: function(res) {									// When loaded
-				_this.assigns=[];											// Start fresh
-				res=$.parseJSON(res);										// Objectify
-				for (var i=0;i<res.length;++i) {							// For each assignment
-					var opt=ShortenString(res[i].id+" - "+res[i].title,49);	// Make options
-					_this.assigns.push(opt);								// Add assignment id
-					$("#classAssigns").append("<option>"+opt+"</option>");	// Add to pulldown
+		if (this.email) {													// If an email set
+
+			$.ajax({ url: "//viseyes.org/pa/findshows.php",					// GET ASSIGNMENTS FROM DB
+					data: { email: this.email, ver:1 },						// Query
+					success: function(res) {								// When loaded
+					_this.assigns=[];										// Start fresh
+					$("#classAssigns").empty();								// Clear select
+					$("#classAssigns").append("<option>Choose assignment</option>");	// Add title
+					res=$.parseJSON(res);									// Objectify
+					for (var i=0;i<res.length;++i) {						// For each assignment
+						var opt=ShortenString(res[i].id+" - "+res[i].title,49);	// Make options
+						_this.assigns.push(opt);							// Add assignment id
+						$("#classAssigns").append("<option>"+opt+"</option>");	// Add to pulldown
+						}
+					_this.DrawClass();										// Fill in class
 					}
-				_this.DrawClass();											// Fill in class
-				}
-			});
+				});
+			}
+		else $("#classAssigns").append("<option>49 - Demo Civil Rights</option>");	// Add demo
 
 		$("#classAdd").on("click", function() {								// ON ADD STUDENT
 			_this.EditStudent(-1);											// Add dialog 
@@ -244,7 +260,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 		$("#classTitle").on("change", function() {							// ON TITLE CHANGE
 			_this.title=$(this).val();										// Set 
 			});
-		
+			
 		$("#classAssigns").on("change", function() {						// ON ASSIGNMENT CHANGE
 			var i;
 			var a=$(this).val();											// Get assignment 
@@ -453,7 +469,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 					if (ui.position.left < -200) {							// Off the side
 						_this.pics.splice(id,1);							// Delete it
 						Sound("delete");									// Sound
-						Draw(curTab);										// Redraw
+						Draw();												// Redraw
 						}
 					}	
 				});
@@ -528,9 +544,10 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 			var q=$("#assSearch").val();									// Get search
 			loadAssignments(q);												// Load assignemnts
 			});
-		function loadAssignments(q) {										// LOAD ASSIGNMENTS
+		
+			function loadAssignments(q) {									// LOAD ASSIGNMENTS
 			$.ajax( { 	url: "//viseyes.org/pa/findshows.php",				// URL
-						data: { q:q, ver:1 },								// Query
+						data: { q:q, ver:1, email: this.email },			// Query
 						success: function(res) {							// When loaded
 							fillAssignmentTable(res);						// Fill table
 							}
@@ -597,16 +614,18 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 		if (o.roster) {															// Must be a class
 			roster.roster=data.roster;											// Get roster
 			roster.title=data.title;											// Title
-			roster.Draw();														// Redraw
+			Draw();																// Redraw
+			SetCookie("lastClass",qmf2.curFile,7);								// Set cookie for last class loaded
 			return;																// Quit
 			}
+		SetCookie("lastAssign",qmf.curFile,7);									// Set cookie for last assign loaded
 		projects.script=data.script;											// Get script
 		projects.title=data.title;												// Title
 		if (data.era != undefined)												// If era set
 			projects.era=projects.ncssEras[data.era];							// Era
 		projects.pics=data.binPics;												// Pics
 		projects.allow=data.allow ? 1 : 0;										// Allow
-		projects.Draw();														// Redraw
+		Draw();																	// Redraw
 	}
 
 	CProject.prototype.AddPic=function() 								// ADD NEW PICTURE
@@ -653,7 +672,7 @@ this.roster[3]={name:"Jill",id:3, assign: 49, email:"" };
 			});
 		
 		$("#cancelBut").on("click", function() {							// ON CANCEL
-			Draw(curTab);													// Redraw
+			Draw();															// Redraw
 			});
 	
 		$("#addUrl").on("change", function() {								// ON IMAGE URL SET
