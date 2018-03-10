@@ -243,7 +243,7 @@
 					$("#classAssigns").append("<option>Choose assignment</option>");	// Add title
 					res=$.parseJSON(res);									// Objectify
 					for (var i=0;i<res.length;++i) {						// For each assignment
-						var opt=ShortenString(res[i].id+" - "+res[i].title,49);	// Make options
+						var opt=ShortenString(res[i].id+" - "+res[i].title,48);	// Make options
 						_this.assigns.push(opt);							// Add assignment id
 						$("#classAssigns").append("<option>"+opt+"</option>");	// Add to pulldown
 						}
@@ -348,7 +348,7 @@
 			o=_this.roster[num];											// Point at current
 		var str="<div style='display:inline-block'><table>";				// Info div/table
 		str+="<tr><td>Name(s)</td><td><textarea id='addName' type='text' class='pa-is' style='width:200px;font-family:sans-serif;padding:3px 8px 0 8px'>"+o.name+"</textarea></td></tr>";
-		str+="<tr><td>Email</td><td><input id='addEmail' type='text' class='pa-is' style='width:200px'value='"+o.email+"'></td></tr>";
+		str+="<tr><td>Email(s)</td><td><input id='addEmail' type='text' class='pa-is' style='width:200px'value='"+o.email+"'></td></tr>";
 		str+="<tr><td>Assignment&nbsp;</td><td>"+MakeSelect("addAssigns",false,this.assigns,this.GetAssignmentName(o.assign))+"</td></tr>";
 		str+="</table></div>";												// End div
 			
@@ -358,12 +358,16 @@
 			o.assign=$("#addAssigns").val().match(/(\d+)/)[0]-0;			// Get id of assignment
 			o.name=o.name.replace(/\\r/,"");								// Remove CRs
 			if (num == -1) {												// Adding a new one
-				var v=o.name.split(",");									// Split by ','
-					if (v.length < 2)	v=o.name.split("\t");					// If nothing, try tabs
+				var v=o.name.split(",");									// Split name by ','
+				if (v.length < 2)	v=o.name.split("\t");					// If nothing, try tabs
 				if (v.length < 2)	v=o.name.split("\n");					// If nothing, try CRs
+				var vv=o.email.split(",");									// Split email by ','
+				if (vv.length < 2)	vv=o.email.split("\t");					// If nothing, try tabs
+				if (vv.length < 2)	vv=o.email.split("\n");					// If nothing, try CRs
 				for (var i=0;i<v.length;++i) {								// For each one
 					o.id=_this.roster.length;								// Set student id
 					o.name=v[i];											// Isolate name
+					if (vv[i]) o.email=vv[i];								// Set								
 					if (o.name)	{											// If a name
 						_this.roster.push($.parseJSON(JSON.stringify(o)));	// Add clone
 						_this.DrawClass();									// Redraw
