@@ -355,7 +355,8 @@
 		DialogBox(title,str,x,y,500, function() {							// Run dialog			
 			o.name=$("#addName").val() ? $("#addName").val() : "";			// Add name
 			o.email=$("#addEmail").val() ? $("#addEmail").val() : "";		// Add name
-			o.assign=$("#addAssigns").val().match(/(\d+)/)[0]-0;			// Get id of assignment
+			if ($("#addAssigns").val())										// If assignments
+				o.assign=$("#addAssigns").val().match(/(\d+)/)[0]-0;		// Get id of assignment
 			o.name=o.name.replace(/\\r/,"");								// Remove CRs
 			if (num == -1) {												// Adding a new one
 				var v=o.name.split(",");									// Split name by ','
