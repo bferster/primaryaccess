@@ -1410,8 +1410,6 @@
 		this.changed=false;														// No unsaved changes
 		if (this.assigned)														// If assigned
 			qmf.SaveFile(this.assigned,"none");									// Save data
-		else if (!qmf.curFile && window.location.search.substring(1)) 			// If nothing loaded and an assigned task
-			qmf.SaveDirector();													// Ask if sure
 		else																	// Normal save
 			qmf.Save();															// Save data
 	}

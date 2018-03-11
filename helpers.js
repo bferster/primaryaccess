@@ -139,24 +139,21 @@ function mtrace(msg)													// MOBILE TRACE
 function Sound(sound, mute)												// PLAY SOUND
 {
 	var snd=new Audio();													// Init audio object
-	if (!snd.canPlayType("audio/mpeg") || (snd.canPlayType("audio/mpeg") == "maybe")) 
-		snd=new Audio("img/"+sound+".ogg");									// Use ogg
-	else	
-		snd=new Audio("img/"+sound+".mp3");									// Use mp3
+	snd=new Audio("img/"+sound+".mp3");										// Use mp3
 	if (!mute)	{															// If not initing or muting	
 		snd.volume=50/100;													// Set volume
 		snd.play();															// Play it
 		}
 	}
 
-function LoadingIcon(mode, size, container)									// SHOW/HIDE LOADING ICON		
+function LoadingIcon(mode, size, container)								// SHOW/HIDE LOADING ICON		
 {
-	container=container ? "#"+container: "#bodyDiv";							// If no container spec'd, use dialog
-	if (!mode) {																// If hiding
-		$("#sf-loadingIcon").remove();											// Remove it
-		return;																	// Quit
+	container=container ? "#"+container: "#bodyDiv";						// If no container spec'd, use dialog
+	if (!mode) {															// If hiding
+		$("#sf-loadingIcon").remove();										// Remove it
+		return;																// Quit
 		}
-	var str="<img src='img/loading.gif' width='"+size+"' ";						// Img
+	var str="<img src='img/loading.gif' width='"+size+"' ";					// Img
 	str+="id='sf-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
 	$(container).append(str);														// Add icon to container
 }

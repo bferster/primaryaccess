@@ -1,5 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  QMEDIA FILE SYSTEM
+//
+//	Dependencies:
+//  img/logo64.gif, img/overlay.png
+//	Draw(), Popup(), doc.DecodeKey() (for PA only)
+//  SaveShow.php, LoadShow.php, ListShow.php, config.php
+//
 ///////////////////////////////////////////////////////////////////////////////////////////////
 		
 	function QmediaFile(host, version) 										// CONSTRUCTOR
@@ -9,6 +15,9 @@
 		this.email=this.GetCookie("email");										// Get email from cookie
 		this.curFile="";														// Current file
 		this.password=this.GetCookie("password");								// Password
+		var style=document.createElement("style");	style.type="text/css";		// Create  style
+		this.is="border-radius:10px;padding:1px 8px 0 8px;border:1px solid #999;font-size:12px;height:20px;width:200px;";
+		this.bs="display:inline-block;border-radius:10px;padding:1px 8px 0 8px;background-color:#ccc;color:#333;border:1px solid #999;font-size:12px;height:16px;cursor:pointer;width:50px;text-align:center;";
 	}
 	
 	QmediaFile.prototype.LogIn=function(callback) 							//	LOGIN DIALOG
@@ -16,10 +25,10 @@
 		var _this=this;															// Save context
 		var str="<br/>Type your email address in the box below."
 		str+="<br><br><div style='text-align:center'>";							// Center	
-		str+="<b>Email:&nbsp;&nbsp</b> <input class='pa-is' type='text' id='email' value='"+this.email+"'/>";
+		str+="<b>Email:&nbsp;&nbsp</b> <input style='"+this.is+"' type='text' id='email' value='"+this.email+"'/>";
 		str+="</div><br><div style='text-align:right'><br>";					// Right justify	
-		str+="<div class='pa-bs' id='logBut'>Login</div>&nbsp;&nbsp;";			// OK but
-		str+="<div class='pa-bs' id='cancelBut'>Cancel</div></div>";			// Cancel but
+		str+="<div style='"+this.bs+"' id='logBut'>Login</div>&nbsp;&nbsp;";	// OK but
+		str+="<div style='"+this.bs+"' id='cancelBut'>Cancel</div></div>";		// Cancel but
 		this.ShowLightBox("Login",str);
 		
 		$("#cancelBut").on("click", function() {								// CANCEL BUTTON
@@ -40,10 +49,10 @@
 		var _this=this;															// Save context
 		var str="<br/>To load one of your projects, type your email address in the box below."
 		str+="<br><br><div style='text-align:center'>";							// Center	
-		str+="<b>Email:&nbsp;&nbsp</b> <input class='pa-is' type='text' id='email' value='"+this.email+"'/>";
+		str+="<b>Email:&nbsp;&nbsp</b> <input style='"+this.is+"' type='text' id='email' value='"+this.email+"'/>";
 		str+="</div><br><div style='text-align:right'><br>";					// Right justify	
-		str+="<div class='pa-bs' id='logBut'>Login</div>&nbsp;&nbsp;";			// OK but
-		str+="<div class='pa-bs' id='cancelBut'>Cancel</div></div>";			// Cancel but
+		str+="<div style='"+this.bs+"' id='logBut'>Login</div>&nbsp;&nbsp;";	// OK but
+		str+="<div style='"+this.bs+"' id='cancelBut'>Cancel</div></div>";		// Cancel but
 		this.ShowLightBox("Login",str);
 		
 		$("#cancelBut").on("click", function() {								// CANCEL BUTTON
@@ -55,33 +64,14 @@
 			});
 	}	
 
-	QmediaFile.prototype.SaveDirector=function() 							//	SAVE FILE DIRECTOR
-	{	
-		var _this=this;															// Save context
-		var str="<br>This will create a new project in PrimaryAccess. If you have already made one and want to update it, load the existing one.<br><br>";
-		str+="<div style='text-align:center'>";								// Center
-		str+="<p><div class='pa-bs' id='loadOldBut' style='width:170px'>Load existing project</div></p>";		// Load but
-		str+="<p><div class='pa-bs' id='saveNewBut' style='width:170px'>Save as new project</div></p></div>";	// Save but
-		this.ShowLightBox("Make a new project?",str);							// Show dialog
-		
-		$("#loadOldBut").on("click",function() {								// LOAD BUTTON
-			$("#lightBoxDiv").remove();											// Close
-			_this.Load();														// Load dialog
-			});
-		$("#saveNewBut").on("click",function() {								// SAVE BUTTON
-			$("#lightBoxDiv").remove();											// Close
-			_this.Save();														// Save dialog
-			});
-		}
-
 	QmediaFile.prototype.Save=function() 									//	SAVE FILE TO DB
 		{	
 		if ((this.password == "undefined" | this.password == undefined))		// No password
 			this.password="";													// Null it out
 		var str="<br/>To save your project, type your email address in the box below. Type in a password if you want to protect it."
 		str+="<br/><blockquote><table cellspacing=0 cellpadding=0 style='font-size:11px'>";
-		str+="<tr><td><b>Email</b><span style='color:#990000'> * </span>&nbsp;</td><td><input class='pa-is' type='text' id='email' value='"+this.email+"'/></td></tr>";
-		str+="<tr><td><b>Password</b><span style='color:#990000'></span></b></td><td><input class='pa-is' type='password' id='password' value='"+this.password+"'/></td></tr>";
+		str+="<tr><td><b>Email</b><span style='color:#990000'> * </span>&nbsp;</td><td><input style='"+this.is+"' type='text' id='email' value='"+this.email+"'/></td></tr>";
+		str+="<tr><td><b>Password&nbsp;&nbsp;</b><span style='color:#990000'></span></b></td><td><input style='"+this.is+"' type='password' id='password' value='"+this.password+"'/></td></tr>";
 		if (this.curFile) {														// If a project loaded, as for save as...
 			str+="<tr><td colspan='2'>&nbsp;</td></tr>";
 			str+="<tr><td colspan='2'><input type='radio' name='rgrp' checked>";
@@ -90,8 +80,8 @@
 			str+=">Create a fresh project</td></tr>";
 			}
 		str+="</table></blockquote><div style='font-size:12px;text-align:right'><br>";	
-		str+="<div class='pa-bs' id='saveBut'>Save</div>&nbsp;&nbsp;";			// Save but
-		str+="<div class='pa-bs' id='cancelBut'>Cancel</div>";					// Cancel but
+		str+="<div style='"+this.bs+"' id='saveBut'>Save</div>&nbsp;&nbsp;";	// Save but
+		str+="<div style='"+this.bs+"' id='cancelBut'>Cancel</div>";			// Cancel but
 		this.ShowLightBox("Save your project",str);								// Show dialog
 		var _this=this;															// Save context
 		
@@ -139,7 +129,7 @@
 					 AlertBox("Error","Sorry, there was an error updating that project (4)");		
 				 else if (!isNaN(d)){											// Success if a number
 					 _this.curFile=d;											// Set current file
-					Sound("ding");												// Ding
+					_this.Sound("ding");										// Ding
 					PopUp("<span style='color:#009900'<b>Saved!</b></span>",100);	// Saved!
 					Draw();														// Redraw menu
 					}
@@ -148,7 +138,7 @@
 			});		
 	
 			function AlertBox(title, content) {									// ALERT BOX
-				Sound("delete");
+				_this.Sound("delete");											// Delete sound
 				var str="<span style='color:#990000'><b>"+title+"</b></span><br><br>";
 				str+=content+"<br>";
 				PopUp(str,4000); 
@@ -191,7 +181,7 @@
 			str+="<tr><td colspan='3'><hr></td></tr>";
 			for (var i=0;i<files.length;++i) 									// For each file
 				str+="<tr id='qmf"+files[i].id+"' "+trsty+"><td>"+ShortenString(files[i].title,30)+"</td><td>"+files[i].date.substr(5,11)+"</td><td align=right>"+files[i].id+"</td></tr>";
-			str+="</table><br><div class='pa-bs' style='float:right' id='cancelBut'>Cancel</div>";	// Cancel but
+			str+="</table><br><div style='"+_this.bs+"float:right' id='cancelBut'>Cancel</div>";	// Cancel but
 			_this.ShowLightBox("Load a project",str);								// Show lightbox
 
 			for (var i=0;i<files.length;++i)									// For each file
@@ -202,16 +192,14 @@
 			$("#cancelBut").on("click", function() {							// CANCEL BUTTON
 				$("#lightBoxDiv").remove();										// Close
 				});
-			Sound('click'); 
+			_this.Sound('click'); 												// Click sound
 			}
 		});	
 	}
 	
-
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  HELPERS
 ///////////////////////////////////////////////////////////////////////////////////////////////
-
 	
 	QmediaFile.prototype.SetCookie=function(cname, cvalue, exdays)			// SET COOKIE
 	{
@@ -254,7 +242,16 @@
 	
 	QmediaFile.prototype.LightBoxAlert=function(msg) 						//	SHOW LIGHTBOX ALERT
 	{
-		Sound("delete");														// Delete sound
+		this.Sound("delete");													// Delete sound
 		$("#lightBoxTitle").html("<span style='color:#990000'>"+msg+"</span>");	// Put new
 	}
 	
+	QmediaFile.prototype.Sound=function(sound, mute) 						//	PLAY SOUND
+	{
+		var snd=new Audio();													// Init audio object
+		snd=new Audio("img/"+sound+".mp3");										// Use mp3
+		if (!mute)	{															// If not initing or muting	
+			snd.volume=50/100;													// Set volume
+			snd.play();															// Play it
+			}
+		}
