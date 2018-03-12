@@ -16,7 +16,7 @@
 							padding: 0; margin: 0px;
 							}
 		.pa-main {		 	height: 100vh; width: 1000px; min-height: 500px; overflow: auto;  
-							background-color:#fff; opacity: 0; margin-left: auto; margin-right: auto;
+							background-color:#fff; margin-left: auto; margin-right: auto;
 							}
 		.pa-tabs { 			background-color:#fff;  font-size: 14px; margin: 16px 0 -1px 16px; cursor: pointer;
 							}
@@ -114,7 +114,6 @@
 		</div>
 	<div id="bodyDiv" class="pa-body"></div>
 	</div>
-	<div id="splashDiv" class="pa-splash"><img src="img/palogo.gif"><br>TeacherPrep</div>
 
 <script>
 
@@ -155,14 +154,6 @@
 			Draw();															// Draw body
 			});					
 		
-		$("#splashDiv").delay(noSplash?1:1000).animate({ opacity:0},noSplash?1:500, // Hide logo
-				function() {	 											// When done
-					if (url && url.match(/&fs/i)) 							// Full screen flag
-						player.SetFullScreen(true);							// Set it
-					$("#mainDiv").animate({ opacity:1},noSplash?500:2000, 	// Show interface
-						function() {	$("#splashDiv").remove();	});		// Remove splash screen
-					});		
-
 		$(window).on("keydown",function(e) {								// HANDLE KEYPRESS
 			if ((e.which == 84) && e.altKey && e.ctrlKey)					// TEST KEY
 				gTest();
@@ -448,7 +439,7 @@
 		str+="<table style='display:inline-block;padding-bottom:8px'>";	
 		str+="<tr><td>Title</td><td><input id='proTitle' class='pa-is' value='"+this.title+"'></input></td>";
 		str+="<td>&nbsp;&nbsp;&nbsp;&nbsp;NCSS era:</td><td>"+MakeSelect("proEra",false,this.ncssEras,this.era)+"</td></tr>";
-		str+="<tr><td>Script</td><td><textarea id='proScript' class='pa-is' style='height:40px'>"+this.script+"</textarea></td></td>";
+		str+="<tr><td>Script</td><td><textarea id='proScript' class='pa-is' style='font-family:sans-serif;padding:5px 8px 0 8px;height:40px'>"+this.script+"</textarea></td></td>";
 		str+="<td style='vertical-align:top'>&nbsp;&nbsp;&nbsp;&nbsp;Allow&nbsp;new&nbsp;pics?&nbsp;&nbsp;</td><td style='vertical-align:top'><input type='checkbox' id='proAllow'"+(this.allow ? 'checked' : "")+"></input></td></tr>";
 		str+="<tr><td>Pictures&nbsp;&nbsp;</td><td colspan='3'><div style='display:inline-block;margin-top:4px' id='picsBin'></div></td></tr></table>";
 		$("#bodyDiv").html(str);
