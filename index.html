@@ -326,8 +326,10 @@
 				player.ScalePic(100,66,"#startImg",script.pics[player.curPic].pos[0]); // Set start
 				player.ScalePic(100,66,"#endImg",script.pics[player.curPic].pos[1]);   // Set end
 				}
-			else if ((e.which == 84) && e.altKey && e.ctrlKey)				// TEST KEY
-				myTest();
+			else if ((e.which == 84) && e.altKey)							// ALT-T (STT)
+				script.SpeechToText();										// Talk in script
+			else if ((e.which == 84) && e.altKey && e.ctrlKey)				// CTRL+ALT (TEST)
+				myTest()
 			});
 		});									
 
@@ -1088,9 +1090,50 @@
 		$("#scriptDiv").scrollTop(y-$("#scriptDiv").height()/2);			// Scroll text
 	}
 
-
-
-
+	CScript.prototype.SpeechToText=function() 							//	TALK TO SCRIPT
+	{
+		Sound("ding");														// Ding
+		var recognition=new webkitSpeechRecognition();						// Init SST API
+		recognition.start();												// Start
+		recognition.onresult=function(event) { 								// ON A PHRASE
+			var pos=getCaretPosition();										// Get character pos
+			var p=event.results[0][0].transcript;							// Get phrase
+			var txt=$("#scriptTextDiv").html();								// Get raw text
+			txt=txt.replace(/<span.+">|<\/span>/g,"");						// Remove
+			txt=txt.replace(/<br>/g,"~");									// Remove CRs
+			txt=txt.replace(/\&nbsp\;/g," ");								// Remove with real spaces
+			txt=txt.substr(0,pos)+" "+p+" "+txt.substr(pos);				// Insert phrase
+			txt=txt.replace(/~/g,"<br>");									// Restore CRs
+			$("#scriptTextDiv").html(txt);									// Set colored text in
+			Sound("ding");													// Ding
+			}
+	
+		function getCaretPosition() {										// FIND CHAR POS IN SCRIPT
+			var caretPos=0,sel, range;
+			var editableDiv=$("#scriptTextDiv")[0];
+			if (window.getSelection) {
+				sel=window.getSelection();
+				if (sel.rangeCount) {
+					range=sel.getRangeAt(0);
+					if (range.commonAncestorContainer.parentNode == editableDiv) 
+						caretPos = range.endOffset;
+					}
+				} 
+			else if (document.selection && document.selection.createRange) {
+				range = document.selection.createRange();
+				if (range.parentElement() == editableDiv) {
+					var tempEl = document.createElement("span");
+					editableDiv.insertBefore(tempEl, editableDiv.firstChild);
+					var tempRange = range.duplicate();
+					tempRange.moveToElementText(tempEl);
+					tempRange.setEndPoint("EndToEnd", range);
+					caretPos = tempRange.text.length;
+					}
+				}
+			return caretPos;
+			}
+	
+		}
 
 
 
