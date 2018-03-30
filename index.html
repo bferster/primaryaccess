@@ -331,7 +331,18 @@
 			else if ((e.which == 84) && e.altKey && e.ctrlKey)				// CTRL+ALT (TEST)
 				myTest()
 			});
-		});									
+	
+		$("#scriptTextDiv")[0].addEventListener("paste", function(e) {		// ON SCRIPT PASTE
+			e.preventDefault();												// Override default
+			var text=e.clipboardData.getData("text/plain");					// Get as plain text
+			if (text) {														// If something to paste
+				text=text.replace(/\r/g,"");								// Kill CRs
+				text=text.replace(/\n/g,"<br>");							// LF -> <br>
+				document.execCommand("insertHTML",false,text);				// Insert text
+				}
+			});
+	
+	});																		// End ready() closure								
 
 	function Draw()														//  RE DRAW SCREEN
 	{
