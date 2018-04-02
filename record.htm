@@ -25,7 +25,13 @@
 		<div id="playerDiv" class="pa-player"></div>
 	</div>
 
+
+
 <script>
+
+
+// http://audior.ec/blog/recording-mp3-using-only-html5-and-javascript-recordmp3-js/
+// https://github.com/Audior/Recordmp3js
 
   var audio_context;
   var recorder;
@@ -216,12 +222,18 @@ var Recorder = function(source, cfg){
 	  encoderWorker.postMessage({ cmd: 'finish'});
 	  encoderWorker.onmessage = function(e) {
 		  if (e.data.cmd == 'data') {
+			LoadingIcon();
 			var url='data:audio/mp3;base64,'+encode64(e.data.buf);
 			var au=document.createElement('audio');
 			au.controls=true;
 			au.src=url;
 			$("#playerDiv").html(au);
-			LoadingIcon();
+			var hf=document.createElement('a');
+			hf.href=url;
+			hf.download="audio.mp3";
+			hf.innerHTML="Save MP3 file";
+			$("#playerDiv").append("<br>");
+			$("#playerDiv").append(hf);
 		  	}
 	  };
 	};
