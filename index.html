@@ -326,6 +326,8 @@
 				player.ScalePic(100,66,"#startImg",script.pics[player.curPic].pos[0]); // Set start
 				player.ScalePic(100,66,"#endImg",script.pics[player.curPic].pos[1]);   // Set end
 				}
+			else if ((e.which == 84) && e.altKey && e.ctrlKey)				// CTRL+ALT (TEST)
+				myTest()
 			else if ((e.which == 84) && e.altKey)							// ALT-T (STT)
 				script.SpeechToText();										// Talk in script
 			else if ((e.which == 84) && e.altKey && e.ctrlKey)				// CTRL+ALT (TEST)
@@ -770,7 +772,9 @@
 		str+="<div style='float:right;width:75px;border-left:1px solid #66cc66;margin-top:-1px;'>&nbsp;</div><br>";
 		str+="Audio pitch<div id='pitchSlider'style='float:right;width:150px'></div><br><br>";
 		str+="Voice<select id='voiceSel' class='pa-is' style='float:right'width:150px'><option>None</option><option>Use MP3 file</option><option>Default computer voice</option></select><br><br>";
-		str+="MP3 file<input id='mp3Inp' type='text' class='pa-is' style='float:right;width:150px'>";
+		str+="MP3 files<span  style='float:right'><input id='mp3Inp' type='text' class='pa-is' style='width:150px'>";
+		str+="&nbsp<img src='img/microphone.png' title='MP3 recorder' style='vertical-align:-5px' onclick='doc.RecordMP3()'><span>";
+		
 		DialogBox("Sound Settings",str,x,y,300, function() {				// Run dialog			
 			_this.pitch=$("#pitchSlider").slider("option", "value"); 		// Get pitch		
 			_this.audioRate=$("#rateSlider").slider("option","value");		// Get rate		
@@ -1487,6 +1491,25 @@
 		Draw();																	// Redraw
 	}
 
+	CDoc.prototype.RecordMP3=function() 									// RECORD MP3
+	{
+		$("#pa-webpage").remove();												// Remove old popup, if any
+		var x=$("#playBut").offset().left-140;									// Get left
+		var y=$("#playBut").offset().top+65;									// Top
+		var str="<div id='pa-webpage' class='pa-webpage' style='";				// Add div
+		str+="font-size:13px;width:300px;height:160px;top:"+y+"px;left:"+x+"px'>";	 // Finish div
+		str+="<b>MP3 Recorder</b><img id='pa-close' src='img/closedot.gif' style='float:right;cursor:pointer;padding-bottom:12px'><br>"	// Add close button
+		str+="<iframe src='record.htm' "; 
+		str+="style='overflow-y:none;border:none'></iframe>";
+		$("body").append(str+"</div>");											// Add popup
+		$("#pa-webpage").fadeIn(1000);											// Fade in
+		$("#pa-webpage").draggable();											// Make it draggable
+		$("#pa-close").click(function() { $("#pa-webpage").remove(); });		// Remove on click of close but
+	}
+
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CHAT
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1544,9 +1567,8 @@ this.msgs[2]={ msg: "Good job!", who:2, when: Date.now/1000 }
 		$("#chatTxt").html(str);												// Set it
 	}
 
-function myTest()
-		{
-
+	function myTest()
+	{		
 		var key=EncodeKey(49,0,1);
 		trace(49,key)
 		trace(doc.DecodeKey(key))

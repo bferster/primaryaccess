@@ -2,6 +2,8 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
+	<title>PrimaryAccess MP3</title>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <style>
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
@@ -16,10 +18,10 @@
 </head>
 <body>
 	<div id="mainDiv" class="pa-main">
-		<br><canvas id="visualizer" width="300" height="50"></canvas><br><br> 
+		<canvas id="visualizer" width="300" height="50"></canvas><br><p><p> 
 		<div id='recordBut' class='pa-bs' onclick="startRecording(this);">Record</div>&nbsp;&nbsp;
 		<div id='pauseBut'	class='pa-bs' onclick="pauseRecording(this);">Pause</div>&nbsp;&nbsp;
-		<div class='pa-bs' onclick="stopRecording(this);" >Stop</div><br><br> 
+		<div class='pa-bs' onclick="stopRecording(this);" >Stop</div></p> 
 		<div id="playerDiv" class="pa-player"></div>
 	</div>
 
@@ -46,7 +48,7 @@
 
   function stopRecording(button) {
     recorder && recorder.stop();
-	$("#playerDiv").html("<span style='color:#009900;font-weight:bold'>Making MP3 (takes a while...)</span>");
+	$("#playerDiv").html("<span style='color:#009900;font-weight:bold'>Making MP3 </span><br>(Takes a while - about 3x record time)");
 	LoadingIcon(true,32,"mainDiv");
 	recorder && recorder.exportWAV(function(blob) {});    
     recorder.clear();
@@ -80,23 +82,23 @@ function FrequencyBars(input)
 	input.connect(analyser);
 	var canvas=$("#visualizer")[0];
 	var canvasCtx=canvas.getContext("2d");
-	var w=canvas.width+3;
+	var w=canvas.width+4;
   	var h=canvas.height;
-    var bufferLength=analyser.frequencyBinCount;
+    var bufferLength=analyser.frequencyBinCount/3;
     var dataArray=new Uint8Array(bufferLength);
-    var barWidth=(w/bufferLength)*4;
+    var barWidth=w/bufferLength;
 
 	var draw=function() {
 		var barHeight,i,x=0;
 		drawVisual=requestAnimationFrame(draw);
       	analyser.getByteFrequencyData(dataArray);
-      	canvasCtx.fillStyle='rgb(255,255,255)';
+      	canvasCtx.fillStyle='rgb(238,238,238)';
       	canvasCtx.fillRect(0,0,w,h);
-        for (i=0;i<bufferLength;i++) {
+		  for (i=0;i<bufferLength;i++) {
        		barHeight=dataArray[i]/4;
-        	canvasCtx.fillStyle='rgb(192,192,192)';
+        	canvasCtx.fillStyle='rgb(180,180,180)';
         	canvasCtx.fillRect(x,h-barHeight,barWidth,barHeight);
-			canvasCtx.fillRect(0,h-1,w-5,h);
+			canvasCtx.fillRect(0,h-1,w-6,h);
     	  	x+=barWidth+2;
      		}
     	};
@@ -112,7 +114,7 @@ function LoadingIcon(mode, size, container)								// SHOW/HIDE LOADING ICON
 		return;																// Quit
 		}
 	var str="<img src='img/loading.gif' width='"+size+"' ";					// Img
-	str+="id='sf-loadingIcon' style='position:absolute;top:150px;left:calc(50% - "+size/2+"px);z-index:5000'>";	
+	str+="id='sf-loadingIcon' style='position:absolute;top:8px;left:calc(50% - "+size/2+"px);z-index:5000'>";	
 	$(container).append(str);														// Add icon to container
 }
 
