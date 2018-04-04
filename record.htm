@@ -7,7 +7,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <style>
 		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 13px;  
-							padding: 0; margin:0px; 
+							padding: 0; margin:0px;;background-color:#eee;
 							}
 		.pa-main {			text-align:center; margin-left:auto; margin-right:auto;
 							}
@@ -35,7 +35,8 @@
 
   var audio_context;
   var recorder;
-
+  var recording=false;
+ 
   function startUserMedia(stream) {
     var input = audio_context.createMediaStreamSource(stream);
     recorder=new Recorder(input, { numChannels: 1 });
@@ -43,17 +44,24 @@
   }
 
   function startRecording(button) {
-    recorder && recorder.record();
-	$("#playerDiv").html("<span style='color:red;font-weight:bold'>-- Recording --</span>");
+    
+	if (recorder) {
+		recording=true;
+		setTimeout(recorder.record,500);
+		$("#playerDiv").html("<span style='color:red;font-weight:bold'>-- Recording --</span>");
+		}
   }
 
  function pauseRecording(button) {
+	if (!recording)	return;
     recorder && recorder.stop();
 	$("#playerDiv").html("<span style='color:#666;font-weight:bold'><i>Recording paused</i></span>");
  }
 
   function stopRecording(button) {
-    recorder && recorder.stop();
+	if (!recording)	return;
+	recording=false;	
+	recorder && recorder.stop();
 	$("#playerDiv").html("<span style='color:#009900;font-weight:bold'>Making MP3 </span><br>(Takes a while - about 3x record time)");
 	LoadingIcon(true,32,"mainDiv");
 	recorder && recorder.exportWAV(function(blob) {});    
