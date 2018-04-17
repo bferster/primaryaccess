@@ -128,7 +128,7 @@
 				 else if (d == -4) 												// Error
 					 AlertBox("Error","Sorry, there was an error updating that project (4)");		
 				 else if (!isNaN(d)){											// Success if a number
-					 _this.curFile=d;											// Set current file
+					_this.curFile=d.trim();										// Set current file
 					_this.Sound("ding");										// Ding
 					PopUp("<span style='color:#009900'<b>Saved!</b></span>",100);	// Saved!
 					Draw();														// Redraw menu
