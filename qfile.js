@@ -102,7 +102,7 @@
 			});
 	}
 	
-	QmediaFile.prototype.SaveFile=function(email, password) 				//	SAVE A FILE FROM DB
+	QmediaFile.prototype.SaveFile=function(email, password) 				//	SAVE A FILE TO DB
 	{
 		var dat={};
 		var _this=this;															// Save context
@@ -113,7 +113,8 @@
 		dat["email"]=email;														// Add email
 		dat["password"]=password;												// Add password
 		dat["ver"]=this.version;												// Add version
-		dat["title"]=AddEscapes(curJson.title);									// Add title
+		var title=curJson.title.replace(/\'/g,"");								// Remove apostrophes
+		dat["title"]=AddEscapes(title);											// Add title
 		dat["private"]=0;														// Add private
 		dat["script"]="LoadShow("+JSON.stringify(curJson,null,'\t')+")";		// Add jsonp-wrapped script
 		$("#lightBoxDiv").remove();												// Close
