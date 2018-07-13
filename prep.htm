@@ -127,6 +127,7 @@
 	var qmf=null;															// QFile assignment system
 	var qmf2=null;															// QFile class system
 	var curJson={};															// To save show
+	var getPicsFromShow=false;												// KLUGE!!!
 
 	$(document).ready(function() {								        // ON PAGE LOADED
 		isMobile=navigator.platform.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag id ios
@@ -602,7 +603,12 @@
 
 	function LoadShow(data) 												// GET DATA FROM LOAD SHOW
 	{
-		var o=data;																// Point at data
+		var o=data;																// If loading pix from a show
+		if (getPicsFromShow) {													// Get pix from show
+			GetPaRes(data.binPics);												// Send data
+			getPicsFromShow=false;												// Reset flag
+			return;																// Quit
+			}
 		if (o && o.qmfmsg && o.qmfmsg == "error") {								// Error loading
 			PopUp("<p style='color:#990000'><b>Couldn't load project!</b></p>",3000); // Popup warning
 			return;																// Quit

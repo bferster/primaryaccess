@@ -74,6 +74,13 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 		LoadingIcon(true,32,"mdAssets");											// Show loading icon
 
 		if (this.type == "PrimaryAccess") {											// From PA DB				
+		if (this.filter.charAt(0) == "#") {
+			var url="//viseyes.org/pa/loadshow.php?id="+this.filter.substr(1);
+			getPicsFromShow=true;													// Divert 
+			$.ajax( { url: url,  dataType: 'jsonp' }); 
+			return;
+			}
+			
 			$("#useEra").show();													// Show era selector
 			var era=this.era;														// Index of era
 			var url="//viseyes.org/pa/getresources.php";
@@ -81,7 +88,7 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 			else if (this.filter) url+="?q="+this.filter.toLowerCase();				// Q
 			else if (this.era) url+="?era="+era;									// Era
 			$.ajax( { url: url,  dataType: 'jsonp' });
-			}
+			}	
 		else if (this.type == "WikiMedia") {										// From  Wikimedia			
 			$.ajax( { url: "//commons.wikimedia.org/w/api.php",
 				jsonp: "callback", 	dataType: 'jsonp', 
@@ -102,7 +109,7 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 							if (p.title)											// If a title
 								o.title=p.title.substring(5,p.title.length-4);		// Strip File: && ext
 							o.src=u.url;											// Set url
-							data.push(o);											// Add to arrat
+							data.push(o);											// Add to array
 							}
 						}
 					GetPaRes(data);													// Add to viewer
@@ -250,7 +257,7 @@ CImageFind.prototype.ImportDialog=function()									// IMPORTER DIALOG
 																					
 	function GetPaRes(data)															// HADLE JSONP AJAX LOAD
 	{
-		var i,o;
+		var i;
 		LoadingIcon();																// Hide loading icon
 		CImageFindObj.data=[];														// New results store 
 		for (i=0;i<data.length;++i) 												// For each doc returned
