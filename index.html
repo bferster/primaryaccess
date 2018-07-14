@@ -256,6 +256,7 @@
 	var isFullScreen=0;														// Is it full screen?
 	var noSplash=(window.location.host == "localhost") ? true : false;		// Splash screen inhibitor
 	var playAspect=.6667;													// Image aspect ratio
+	var getPicsFromShow=false;												// KLUGE!!!
 
 	$(document).ready(function() {								        // ON PAGE LOADED
 		isMobile=navigator.platform.match(/(ipad|iphone|ipod|android)/i) ? true : false; // Set mobile flag id ios
@@ -1480,6 +1481,11 @@
 	
 	function LoadShow(data) 												// GET DATA FROM LOAD SHOW
 	{
+		if (getPicsFromShow) {													// Get pix from show
+			GetPaRes(data.binPics);												// Send data
+			getPicsFromShow=false;												// Reset flag
+			return;																// Quit
+			}
 		doc.LoadJSON(data);														// Load show
 		doc.allowNewPics=1;														// Assume we're allowing new pics
 		if (data.allow != undefined)	doc.allowNewPics=data.allow;			// Set pic allow
